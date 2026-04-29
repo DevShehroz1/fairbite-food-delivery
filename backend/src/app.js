@@ -14,7 +14,7 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: true,
   credentials: true,
 }));
 
@@ -50,7 +50,7 @@ app.use('/api/restaurants', require('./routes/restaurantRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
 });
 

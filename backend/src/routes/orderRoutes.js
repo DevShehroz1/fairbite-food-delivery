@@ -11,6 +11,7 @@ router.route('/:id')
   .get(protect, getOrder);
 
 router.put('/:id/status', protect, authorize('restaurant', 'rider', 'admin'), updateOrderStatus);
+router.put('/:id/accept', protect, authorize('rider'), require('../controllers/orderController').acceptOrder);
 router.delete('/:id', protect, cancelOrder);
 
 module.exports = router;

@@ -9,7 +9,13 @@
     "test": "jest --watchAll --verbose",
     "seed": "node src/utils/seeder.js"
   },
-  "keywords": ["food-delivery", "fairbite", "express", "mongodb", "nodejs"],
+  "keywords": [
+    "food-delivery",
+    "fairbite",
+    "express",
+    "mongodb",
+    "nodejs"
+  ],
   "author": "FairBite Team",
   "license": "MIT",
   "type": "commonjs",
@@ -23,7 +29,9 @@
     "express-validator": "^7.3.2",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.5.0"
+    "mongoose": "^9.5.0",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "eslint": "^10.2.1",

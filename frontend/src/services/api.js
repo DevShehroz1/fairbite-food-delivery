@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+// Production (Vercel): use full Render backend URL from env var
+// Local / ngrok: use relative /api (proxied by React dev server → backend)
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  baseURL: process.env.REACT_APP_API_URL || '/api',
   headers: { 'Content-Type': 'application/json' },
 });
 

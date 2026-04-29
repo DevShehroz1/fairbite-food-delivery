@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Grid, Typography, Box, Button, Card, CardMedia, Rating, Chip, Divider, CircularProgress, IconButton, Badge, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import { Container, Grid, Typography, Box, Button, Card, CardMedia, Rating, Chip, Divider, CircularProgress, IconButton, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import { Add, Remove, ShoppingCart, AccessTime, ExpandMore, LocalFireDepartment } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';

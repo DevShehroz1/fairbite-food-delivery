@@ -69,13 +69,12 @@ const orderSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-orderSchema.pre('save', async function (next) {
+orderSchema.pre('validate', async function () {
   if (!this.orderNumber) {
     const date = new Date();
     const random = Math.floor(1000 + Math.random() * 9000);
     this.orderNumber = `FB${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${random}`;
   }
-  next();
 });
 
 module.exports = mongoose.model('Order', orderSchema);

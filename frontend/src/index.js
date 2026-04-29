@@ -17,7 +17,15 @@ root.render(
         <CssBaseline />
         <AuthProvider>
           <App />
-          <ToastContainer position="top-right" autoClose={3000} />
+          <ToastContainer
+            position="bottom-center"
+            autoClose={3500}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            pauseOnHover={false}
+            toastStyle={{ borderRadius: 16, fontWeight: 600 }}
+          />
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

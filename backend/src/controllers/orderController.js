@@ -1,6 +1,13 @@
 const Order = require('../models/Order');
 const Restaurant = require('../models/Restaurant');
 
+// Helper: broadcast order event to relevant rooms
+const emit = (req, event, payload) => {
+  const io = req.app.get('io');
+  if (!io) return;
+  io.emit(event, payload); // broadcast to everyone (riders + customers)
+};
+
 exports.getOrders = async (req, res, next) => {
   try {
     const query = {};
@@ -87,6 +94,17 @@ exports.createOrder = async (req, res, next) => {
     restaurant.stats.totalOrders += 1;
     await restaurant.save({ validateBeforeSave: false });
 
+    // Notify all riders of new order
+    emit(req, 'new_order', {
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+      restaurantName: restaurant.name,
+      restaurantAddress: restaurant.address,
+      deliveryAddress: order.deliveryAddress,
+      items: order.items,
+      pricing: order.pricing,
+    });
+
     res.status(201).json({ success: true, data: order });
   } catch (err) {
     next(err);
@@ -114,6 +132,31 @@ exports.updateOrderStatus = async (req, res, next) => {
     }
 
     await order.save();
+
+    // Notify customer's tracking page of status change
+    emit(req, `order_${order._id}_status`, { status: order.status, riderId: order.rider });
+
+    res.status(200).json({ success: true, data: order });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.acceptOrder = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (order.rider) return res.status(400).json({ success: false, message: 'Order already taken by another rider' });
+
+    order.rider = req.user.id;
+    order.status = 'picked-up';
+    order.statusHistory.push({ status: 'picked-up', note: 'Rider accepted and picked up' });
+    await order.save();
+
+    emit(req, `order_${order._id}_status`, { status: 'picked-up', riderId: req.user.id });
+    // Tell all riders this order is gone
+    emit(req, 'order_taken', { orderId: order._id });
+
     res.status(200).json({ success: true, data: order });
   } catch (err) {
     next(err);

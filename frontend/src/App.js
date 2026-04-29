@@ -1,7 +1,5 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import { Box, CircularProgress } from '@mui/material';
 
 // Layout
 import Navbar from './components/layout/Navbar';
@@ -27,13 +25,8 @@ import RiderDashboard from './pages/rider/RiderDashboard';
 // Pages — Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
 
-const ProtectedRoute = ({ children, roles }) => {
-  const { user, isAuthenticated, loading } = useAuth();
-  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress color="primary" /></Box>;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (roles && !roles.includes(user?.role)) return <Navigate to="/" replace />;
-  return children;
-};
+// Login not required — all routes are open for demo
+const ProtectedRoute = ({ children }) => children;
 
 const App = () => {
   return (
