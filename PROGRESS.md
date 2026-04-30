@@ -70,6 +70,9 @@
 ## REMAINING TODO 📋
 
 ### Frontend (to do next session)
+- [x] `src/pages/auth/LandingPage.jsx` — new landing/login with Google picker + role selection
+- [x] Fixed rider not receiving new orders (replaced socket-only with 5s polling via `/orders/available`)
+- [x] `src/App.js` — `/` now shows LandingPage (no Navbar), redirects logged-in users to dashboard
 - [ ] `src/pages/customer/CheckoutSuccessPage.jsx`
 - [ ] `src/components/common/LoadingSpinner.jsx`
 - [ ] `src/pages/customer/ReviewPage.jsx`

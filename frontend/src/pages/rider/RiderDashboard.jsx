@@ -98,20 +98,34 @@ const RiderDashboard = () => {
   const phaseTimerRef               = useRef(null);
   const countdownRef                = useRef(null);
 
+  // Join rider room once; listen for order_taken (another rider grabbed it)
   useEffect(() => {
     socket.emit('join_rider');
-
-    socket.on('new_order', (order) => {
-      if (!online) return;
-      setPending(prev => prev.find(o=>o.orderId===order.orderId) ? prev : [order,...prev]);
-      if (navigator.vibrate) navigator.vibrate([200,100,200]);
-    });
-
     socket.on('order_taken', ({ orderId }) => {
-      setPending(prev => prev.filter(o=>o.orderId!==orderId));
+      setPending(prev => prev.filter(o => o.orderId !== orderId));
     });
+    return () => { socket.off('order_taken'); };
+  }, []);
 
-    return () => { socket.off('new_order'); socket.off('order_taken'); };
+  // Poll /orders/available every 5s when online — works across all devices/deployments
+  useEffect(() => {
+    if (!online) { setPending([]); return; }
+    const fetchAvailable = async () => {
+      try {
+        const { data } = await api.get('/orders/available');
+        setPending((data.data || []).map(o => ({
+          orderId:         o.id,
+          orderNumber:     o.orderNumber,
+          restaurantName:  o.restaurant?.name || 'Restaurant',
+          deliveryAddress: o.deliveryAddress,
+          items:           o.items,
+          pricing:         o.pricing,
+        })));
+      } catch {}
+    };
+    fetchAvailable();
+    const interval = setInterval(fetchAvailable, 5000);
+    return () => clearInterval(interval);
   }, [online]);
 
   const goOnline = (val) => {

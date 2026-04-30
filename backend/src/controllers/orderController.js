@@ -6,6 +6,13 @@ const emit = (req, event, payload) => {
   if (io) io.emit(event, payload);
 };
 
+exports.getAvailableOrders = async (req, res, next) => {
+  try {
+    const orders = await Order.findAvailable();
+    res.status(200).json({ success: true, count: orders.length, data: orders });
+  } catch (err) { next(err); }
+};
+
 exports.getOrders = async (req, res, next) => {
   try {
     let restaurantId = null;

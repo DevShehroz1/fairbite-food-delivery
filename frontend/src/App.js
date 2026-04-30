@@ -1,10 +1,12 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 
 // Layout
 import Navbar from './components/layout/Navbar';
 
 // Pages — Auth
+import LandingPage from './pages/auth/LandingPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 
@@ -25,34 +27,52 @@ import RiderDashboard from './pages/rider/RiderDashboard';
 // Pages — Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
 
-// Login not required — all routes are open for demo
-const ProtectedRoute = ({ children }) => children;
+const DASHBOARD_ROUTES = {
+  customer:   '/restaurants',
+  rider:      '/dashboard/rider',
+  restaurant: '/dashboard/restaurant',
+  admin:      '/dashboard/admin',
+};
 
 const App = () => {
+  const { isAuthenticated, user, loading } = useAuth();
+  const location = useLocation();
+  const isLanding = location.pathname === '/';
+
+  if (loading) return null;
+
   return (
     <>
-      <Navbar />
+      {/* Hide Navbar on the landing/login page */}
+      {!isLanding && <Navbar />}
+
       <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
+        {/* Landing = login page; redirect logged-in users to their dashboard */}
+        <Route
+          path="/"
+          element={
+            isAuthenticated
+              ? <Navigate to={DASHBOARD_ROUTES[user?.role] || '/restaurants'} replace />
+              : <LandingPage />
+          }
+        />
+
+        {/* Legacy login/register kept for direct access */}
+        <Route path="/login" element={isAuthenticated ? <Navigate to={DASHBOARD_ROUTES[user?.role] || '/restaurants'} replace /> : <LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/restaurants" element={<RestaurantListPage />} />
-        <Route path="/restaurants/:id" element={<RestaurantDetailPage />} />
 
         {/* Customer routes */}
-        <Route path="/cart" element={<ProtectedRoute roles={['customer']}><CartPage /></ProtectedRoute>} />
-        <Route path="/orders" element={<ProtectedRoute roles={['customer']}><OrderHistoryPage /></ProtectedRoute>} />
-        <Route path="/orders/:id/track" element={<ProtectedRoute roles={['customer']}><OrderTrackingPage /></ProtectedRoute>} />
+        <Route path="/restaurants"     element={<RestaurantListPage />} />
+        <Route path="/restaurants/:id" element={<RestaurantDetailPage />} />
+        <Route path="/home"            element={<HomePage />} />
+        <Route path="/cart"            element={<CartPage />} />
+        <Route path="/orders"          element={<OrderHistoryPage />} />
+        <Route path="/orders/:id/track" element={<OrderTrackingPage />} />
 
-        {/* Restaurant routes */}
-        <Route path="/dashboard/restaurant" element={<ProtectedRoute roles={['restaurant']}><RestaurantDashboard /></ProtectedRoute>} />
-
-        {/* Rider routes */}
-        <Route path="/dashboard/rider" element={<ProtectedRoute roles={['rider']}><RiderDashboard /></ProtectedRoute>} />
-
-        {/* Admin routes */}
-        <Route path="/dashboard/admin" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+        {/* Role dashboards */}
+        <Route path="/dashboard/restaurant" element={<RestaurantDashboard />} />
+        <Route path="/dashboard/rider"      element={<RiderDashboard />} />
+        <Route path="/dashboard/admin"      element={<AdminDashboard />} />
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

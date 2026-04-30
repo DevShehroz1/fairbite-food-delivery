@@ -67,6 +67,15 @@ exports.updateStatus = async (id, status, note) => {
   return fmt(data);
 };
 
+exports.findAvailable = async () => {
+  const { data, error } = await supabase.from('orders').select(JOINS)
+    .eq('status', 'pending')
+    .is('rider_id', null)
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data || []).map(fmt);
+};
+
 exports.acceptOrder = async (id, riderId) => {
   const { data: current } = await supabase.from('orders').select('status_history,rider_id').eq('id', id).single();
   if (current?.rider_id) throw new Error('Order already taken');
