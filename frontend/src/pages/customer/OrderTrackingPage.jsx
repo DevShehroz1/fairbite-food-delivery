@@ -4,7 +4,7 @@ import { CheckCircle, Phone, Star } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { runDemoOrder, DEMO_RIDER_INFO } from '../../services/demoService';
+import { runDemoOrder, DEMO_RIDER_INFO, isDemoMode } from '../../services/demoService';
 import socket from '../../services/socket';
 import api from '../../services/api';
 
@@ -302,22 +302,32 @@ const OrderTrackingPage = () => {
       }));
 
     socket.emit('join_order', id);
-    // Real-time update from rider/restaurant — only advance
     socket.on(`order_${id}_status`, ({ status: s }) => advanceStatus(s));
     socket.on('rider_location', ({ lat, lng, delivered: done }) => {
       if (done) { advanceStatus('delivered'); setRiderProgress(1); return; }
       setRiderProgress(p => Math.min(p + 0.035, 1));
     });
 
-    // Always run the demo simulation — works whether demo toggle is on or off.
-    // Real socket events and demo both call advanceStatus(), which only moves forward,
-    // so whichever fires first wins and the other is safely ignored.
-    cancelDemoRef.current = runDemoOrder({
-      onStatusChange: (s) => advanceStatus(s),
-      onRiderLocationChange: () => setRiderProgress(p => Math.min(p + 0.028, 1)),
-      restaurantCoords: { lat: 24.8607, lng: 67.0011 },
-      deliveryCoords:   { lat: 24.8900, lng: 67.0200 },
-    });
+    // Demo mode: auto-progress through all stages on a timer (class presentation)
+    if (isDemoMode()) {
+      cancelDemoRef.current = runDemoOrder({
+        onStatusChange: (s) => advanceStatus(s),
+        onRiderLocationChange: () => setRiderProgress(p => Math.min(p + 0.028, 1)),
+        restaurantCoords: { lat: 24.8607, lng: 67.0011 },
+        deliveryCoords:   { lat: 24.8900, lng: 67.0200 },
+      });
+    } else {
+      // Real mode: poll order status every 5s so rider/restaurant updates show up
+      const pollStatus = async () => {
+        try {
+          const r = await api.get(`/orders/${id}`);
+          advanceStatus(r.data.data.status);
+        } catch {}
+      };
+      const pollInterval = setInterval(pollStatus, 5000);
+      const origCancel = cancelDemoRef.current;
+      cancelDemoRef.current = () => { clearInterval(pollInterval); origCancel?.(); };
+    }
 
     return () => {
       cancelDemoRef.current?.();
