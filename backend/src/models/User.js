@@ -1,70 +1,41 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const supabase = require('../config/supabase');
+const bcrypt   = require('bcryptjs');
+const jwt      = require('jsonwebtoken');
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Please provide a name'],
-    trim: true,
-    maxlength: [50, 'Name cannot be more than 50 characters'],
-  },
-  email: {
-    type: String,
-    required: [true, 'Please provide an email'],
-    unique: true,
-    lowercase: true,
-    match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email'],
-  },
-  password: {
-    type: String,
-    required: [true, 'Please provide a password'],
-    minlength: [6, 'Password must be at least 6 characters'],
-    select: false,
-  },
-  role: {
-    type: String,
-    enum: ['customer', 'restaurant', 'rider', 'admin'],
-    default: 'customer',
-  },
-  phone: {
-    type: String,
-    required: [true, 'Please provide a phone number'],
-    match: [/^[0-9]{10,15}$/, 'Please provide a valid phone number'],
-  },
-  avatar: {
-    type: String,
-    default: 'https://ui-avatars.com/api/?background=random&name=',
-  },
-  address: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: { type: String, default: 'Pakistan' },
-    coordinates: { lat: Number, lng: Number },
-  },
-  isVerified: { type: Boolean, default: false },
-  isActive: { type: Boolean, default: true },
-  lastLogin: Date,
-}, { timestamps: true });
+const fmt = (row) => row ? { ...row, _id: row.id } : null;
 
-userSchema.pre('save', async function () {
-  if (!this.isModified('password')) return;
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
-
-userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+exports.findByEmail = async (email, includePassword = false) => {
+  const cols = includePassword ? '*' : 'id,name,email,role,phone,avatar,is_active,created_at';
+  const { data } = await supabase.from('users').select(cols).eq('email', email.toLowerCase()).single();
+  return fmt(data);
 };
 
-userSchema.methods.generateToken = function () {
-  return jwt.sign(
-    { id: this._id, role: this.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRE || '7d' }
-  );
+exports.findById = async (id) => {
+  const { data } = await supabase.from('users').select('id,name,email,role,phone,avatar,is_active').eq('id', id).single();
+  return fmt(data);
 };
 
-module.exports = mongoose.model('User', userSchema);
+exports.create = async ({ name, email, password, role, phone }) => {
+  const hashed = await bcrypt.hash(password, 10);
+  const { data, error } = await supabase.from('users').insert({
+    name,
+    email: email.toLowerCase(),
+    password: hashed,
+    role: role || 'customer',
+    phone,
+    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=E53935&color=fff&bold=true`,
+  }).select().single();
+  if (error) throw new Error(error.message);
+  return fmt(data);
+};
+
+exports.update = async (id, fields) => {
+  const { data, error } = await supabase.from('users').update({ ...fields, updated_at: new Date() }).eq('id', id).select().single();
+  if (error) throw new Error(error.message);
+  return fmt(data);
+};
+
+exports.matchPassword = async (entered, hashed) => bcrypt.compare(entered, hashed);
+
+exports.generateToken = (user) =>
+  jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });

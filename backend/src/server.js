@@ -1,12 +1,9 @@
 require('dotenv').config();
-const http    = require('http');
+const http       = require('http');
 const { Server } = require('socket.io');
-const app     = require('./app');
-const connectDB = require('./config/db');
+const app        = require('./app');
 
-const PORT = process.env.PORT || 5000;
-
-connectDB();
+const PORT = process.env.PORT || 5001;
 
 const server = http.createServer(app);
 
@@ -45,7 +42,7 @@ io.on('connection', (socket) => {
 
 server.listen(PORT, () => {
   console.log('='.repeat(50));
-  console.log('FairBite Backend + Socket.io Started!');
+  console.log('FairBite Backend + Socket.io + Supabase Started!');
   console.log(`URL: http://localhost:${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log('='.repeat(50));

@@ -1,80 +1,82 @@
-const mongoose = require('mongoose');
+const supabase = require('../config/supabase');
 
-const orderSchema = new mongoose.Schema({
-  orderNumber: { type: String, unique: true, required: true },
-  customer:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  restaurant: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant', required: true },
-  rider:      { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  items: [{
-    menuItemId: mongoose.Schema.Types.ObjectId,
-    name:   String,
-    price:  Number,
-    quantity: { type: Number, required: true, min: 1 },
-    specialInstructions: String,
-    subtotal: Number,
-  }],
-  pricing: {
-    subtotal:    { type: Number, required: true },
-    platformFee: { type: Number, default: 0 },
-    deliveryFee: { type: Number, default: 50 },
-    tax:         { type: Number, default: 0 },
-    discount:    { type: Number, default: 0 },
-    total:       { type: Number, required: true },
-  },
-  deliveryAddress: {
-    street: { type: String, required: true },
-    city:   { type: String, required: true },
-    zipCode: String,
-    coordinates: { lat: Number, lng: Number },
-    instructions: String,
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'confirmed', 'preparing', 'ready-for-pickup', 'picked-up', 'on-the-way', 'delivered', 'cancelled'],
-    default: 'pending',
-  },
-  statusHistory: [{
-    status:    String,
-    timestamp: { type: Date, default: Date.now },
-    note:      String,
-  }],
-  payment: {
-    method: { type: String, enum: ['cash', 'card', 'wallet'], required: true },
-    status: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },
-    transactionId: String,
-    paidAt: Date,
-  },
-  promoCode: { code: String, discount: Number },
-  timing: {
-    ordered:          { type: Date, default: Date.now },
-    confirmed:        Date,
-    preparing:        Date,
-    readyForPickup:   Date,
-    pickedUp:         Date,
-    onTheWay:         Date,
-    delivered:        Date,
-    estimatedDelivery: Date,
-  },
-  rating: {
-    food:     { type: Number, min: 1, max: 5 },
-    delivery: { type: Number, min: 1, max: 5 },
-    overall:  { type: Number, min: 1, max: 5 },
-    review:   String,
-    reviewedAt: Date,
-  },
-  cancellation: {
-    reason: String,
-    cancelledBy: { type: String, enum: ['customer', 'restaurant', 'rider', 'admin'] },
-    cancelledAt: Date,
-  },
-}, { timestamps: true });
+const genOrderNumber = () => {
+  const d = new Date();
+  const r = Math.floor(1000 + Math.random() * 9000);
+  return `FB${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${r}`;
+};
 
-orderSchema.pre('validate', async function () {
-  if (!this.orderNumber) {
-    const date = new Date();
-    const random = Math.floor(1000 + Math.random() * 9000);
-    this.orderNumber = `FB${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${random}`;
-  }
-});
+const fmt = (row) => {
+  if (!row) return null;
+  return {
+    ...row,
+    _id:            row.id,
+    orderNumber:    row.order_number,
+    deliveryAddress:row.delivery_address,
+    statusHistory:  row.status_history || [],
+    customer: row.customer ? { ...row.customer, _id: row.customer.id } : row.customer_id,
+    restaurant: row.restaurant ? { ...row.restaurant, _id: row.restaurant.id } : row.restaurant_id,
+    rider: row.rider ? { ...row.rider, _id: row.rider.id } : row.rider_id,
+  };
+};
 
-module.exports = mongoose.model('Order', orderSchema);
+const JOINS = `
+  *,
+  customer:users!customer_id(id,name,email,phone),
+  restaurant:restaurants(id,name,address,contact,images),
+  rider:users!rider_id(id,name,phone)
+`;
+
+exports.create = async (fields) => {
+  const { deliveryAddress, statusHistory, ...rest } = fields;
+  const { data, error } = await supabase.from('orders').insert({
+    ...rest,
+    order_number:     genOrderNumber(),
+    delivery_address: deliveryAddress || rest.delivery_address,
+    status_history:   statusHistory || rest.status_history || [{ status: 'pending', note: 'Order placed', time: new Date() }],
+  }).select(JOINS).single();
+  if (error) throw new Error(error.message);
+  return fmt(data);
+};
+
+exports.findById = async (id) => {
+  const { data, error } = await supabase.from('orders').select(JOINS).eq('id', id).single();
+  if (error || !data) return null;
+  return fmt(data);
+};
+
+exports.findByUser = async ({ role, userId, restaurantId }) => {
+  let q = supabase.from('orders').select(JOINS);
+  if (role === 'customer')   q = q.eq('customer_id', userId);
+  else if (role === 'rider') q = q.eq('rider_id', userId);
+  else if (restaurantId)     q = q.eq('restaurant_id', restaurantId);
+  const { data, error } = await q.order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data || []).map(fmt);
+};
+
+exports.updateStatus = async (id, status, note) => {
+  const { data: current } = await supabase.from('orders').select('status_history').eq('id', id).single();
+  const history = [...(current?.status_history || []), { status, note, time: new Date() }];
+  const { data, error } = await supabase.from('orders').update({
+    status,
+    status_history: history,
+    updated_at: new Date(),
+  }).eq('id', id).select(JOINS).single();
+  if (error) throw new Error(error.message);
+  return fmt(data);
+};
+
+exports.acceptOrder = async (id, riderId) => {
+  const { data: current } = await supabase.from('orders').select('status_history,rider_id').eq('id', id).single();
+  if (current?.rider_id) throw new Error('Order already taken');
+  const history = [...(current?.status_history || []), { status: 'picked-up', note: 'Rider accepted', time: new Date() }];
+  const { data, error } = await supabase.from('orders').update({
+    rider_id:       riderId,
+    status:         'picked-up',
+    status_history: history,
+    updated_at:     new Date(),
+  }).eq('id', id).select(JOINS).single();
+  if (error) throw new Error(error.message);
+  return fmt(data);
+};
