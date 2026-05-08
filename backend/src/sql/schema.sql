@@ -18,6 +18,7 @@ CREATE TABLE users (
                 CHECK (role IN ('customer','rider','restaurant','admin')),
   phone       VARCHAR(20),
   avatar      TEXT,
+  google_id   VARCHAR(100),
   is_active   BOOLEAN DEFAULT true,
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW()

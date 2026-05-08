@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { Icons, Pressable, BrandButton, FBLogoMark } from '../../components/ui';
@@ -35,13 +36,14 @@ const FOOD_IMGS = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [tab, setTab]       = useState('login');
-  const [role, setRole]     = useState('Customer');
-  const [email, setEmail]   = useState('customer@demo.com');
-  const [password, setPass] = useState('demo123');
-  const [name, setName]     = useState('');
-  const [showPw, setShowPw] = useState(false);
+  const [tab, setTab]         = useState('login');
+  const [role, setRole]       = useState('Customer');
+  const [email, setEmail]     = useState('customer@demo.com');
+  const [password, setPass]   = useState('demo123');
+  const [name, setName]       = useState('');
+  const [showPw, setShowPw]   = useState(false);
   const [loading, setLoading] = useState(false);
+  const [gLoading, setGLoading] = useState(false);
 
   const selectDemo = (r) => {
     setRole(r.label);
@@ -69,6 +71,36 @@ export default function LandingPage() {
     }
   };
 
+  // Google One-Tap / popup login
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGLoading(true);
+      try {
+        // Get user info from Google
+        const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+        const profile = await profileRes.json();
+
+        // Send to our backend
+        const { data } = await api.post('/auth/google-token', {
+          email: profile.email,
+          name:  profile.name,
+          avatar: profile.picture,
+          googleId: profile.sub,
+        });
+        login(data.token, data.user);
+        toast.success(`Welcome, ${data.user.name.split(' ')[0]}!`);
+        navigate(ROLE_ROUTES[data.user.role] || '/home');
+      } catch (err) {
+        toast.error('Google sign-in failed. Try email login.');
+      } finally {
+        setGLoading(false);
+      }
+    },
+    onError: () => toast.error('Google sign-in was cancelled'),
+  });
+
   const stagger = {
     hidden: {},
     show: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
@@ -95,7 +127,7 @@ export default function LandingPage() {
         position: 'fixed', inset: 0,
         backdropFilter: 'blur(28px) saturate(140%)',
         WebkitBackdropFilter: 'blur(28px) saturate(140%)',
-        background: 'linear-gradient(180deg, rgba(15,10,10,0.55), rgba(20,10,10,0.78))',
+        background: 'linear-gradient(180deg, rgba(15,10,10,0.55), rgba(20,10,10,0.82))',
       }}/>
 
       <motion.div variants={stagger} initial="hidden" animate="show"
@@ -127,6 +159,38 @@ export default function LandingPage() {
         <motion.p variants={item} style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, margin: '0 0 22px' }}>
           Sign in or create an account in seconds.
         </motion.p>
+
+        {/* Google button */}
+        <motion.div variants={item} style={{ marginBottom: 16 }}>
+          <Pressable
+            onClick={() => googleLogin()}
+            disabled={gLoading}
+            style={{
+              width: '100%', height: 52, borderRadius: 16,
+              background: '#fff', color: '#111',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+              fontSize: 15, fontWeight: 700,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+              opacity: gLoading ? 0.7 : 1,
+            }}
+          >
+            {gLoading ? (
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+                <Icons.Settings size={18} stroke="#666" />
+              </motion.div>
+            ) : (
+              <Icons.Google size={20} />
+            )}
+            {gLoading ? 'Signing in with Google…' : 'Continue with Google'}
+          </Pressable>
+        </motion.div>
+
+        {/* divider */}
+        <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.15)' }}/>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>or sign in with email</span>
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.15)' }}/>
+        </motion.div>
 
         {/* tab switcher */}
         <motion.div variants={item} style={{
@@ -199,7 +263,7 @@ export default function LandingPage() {
         <motion.div variants={item} style={{
           textAlign: 'center', marginTop: 12, fontSize: 11.5, color: 'rgba(255,255,255,0.55)',
         }}>
-          Secure payment · Free cancellation
+          Google sign-in creates a customer account · Demo accounts for all roles
         </motion.div>
       </motion.div>
     </div>

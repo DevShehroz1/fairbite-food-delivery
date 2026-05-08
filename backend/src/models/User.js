@@ -29,6 +29,19 @@ exports.create = async ({ name, email, password, role, phone }) => {
   return fmt(data);
 };
 
+exports.createGoogleUser = async ({ name, email, avatar, googleId, role }) => {
+  const { data, error } = await supabase.from('users').insert({
+    name,
+    email: email.toLowerCase(),
+    password: `google_${googleId}`, // placeholder — can never be used to log in via email
+    role: role || 'customer',
+    avatar: avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=E53935&color=fff&bold=true`,
+    google_id: googleId,
+  }).select().single();
+  if (error) throw new Error(error.message);
+  return fmt(data);
+};
+
 exports.update = async (id, fields) => {
   const { data, error } = await supabase.from('users').update({ ...fields, updated_at: new Date() }).eq('id', id).select().single();
   if (error) throw new Error(error.message);
