@@ -8,35 +8,50 @@ const PORT = process.env.PORT || 5001;
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  cors: { origin: '*', methods: ['GET', 'POST'] },
+  cors: { origin: '*', methods: ['GET', 'POST', 'PUT'] },
   transports: ['websocket', 'polling'],
 });
 
-// Make io available to controllers via req.app.get('io')
+// Track online riders: userId -> socketId (for auto-assignment)
+const onlineRiders = new Map();
 app.set('io', io);
+app.set('onlineRiders', onlineRiders);
 
 io.on('connection', (socket) => {
-  console.log(`Socket connected: ${socket.id}`);
-
-  // Rider joins their own room to receive order notifications
-  socket.on('join_rider', () => {
+  // Rider comes online — joins personal room + global riders pool
+  socket.on('join_rider', ({ userId } = {}) => {
     socket.join('riders');
-    console.log(`Rider joined: ${socket.id}`);
+    if (userId) {
+      socket.join(`rider_${userId}`);
+      onlineRiders.set(userId, socket.id);
+      socket.data.userId = userId;
+      socket.data.role = 'rider';
+    }
   });
 
-  // Customer joins order-specific room to receive live updates
+  // Restaurant comes online — joins restaurant-specific room
+  socket.on('join_restaurant', ({ restaurantId } = {}) => {
+    if (restaurantId) {
+      socket.join(`restaurant_${restaurantId}`);
+      socket.data.restaurantId = restaurantId;
+      socket.data.role = 'restaurant';
+    }
+  });
+
+  // Customer tracks a specific order
   socket.on('join_order', (orderId) => {
     socket.join(`order_${orderId}`);
-    console.log(`Customer watching order: ${orderId}`);
   });
 
-  // Rider broadcasts their GPS location
+  // Rider broadcasts GPS location to customer
   socket.on('rider_location', ({ orderId, lat, lng }) => {
     io.to(`order_${orderId}`).emit('rider_location', { lat, lng });
   });
 
   socket.on('disconnect', () => {
-    console.log(`Socket disconnected: ${socket.id}`);
+    if (socket.data.role === 'rider' && socket.data.userId) {
+      onlineRiders.delete(socket.data.userId);
+    }
   });
 });
 

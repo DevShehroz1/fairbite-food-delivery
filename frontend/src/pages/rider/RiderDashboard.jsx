@@ -26,10 +26,28 @@ export default function RiderDashboard() {
     fetchOrders();
     setLoading(false);
     const poll = setInterval(fetchOrders, 5000);
-    socket.emit('join_rider');
+
+    // Join with userId so backend can route auto-assignments to this rider
+    socket.emit('join_rider', { userId: user?.id });
+
     socket.on('new_order', fetchOrders);
-    return () => { clearInterval(poll); socket.off('new_order', fetchOrders); };
-  }, []);
+
+    // Auto-assigned by backend when restaurant marks order ready
+    socket.on('order_assigned', (order) => {
+      setActiveOrder(order);
+      setOrders(prev => prev.filter(o => o.id !== order.id));
+      toast(`Order assigned to you! 🛵 #${order.orderNumber}`, {
+        icon: '🎯',
+        style: { background: '#fff', color: '#111', fontWeight: 700 },
+      });
+    });
+
+    return () => {
+      clearInterval(poll);
+      socket.off('new_order', fetchOrders);
+      socket.off('order_assigned');
+    };
+  }, [user?.id]);
 
   const acceptOrder = async (orderId) => {
     try {

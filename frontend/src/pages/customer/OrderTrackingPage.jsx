@@ -43,9 +43,10 @@ export default function OrderTrackingPage() {
   // Socket.io real-time updates
   useEffect(() => {
     socket.emit('join_order', id);
-    socket.on(`order_${id}_status`, ({ status }) => {
+    socket.on(`order_${id}_status`, ({ status, rider }) => {
       const idx = STATUS_STEPS.findIndex(s => s.key === status);
       if (idx >= 0) setStep(idx);
+      if (rider) setOrder(prev => prev ? { ...prev, rider } : prev);
     });
     return () => { socket.off(`order_${id}_status`); };
   }, [id]);

@@ -76,6 +76,31 @@ exports.findAvailable = async () => {
   return (data || []).map(fmt);
 };
 
+exports.findAvailableRider = async (onlineRiderIds = []) => {
+  // Riders currently on an active delivery
+  const { data: busy } = await supabase
+    .from('orders')
+    .select('rider_id')
+    .in('status', ['picked-up', 'on-the-way'])
+    .not('rider_id', 'is', null);
+
+  const busyIds = new Set((busy || []).map(o => o.rider_id));
+
+  // Prefer online riders first, then any non-busy rider
+  const candidates = onlineRiderIds.filter(id => !busyIds.has(id));
+  if (candidates.length > 0) return candidates[0];
+
+  // Fallback: pick any rider from DB not currently busy
+  const { data: allRiders } = await supabase
+    .from('users')
+    .select('id')
+    .eq('role', 'rider')
+    .eq('is_active', true);
+
+  const fallback = (allRiders || []).find(r => !busyIds.has(r.id));
+  return fallback?.id || null;
+};
+
 exports.acceptOrder = async (id, riderId) => {
   const { data: current } = await supabase.from('orders').select('status_history,rider_id').eq('id', id).single();
   if (current?.rider_id) throw new Error('Order already taken');

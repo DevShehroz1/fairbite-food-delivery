@@ -7,16 +7,42 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+html {
+  /* Prevent pinch-zoom on mobile */
+  touch-action: manipulation;
+}
+
 html, body {
   margin: 0;
   padding: 0;
   min-height: 100%;
   font-family: 'Inter', -apple-system, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background: #fff;
+  background: #E5E5E5;
+  /* No pull-to-refresh on mobile */
+  overscroll-behavior-y: none;
+}
+
+/* Mobile-first: center the app on desktop like a phone */
+#root {
+  max-width: 430px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: #F5F5F5;
+  position: relative;
+  overflow-x: hidden;
+  /* Subtle desktop shadow to look like a phone frame */
+  box-shadow: 0 0 60px rgba(0,0,0,0.18);
 }
 
 button { font-family: inherit; }
+
+/* Hide scrollbars globally but keep scrolling */
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar { display: none; }
 
 .fb-no-scrollbar::-webkit-scrollbar { display: none; }
 .fb-no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -24,4 +50,11 @@ button { font-family: inherit; }
 @keyframes fb-shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* Status bar area safe zone on iOS */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .fb-safe-top {
+    padding-top: calc(52px + env(safe-area-inset-top));
+  }
 }
