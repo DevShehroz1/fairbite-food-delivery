@@ -13,8 +13,13 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+const ALLOWED_ORIGINS = [
+  process.env.CLIENT_URL,
+  'http://localhost:3000',
+].filter(Boolean);
+
 app.use(cors({
-  origin: true,
+  origin: (origin, cb) => cb(null, !origin || ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.some(o => o === '*')),
   credentials: true,
 }));
 

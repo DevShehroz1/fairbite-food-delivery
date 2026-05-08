@@ -1,591 +1,351 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, Card, CardContent, Avatar, Chip, Divider, Button, LinearProgress } from '@mui/material';
-import { CheckCircle, Phone, Star } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'react-toastify';
-import { runDemoOrder, DEMO_RIDER_INFO, isDemoMode } from '../../services/demoService';
-import socket from '../../services/socket';
 import api from '../../services/api';
+import socket from '../../services/socket';
+import { Icons, PKR, Pressable, SmartImg, Stars, BrandButton } from '../../components/ui';
 
-// ─── Order stages ─────────────────────────────────────────────────────────────
-const STAGES = [
-  { key: 'pending',           label: 'Order Placed',      icon: '🧾' },
-  { key: 'confirmed',         label: 'Confirmed',         icon: '✅' },
-  { key: 'preparing',         label: 'Preparing',         icon: '👨‍🍳' },
-  { key: 'ready-for-pickup',  label: 'Ready for Pickup',  icon: '📦' },
-  { key: 'picked-up',         label: 'Rider at Restaurant', icon: '🏍️' },
-  { key: 'on-the-way',        label: 'On The Way',        icon: '🚀' },
-  { key: 'delivered',         label: 'Delivered',         icon: '🎉' },
+const STATUS_STEPS = [
+  { key: 'pending',    label: 'Order Placed',  sub: 'We received your order' },
+  { key: 'confirmed',  label: 'Confirmed',     sub: 'Restaurant accepted' },
+  { key: 'preparing',  label: 'Preparing',     sub: 'Chefs are on it' },
+  { key: 'ready',      label: 'Ready',         sub: 'Awaiting pickup' },
+  { key: 'picked-up',  label: 'Picked Up',     sub: 'Rider has your food' },
+  { key: 'on-the-way', label: 'On The Way',    sub: '1.2 km away' },
+  { key: 'delivered',  label: 'Delivered',     sub: 'Enjoy your meal!' },
 ];
 
-const STATUS_COLORS = {
-  pending:           '#9E9E9E',
-  confirmed:         '#FF7043',
-  preparing:         '#FF9800',
-  'ready-for-pickup':'#2196F3',
-  'picked-up':       '#9C27B0',
-  'on-the-way':      '#E53935',
-  delivered:         '#2E7D32',
-};
+const ROUTE_PATH = "M50,360 C90,320 130,300 165,280 S220,240 250,200 S290,140 340,120";
 
-// ─── SVG City Map ─────────────────────────────────────────────────────────────
-// Route: Restaurant(10,20) → (42,20) → (42,52) → (67,52) → (67,70) → Dest(84,70)
-const ROUTE = [[10,20],[42,20],[42,52],[67,52],[67,70],[84,70]];
-
-// Cumulative segment distances for rider position along path
-const SEG_LENS = ROUTE.slice(1).map(([x,y],i) => {
-  const [px,py] = ROUTE[i];
-  return Math.sqrt((x-px)**2 + (y-py)**2);
-});
-const TOTAL_LEN = SEG_LENS.reduce((a,b)=>a+b,0);
-const CUM_LENS  = SEG_LENS.reduce((acc,d)=>[...acc, (acc[acc.length-1]||0)+d],[]).slice(1);
-
-const getRiderPos = (t) => {
-  const dist = Math.min(t,1) * TOTAL_LEN;
-  for (let i=0; i<CUM_LENS.length; i++) {
-    const prevD = i===0 ? 0 : CUM_LENS[i-1];
-    if (dist <= CUM_LENS[i]) {
-      const segT = (dist - prevD) / SEG_LENS[i];
-      const [x1,y1] = ROUTE[i];
-      const [x2,y2] = ROUTE[i+1];
-      return { x: x1+(x2-x1)*segT, y: y1+(y2-y1)*segT };
-    }
-  }
-  return { x: ROUTE[ROUTE.length-1][0], y: ROUTE[ROUTE.length-1][1] };
-};
-
-const LiveMap = ({ progress, status }) => {
-  const atRestaurant = status === 'picked-up';
-  const isMoving     = status === 'on-the-way';
-  const delivered    = status === 'delivered';
-  const riderVisible = ['picked-up','on-the-way','delivered'].includes(status);
-
-  const riderPos = riderVisible
-    ? (atRestaurant ? { x: ROUTE[0][0], y: ROUTE[0][1] } : getRiderPos(progress))
-    : null;
-
-  const routePts = ROUTE.map(([x,y])=>`${x},${y}`).join(' ');
-
-  return (
-    <Box sx={{ position:'relative', width:'100%', height: 300, overflow:'hidden', bgcolor:'#F2EFE9' }}>
-      <svg
-        viewBox="0 0 100 80"
-        preserveAspectRatio="none"
-        style={{ position:'absolute', inset:0, width:'100%', height:'100%' }}
-      >
-        {/* Background */}
-        <rect x="0" y="0" width="100" height="80" fill="#F2EFE9"/>
-
-        {/* Parks */}
-        <rect x="0"  y="26" width="8"  height="20" fill="#C8DFB0" rx="1"/>
-        <rect x="44" y="0"  width="17" height="13" fill="#C8DFB0" rx="1"/>
-        <rect x="70" y="55" width="12" height="12" fill="#C8DFB0" rx="1"/>
-        <rect x="87" y="30" width="13" height="18" fill="#C8DFB0" rx="1"/>
-
-        {/* Park trees (circles) */}
-        {[[3,31],[5,38],[49,5],[54,9],[60,5],[74,59],[79,63],[91,34],[95,42]].map(([x,y],i)=>(
-          <circle key={i} cx={x} cy={y} r="1.5" fill="#8BC34A" opacity="0.7"/>
-        ))}
-
-        {/* Main horizontal roads */}
-        <rect x="0" y="16.5" width="100" height="7"  fill="white"   opacity="0.95"/>
-        <rect x="0" y="48.5" width="100" height="5.5" fill="#EAE7E0" opacity="0.9"/>
-        <rect x="0" y="66.5" width="100" height="5.5" fill="#EAE7E0" opacity="0.9"/>
-        <rect x="0" y="35"   width="100" height="3.5" fill="#EAE7E0" opacity="0.75"/>
-
-        {/* Main vertical roads */}
-        <rect x="7.5"  y="0" width="5.5" height="80" fill="white"   opacity="0.95"/>
-        <rect x="39.5" y="0" width="5.5" height="80" fill="white"   opacity="0.95"/>
-        <rect x="64.5" y="0" width="5"   height="80" fill="#EAE7E0" opacity="0.9"/>
-        <rect x="82"   y="0" width="4"   height="80" fill="#EAE7E0" opacity="0.9"/>
-        <rect x="23"   y="0" width="3.5" height="80" fill="#EAE7E0" opacity="0.8"/>
-        <rect x="53"   y="0" width="3.5" height="80" fill="#EAE7E0" opacity="0.8"/>
-
-        {/* Road centre dashes */}
-        <line x1="0" y1="20" x2="100" y2="20" stroke="white" strokeWidth="0.6" strokeDasharray="4,3" opacity="0.7"/>
-        <line x1="10" y1="0" x2="10"  y2="80" stroke="white" strokeWidth="0.6" strokeDasharray="4,3" opacity="0.7"/>
-        <line x1="42" y1="0" x2="42"  y2="80" stroke="white" strokeWidth="0.6" strokeDasharray="4,3" opacity="0.7"/>
-
-        {/* City blocks (buildings) */}
-        {[
-          [13,0,8,15],[22.5,0,15.5,15],[27.5,20,10,13],[38,20,0.5,13],
-          [13,23,9,10],[13,37,9,10],[27.5,37,10,10],[27.5,24,5,10],
-          [13,55,9,10],[27.5,55,10,10],[45,0,7,15],[57.5,0,6,15],
-          [45,24,7,10],[57.5,24,6,10],[45,37,7,10],[57.5,37,6,10],
-          [45,55,7,10],[57.5,55,6,10],[70,0,10,15],[81,14,0.5,20],
-          [70,24,10,9],[70,37,10,10],[87,14,13,8],[87,24,13,10],
-          [70,55,0.5,9],[87,50,13,15],[87,67,13,11],
-        ].map(([x,y,w,h],i)=>(
-          <rect key={i} x={x} y={y} width={w} height={h} fill="#E4E0D8" rx="0.8" opacity="0.8"/>
-        ))}
-
-        {/* Street labels */}
-        {[
-          { x:20, y:19.5, text:'Burns Road', anchor:'middle' },
-          { x:70, y:51.5, text:'Clifton Blvd', anchor:'middle' },
-          { x:10.2, y:45,  text:'Main St', anchor:'start', rotate:-90, rx:10, ry:45 },
-          { x:42.2, y:45,  text:'Park Ave', anchor:'start', rotate:-90, rx:42, ry:45 },
-        ].map((l,i)=>(
-          <text key={i} x={l.x} y={l.y} fontSize="2.2" fill="#9E9E9E" textAnchor={l.anchor}
-            transform={l.rotate ? `rotate(${l.rotate},${l.rx},${l.ry})` : undefined}>
-            {l.text}
-          </text>
-        ))}
-
-        {/* Dashed grey route (full path — always visible) */}
-        <polyline
-          points={routePts}
-          fill="none" stroke="#BDBDBD" strokeWidth="1.8"
-          strokeLinecap="round" strokeLinejoin="round"
-          strokeDasharray="3,2"
-        />
-
-        {/* Animated red route highlight */}
-        {(isMoving || delivered) && (
-          <motion.polyline
-            points={routePts}
-            fill="none"
-            stroke="#E53935"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: Math.min(progress, 1) }}
-            transition={{ duration: 0.6, ease: 'linear' }}
-          />
-        )}
-
-        {/* Restaurant pin */}
-        <g transform={`translate(${ROUTE[0][0]}, ${ROUTE[0][1]})`}>
-          <circle r="4.5" fill="#E53935" opacity="0.15"/>
-          <circle r="3"   fill="#E53935"/>
-          <text x="0" y="1" fontSize="2.8" textAnchor="middle" dominantBaseline="middle">🍽️</text>
-        </g>
-        <rect x={ROUTE[0][0]-6.5} y={ROUTE[0][1]+4} width="13" height="4.5" fill="white" rx="2.2" opacity="0.95"/>
-        <text x={ROUTE[0][0]} y={ROUTE[0][1]+6.8} fontSize="2.2" fill="#E53935" textAnchor="middle" fontWeight="bold">Restaurant</text>
-
-        {/* Destination pin */}
-        <g transform={`translate(${ROUTE[ROUTE.length-1][0]}, ${ROUTE[ROUTE.length-1][1]})`}>
-          <circle r="4.5" fill={delivered ? '#2E7D32' : '#1976D2'} opacity="0.15"/>
-          <circle r="3"   fill={delivered ? '#2E7D32' : '#1976D2'}/>
-          <text x="0" y="1" fontSize="2.8" textAnchor="middle" dominantBaseline="middle">🏠</text>
-        </g>
-        <rect x={ROUTE[ROUTE.length-1][0]-5.5} y={ROUTE[ROUTE.length-1][1]+4} width="11" height="4.5" fill="white" rx="2.2" opacity="0.95"/>
-        <text x={ROUTE[ROUTE.length-1][0]} y={ROUTE[ROUTE.length-1][1]+6.8} fontSize="2.2"
-          fill={delivered ? '#2E7D32' : '#1976D2'} textAnchor="middle" fontWeight="bold">Your Home</text>
-
-        {/* Rider bubble */}
-        {riderVisible && riderPos && (
-          <motion.g
-            animate={{ x: riderPos.x, y: riderPos.y }}
-            transition={{ duration: 0.55, ease: 'linear' }}
-          >
-            {/* Pulse ring when waiting */}
-            {atRestaurant && (
-              <motion.circle
-                r="6" fill="none" stroke="#9C27B0" strokeWidth="1"
-                animate={{ r: [5, 9], opacity: [0.8, 0] }}
-                transition={{ duration: 1.4, repeat: Infinity }}
-              />
-            )}
-            <circle r="4.5" fill="white" stroke={atRestaurant ? '#9C27B0' : '#E53935'} strokeWidth="1.5"/>
-            <text x="0" y="1" fontSize="4" textAnchor="middle" dominantBaseline="middle">
-              {delivered ? '✅' : '🏍️'}
-            </text>
-          </motion.g>
-        )}
-      </svg>
-
-      {/* ETA chip */}
-      {isMoving && !delivered && (
-        <Chip
-          label={`ETA ~${Math.max(1, Math.round((1 - progress) * 12))} min`}
-          sx={{ position:'absolute', top:12, right:12, bgcolor:'white', fontWeight:700, boxShadow:'0 2px 10px rgba(0,0,0,0.15)', fontSize:12 }}
-        />
-      )}
-
-      {/* LIVE / WAITING badge */}
-      {riderVisible && (
-        <Chip
-          label={atRestaurant ? '🟣 WAITING' : isMoving ? '🔴 LIVE' : '✅ DONE'}
-          size="small"
-          sx={{
-            position:'absolute', bottom:12, left:12,
-            bgcolor: atRestaurant ? '#9C27B0' : isMoving ? '#E53935' : '#2E7D32',
-            color:'white', fontWeight:700, fontSize:11,
-            boxShadow:'0 2px 10px rgba(0,0,0,0.2)',
-          }}
-        />
-      )}
-
-      {/* Distance label */}
-      <Box sx={{ position:'absolute', bottom:12, right:12, bgcolor:'rgba(255,255,255,0.9)', px:1.5, py:0.5, borderRadius:2, boxShadow:1 }}>
-        <Typography variant="caption" fontWeight={700} color="text.secondary">2.4 km</Typography>
-      </Box>
-    </Box>
-  );
-};
-
-// ─── Beautiful floating notification ─────────────────────────────────────────
-const showToast = (msg, type = 'info') => {
-  const colors = { success:'#2E7D32', error:'#C62828', info:'#1565C0', primary:'#E53935' };
-  toast(msg, {
-    position: 'bottom-center',
-    autoClose: 3500,
-    hideProgressBar: false,
-    style: {
-      borderRadius: 16,
-      background: colors[type] || '#1A1A1A',
-      color: 'white',
-      fontWeight: 600,
-      fontSize: 14,
-      boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
-      padding: '14px 20px',
-    },
-  });
-};
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-const OrderTrackingPage = () => {
+export default function OrderTrackingPage() {
   const { id }    = useParams();
   const navigate  = useNavigate();
-  const [status, setStatus]               = useState('pending');
-  const [riderProgress, setRiderProgress] = useState(0);
-  const [order, setOrder]                 = useState(null);
-  const cancelDemoRef                     = useRef(null);
-  const prevStatusRef                     = useRef('pending');
+  const pathRef   = useRef(null);
 
-  const stageIdx    = STAGES.findIndex(s => s.key === status);
-  const delivered   = status === 'delivered';
-  const riderVisible = ['picked-up','on-the-way','delivered'].includes(status);
-  const waiting     = status === 'picked-up';
-  const activeColor = STATUS_COLORS[status] || '#E53935';
-  const currentStage = STAGES[stageIdx] || STAGES[0];
-
-  // Fire important toasts only on key status changes
-  useEffect(() => {
-    if (prevStatusRef.current === status) return;
-    const prev = prevStatusRef.current;
-    prevStatusRef.current = status;
-
-    if (status === 'confirmed')        showToast('✅ Restaurant confirmed your order!', 'success');
-    if (status === 'picked-up')        showToast('🏍️ Rider Ali arrived at the restaurant!', 'primary');
-    if (status === 'on-the-way')       showToast('🚀 Ali is on his way to you!', 'primary');
-    if (status === 'delivered')        showToast('🎉 Delivered! Enjoy your meal!', 'success');
-    void prev;
-  }, [status]);
-
-  // Only advance status — never go backwards (demo + real socket coexist safely)
-  const advanceStatus = (newStatus) => {
-    setStatus(prev => {
-      const prevIdx = STAGES.findIndex(s => s.key === prev);
-      const newIdx  = STAGES.findIndex(s => s.key === newStatus);
-      return newIdx > prevIdx ? newStatus : prev;
-    });
-  };
+  const [order, setOrder]   = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [step, setStep]     = useState(0);
+  const [eta, setEta]       = useState(28 * 60);
+  const [riderPos, setRiderPos] = useState({ x: 50, y: 360 });
 
   useEffect(() => {
     api.get(`/orders/${id}`)
       .then(r => {
-        setOrder(r.data.data);
-        // Only set status from API if it hasn't been advanced already by demo
-        setStatus(prev => {
-          const apiIdx  = STAGES.findIndex(s => s.key === r.data.data.status);
-          const prevIdx = STAGES.findIndex(s => s.key === prev);
-          return apiIdx > prevIdx ? r.data.data.status : prev;
-        });
+        const o = r.data.data;
+        setOrder(o);
+        const idx = STATUS_STEPS.findIndex(s => s.key === o.status);
+        setStep(Math.max(0, idx));
       })
-      .catch(() => setOrder({
-        orderNumber: 'FB202604DEMO',
-        pricing: { subtotal: 1450, deliveryFee: 50, platformFee: 218, total: 1718 },
-      }));
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [id]);
 
+  // Socket.io real-time updates
+  useEffect(() => {
     socket.emit('join_order', id);
-    socket.on(`order_${id}_status`, ({ status: s }) => advanceStatus(s));
-    socket.on('rider_location', ({ lat, lng, delivered: done }) => {
-      if (done) { advanceStatus('delivered'); setRiderProgress(1); return; }
-      setRiderProgress(p => Math.min(p + 0.035, 1));
+    socket.on(`order_${id}_status`, ({ status }) => {
+      const idx = STATUS_STEPS.findIndex(s => s.key === status);
+      if (idx >= 0) setStep(idx);
     });
+    return () => { socket.off(`order_${id}_status`); };
+  }, [id]);
 
-    // Demo mode: auto-progress through all stages on a timer (class presentation)
-    if (isDemoMode()) {
-      cancelDemoRef.current = runDemoOrder({
-        onStatusChange: (s) => advanceStatus(s),
-        onRiderLocationChange: () => setRiderProgress(p => Math.min(p + 0.028, 1)),
-        restaurantCoords: { lat: 24.8607, lng: 67.0011 },
-        deliveryCoords:   { lat: 24.8900, lng: 67.0200 },
-      });
-    } else {
-      // Real mode: poll order status every 5s so rider/restaurant updates show up
-      const pollStatus = async () => {
-        try {
-          const r = await api.get(`/orders/${id}`);
-          advanceStatus(r.data.data.status);
-        } catch {}
-      };
-      const pollInterval = setInterval(pollStatus, 5000);
-      const origCancel = cancelDemoRef.current;
-      cancelDemoRef.current = () => { clearInterval(pollInterval); origCancel?.(); };
-    }
+  // ETA countdown
+  useEffect(() => {
+    const t = setInterval(() => setEta(e => Math.max(0, e - 1)), 1000);
+    return () => clearInterval(t);
+  }, []);
 
-    return () => {
-      cancelDemoRef.current?.();
-      socket.off(`order_${id}_status`);
-      socket.off('rider_location');
-    };
-  }, [id]); // eslint-disable-line
+  // Demo: auto-advance step every 9s
+  useEffect(() => {
+    if (step >= STATUS_STEPS.length - 1) return;
+    const t = setTimeout(() => setStep(s => Math.min(STATUS_STEPS.length - 1, s + 1)), 9000);
+    return () => clearTimeout(t);
+  }, [step]);
+
+  // Rider dot position along path
+  useEffect(() => {
+    const el = pathRef.current;
+    if (!el) return;
+    try {
+      const total = el.getTotalLength();
+      const progress = Math.min(1, step / (STATUS_STEPS.length - 1));
+      const pt = el.getPointAtLength(progress * total);
+      setRiderPos({ x: pt.x, y: pt.y });
+    } catch (_) {}
+  }, [step]);
+
+  const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const progress = Math.min(1, step / (STATUS_STEPS.length - 1));
+
+  if (loading) return (
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+        <Icons.Bike size={36} stroke="var(--fb-primary)"/>
+      </motion.div>
+    </div>
+  );
+
+  const currentStep = STATUS_STEPS[step];
+  const rider = order?.rider;
 
   return (
-    <Box sx={{ minHeight:'100vh', bgcolor:'#F7F3F0' }}>
+    <div style={{ height: '100vh', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* map — top 60% */}
+      <div style={{ position: 'relative', flex: '0 0 60%', overflow: 'hidden' }}>
+        <CityMap progress={progress} pathRef={pathRef} riderPos={riderPos}/>
 
-      {/* ── Map ── */}
-      <LiveMap progress={riderProgress} status={status} />
+        {/* back btn */}
+        <Pressable onClick={() => navigate(-1)} style={{
+          position: 'absolute', top: 52, left: 16, zIndex: 5,
+          width: 40, height: 40, borderRadius: 999, background: 'rgba(255,255,255,0.96)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+        }}><Icons.ChevronL size={20} stroke="#111" sw={2.5}/></Pressable>
 
-      {/* ── Status pill — overlaps map bottom ── */}
-      <Box sx={{ maxWidth:640, mx:'auto', px:2 }}>
-        <motion.div
-          key={status}
-          initial={{ y: -18, opacity:0, scale:0.97 }}
-          animate={{ y: 0,   opacity:1, scale:1    }}
-          transition={{ type:'spring', stiffness:300, damping:24 }}
-        >
-          <Box sx={{
-            mt: -2.5, borderRadius: 4,
-            background: `linear-gradient(135deg, ${activeColor} 0%, ${activeColor}DD 100%)`,
-            color: 'white', px: 3, py: 2,
-            boxShadow: `0 8px 32px ${activeColor}55`,
-            display:'flex', alignItems:'center', gap:2,
-            zIndex: 20, position:'relative',
-          }}>
-            <Typography sx={{ fontSize:40, lineHeight:1, filter:'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>
-              {currentStage.icon}
-            </Typography>
-            <Box sx={{ flex:1 }}>
-              <Typography variant="h6" fontWeight={800} lineHeight={1.2} letterSpacing={-0.3}>
-                {currentStage.label}
-              </Typography>
-              <Typography variant="body2" sx={{ opacity:0.88, mt:0.3 }}>
-                {status === 'picked-up'
-                  ? 'Rider is at restaurant waiting for your food to be packed'
-                  : status === 'on-the-way'
-                  ? 'Your rider collected the food and is heading your way!'
-                  : STAGES.find(s=>s.key===status)
-                    ? `Step ${stageIdx+1} of ${STAGES.length}`
-                    : ''}
-              </Typography>
-            </Box>
-            {order && (
-              <Chip
-                label={`#${order.orderNumber || 'DEMO'}`}
-                size="small"
-                sx={{ bgcolor:'rgba(255,255,255,0.22)', color:'white', fontWeight:700, fontSize:11 }}
-              />
+        {/* ETA pill */}
+        <div style={{
+          position: 'absolute', top: 52, right: 16, zIndex: 5,
+          padding: '8px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.96)',
+          backdropFilter: 'blur(10px)', boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+          display: 'flex', alignItems: 'center', gap: 6,
+        }}>
+          <motion.div animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.4, repeat: Infinity }}
+            style={{ width: 8, height: 8, borderRadius: 999, background: '#10b981' }}/>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>
+            Arriving in <span style={{ color: 'var(--fb-primary)' }}>{fmt(eta)}</span>
+          </span>
+        </div>
+
+        {/* distance pill */}
+        <div style={{
+          position: 'absolute', top: 106, right: 16, zIndex: 5,
+          padding: '6px 10px', borderRadius: 12, background: 'rgba(17,17,17,0.85)',
+          backdropFilter: 'blur(8px)', color: '#fff',
+          fontSize: 11, fontWeight: 700,
+          display: 'flex', alignItems: 'center', gap: 5,
+        }}>
+          <Icons.Bike size={12} stroke="var(--fb-accent)" sw={2.5}/>
+          1.2 km away
+        </div>
+
+        {/* social proof */}
+        <div style={{
+          position: 'absolute', bottom: 14, left: 16, zIndex: 5,
+          padding: '6px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.96)',
+          backdropFilter: 'blur(8px)',
+          fontSize: 11, fontWeight: 600, color: '#374151',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        }}>
+          12 people ordering from here now
+        </div>
+      </div>
+
+      {/* status panel — bottom 40% */}
+      <div style={{
+        flex: 1, background: '#fff', overflow: 'auto',
+        borderTopLeftRadius: 28, borderTopRightRadius: 28,
+        marginTop: -28, position: 'relative', zIndex: 4,
+        boxShadow: '0 -10px 30px rgba(0,0,0,0.08)',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 6px' }}>
+          <div style={{ width: 40, height: 4, borderRadius: 999, background: '#E5E5E5' }}/>
+        </div>
+
+        <div style={{ padding: '6px 18px 18px' }}>
+          <div>
+            <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>
+              Order #{order?.orderNumber || '—'}
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#111', letterSpacing: -0.3, marginTop: 2 }}>
+              {currentStep.label}
+            </div>
+            <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>{currentStep.sub}</div>
+          </div>
+
+          {/* rider card (shows after pickup) */}
+          <AnimatePresence>
+            {step >= 4 && (
+              <motion.div
+                initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+                style={{
+                  marginTop: 14, padding: 12, borderRadius: 16,
+                  background: 'linear-gradient(135deg, #111 0%, #1f1f1f 100%)',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                }}>
+                {rider?.avatar
+                  ? <SmartImg src={rider.avatar} style={{ width: 48, height: 48, flexShrink: 0 }} radius={999}/>
+                  : <div style={{ width: 48, height: 48, borderRadius: 999, background: '#333',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Icons.User size={24} stroke="#fff"/>
+                    </div>
+                }
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>
+                    {rider?.name || 'Your Rider'}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 1 }}>
+                    Honda CD 70 · On the way
+                  </div>
+                </div>
+                <Pressable style={{
+                  width: 40, height: 40, borderRadius: 999, background: '#10b981',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#fff', boxShadow: '0 4px 12px rgba(16,185,129,0.4)',
+                }}><Icons.Phone size={16}/></Pressable>
+              </motion.div>
             )}
-          </Box>
-        </motion.div>
+          </AnimatePresence>
 
-        {/* ── Rider info card ── */}
-        <AnimatePresence>
-          {riderVisible && (
-            <motion.div
-              initial={{ opacity:0, y:20, scale:0.95 }}
-              animate={{ opacity:1, y:0,  scale:1    }}
-              exit={{    opacity:0, y:10, scale:0.97 }}
-              transition={{ type:'spring', stiffness:260, damping:22, delay:0.1 }}
-            >
-              <Card sx={{ mt:2, overflow:'visible' }}>
-                <CardContent sx={{ pb:'16px !important' }}>
-                  <Typography variant="overline" color="text.secondary" fontWeight={700} letterSpacing={1.5} fontSize={10}>
-                    YOUR RIDER
-                  </Typography>
-                  <Box sx={{ display:'flex', alignItems:'center', gap:2, mt:1 }}>
-                    <Box sx={{ position:'relative' }}>
-                      <Avatar
-                        src={DEMO_RIDER_INFO.avatar}
-                        sx={{ width:60, height:60, border:'3px solid #E53935', boxShadow:'0 4px 16px rgba(229,57,53,0.3)' }}
-                      />
-                      {/* Online dot */}
-                      <Box sx={{ position:'absolute', bottom:2, right:2, width:12, height:12, borderRadius:'50%', bgcolor:'#4CAF50', border:'2px solid white' }}/>
-                    </Box>
-                    <Box sx={{ flex:1 }}>
-                      <Typography variant="subtitle1" fontWeight={700}>{DEMO_RIDER_INFO.name}</Typography>
-                      <Typography variant="caption" color="text.secondary" display="block">{DEMO_RIDER_INFO.vehicle}</Typography>
-                      <Box sx={{ display:'flex', gap:0.75, mt:0.75, flexWrap:'wrap' }}>
-                        <Chip
-                          icon={<Star sx={{ fontSize:'12px !important', color:'#FF9800 !important' }}/>}
-                          label={DEMO_RIDER_INFO.rating}
-                          size="small"
-                          sx={{ bgcolor:'#FFF8E1', color:'#E65100', fontWeight:700, fontSize:11, height:22 }}
-                        />
-                        <Chip
-                          label={`${DEMO_RIDER_INFO.totalDeliveries.toLocaleString()} rides`}
-                          size="small"
-                          sx={{ bgcolor:'#F5F5F5', fontWeight:600, fontSize:11, height:22 }}
-                        />
-                        {waiting && (
-                          <Chip
-                            label="⏳ At Restaurant"
-                            size="small"
-                            sx={{ bgcolor:'#F3E5F5', color:'#7B1FA2', fontWeight:700, fontSize:11, height:22 }}
-                          />
-                        )}
-                      </Box>
-                    </Box>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<Phone sx={{ fontSize:16 }}/>}
-                      sx={{
-                        borderRadius:12, borderColor:'#E53935', color:'#E53935',
-                        '&:hover':{ bgcolor:'#FFEBEE', borderColor:'#C62828' },
-                        fontSize:12, px:2, py:0.75,
-                      }}
-                    >
-                      Call
-                    </Button>
-                  </Box>
-
-                  {/* Waiting progress bar */}
-                  {waiting && (
-                    <Box sx={{ mt:2 }}>
-                      <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                        Food being packed • Rider waiting at restaurant...
-                      </Typography>
-                      <LinearProgress
-                        variant="indeterminate"
-                        sx={{
-                          mt:0.75, height:4, borderRadius:4,
-                          bgcolor:'#F3E5F5',
-                          '& .MuiLinearProgress-bar':{ bgcolor:'#9C27B0' },
-                        }}
-                      />
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ── Stage timeline ── */}
-        <Card sx={{ mt:2 }}>
-          <CardContent sx={{ pb:'16px !important' }}>
-            <Typography variant="overline" color="text.secondary" fontWeight={700} letterSpacing={1.5} fontSize={10} display="block" mb={1.5}>
-              ORDER PROGRESS
-            </Typography>
-            {STAGES.map((stage, idx) => {
-              const done   = idx < stageIdx;
-              const active = idx === stageIdx;
-              const future = idx > stageIdx;
+          {/* vertical stepper */}
+          <div style={{ marginTop: 18 }}>
+            {STATUS_STEPS.map((s, i) => {
+              const reached  = i <= step;
+              const current  = i === step;
               return (
-                <Box key={stage.key} sx={{ display:'flex', alignItems:'flex-start' }}>
-                  <Box sx={{ display:'flex', flexDirection:'column', alignItems:'center', mr:2, width:28 }}>
-                    <motion.div animate={{ scale: active ? 1.2 : 1 }} transition={{ duration:0.25 }}>
-                      <Box sx={{
-                        width:28, height:28, borderRadius:'50%',
-                        display:'flex', alignItems:'center', justifyContent:'center',
-                        bgcolor: done ? '#E53935' : active ? activeColor : '#F0EDE8',
-                        color: done||active ? 'white' : '#BDBDBD',
-                        fontSize: done ? 12 : 15,
-                        boxShadow: active ? `0 0 0 4px ${activeColor}30` : 'none',
-                        transition: 'all 0.35s',
-                      }}>
-                        {done ? <CheckCircle sx={{ fontSize:16 }}/> : stage.icon}
-                      </Box>
-                    </motion.div>
-                    {idx < STAGES.length-1 && (
-                      <motion.div
-                        style={{ width:2, minHeight:20, marginTop:3, marginBottom:3, borderRadius:2, overflow:'hidden' }}
-                        animate={{ backgroundColor: done ? '#E53935' : '#EEEBE6' }}
-                        transition={{ duration:0.4 }}
-                      >
-                        <Box sx={{ width:2, height:'100%', bgcolor: done ? '#E53935' : '#EEEBE6', transition:'background 0.4s' }}/>
-                      </motion.div>
-                    )}
-                  </Box>
-                  <Box sx={{ pb: idx < STAGES.length-1 ? 1.5 : 0, pt:0.3, flex:1 }}>
-                    <Typography
-                      variant="body2"
-                      fontWeight={active ? 800 : done ? 500 : 400}
-                      color={future ? 'text.disabled' : active ? activeColor : 'text.primary'}
-                      lineHeight={1.3}
-                    >
-                      {stage.label}
-                    </Typography>
-                    {active && (
-                      <Typography variant="caption" color="text.secondary" sx={{ opacity:0.75 }}>
-                        In progress...
-                      </Typography>
-                    )}
-                  </Box>
-                  {active && (
+                <div key={s.key} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div style={{ width: 32, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <motion.div
-                      animate={{ opacity:[1,0.2,1] }}
-                      transition={{ duration:1, repeat:Infinity }}
-                    >
-                      <Box sx={{ width:8, height:8, borderRadius:'50%', bgcolor:activeColor, mt:1, mr:0.5 }}/>
+                      initial={false}
+                      animate={{
+                        scale: current ? [1, 1.18, 1] : 1,
+                        backgroundColor: reached ? '#10b981' : '#F5F5F5',
+                        boxShadow: current ? '0 0 0 6px rgba(16,185,129,0.18)' : '0 0 0 0 rgba(0,0,0,0)',
+                      }}
+                      transition={{ scale: { duration: 1.4, repeat: current ? Infinity : 0, ease: 'easeInOut' } }}
+                      style={{
+                        width: 26, height: 26, borderRadius: 999,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                      {reached
+                        ? <Icons.Check size={13} sw={3} stroke="#fff"/>
+                        : <span style={{ width: 8, height: 8, borderRadius: 999, background: '#D1D5DB', display: 'block' }}/>}
                     </motion.div>
-                  )}
-                </Box>
+                    {i < STATUS_STEPS.length - 1 && (
+                      <div style={{ width: 2, flex: 1, minHeight: 22,
+                        background: i < step ? '#10b981' : '#F0F0F0' }}/>
+                    )}
+                  </div>
+                  <div style={{ flex: 1, paddingBottom: 14 }}>
+                    <div style={{ fontSize: 14, fontWeight: reached ? 700 : 500,
+                      color: reached ? '#111' : '#9CA3AF' }}>{s.label}</div>
+                    <div style={{ fontSize: 11, color: reached ? '#6b7280' : '#D1D5DB', marginTop: 2 }}>
+                      {s.sub}
+                    </div>
+                  </div>
+                </div>
               );
             })}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* ── Pricing ── */}
-        {order && (
-          <Card sx={{ mt:2 }}>
-            <CardContent sx={{ pb:'16px !important' }}>
-              <Typography variant="overline" color="text.secondary" fontWeight={700} letterSpacing={1.5} fontSize={10} display="block" mb={1.5}>
-                BILL SUMMARY
-              </Typography>
-              {[
-                ['Food Subtotal',         order.pricing?.subtotal],
-                ['Delivery Fee',          order.pricing?.deliveryFee],
-                ['Platform Fee (15%)',    order.pricing?.platformFee],
-              ].map(([label, val]) => (
-                <Box key={label} sx={{ display:'flex', justifyContent:'space-between', mb:1 }}>
-                  <Typography variant="body2" color="text.secondary">{label}</Typography>
-                  <Typography variant="body2" fontWeight={500}>PKR {val}</Typography>
-                </Box>
-              ))}
-              <Divider sx={{ my:1.5, borderColor:'#F0EDE8' }}/>
-              <Box sx={{ display:'flex', justifyContent:'space-between' }}>
-                <Typography variant="subtitle1" fontWeight={800}>Total</Typography>
-                <Typography variant="subtitle1" fontWeight={800} color="primary">PKR {order.pricing?.total}</Typography>
-              </Box>
-              <Box sx={{ mt:1.5, p:1.5, bgcolor:'#FFF8F8', borderRadius:3, border:'1px solid #FFCDD2' }}>
-                <Typography variant="caption" color="#C62828" fontWeight={600}>
-                  💚 You saved ~PKR {Math.round((order.pricing?.subtotal||0)*0.15)} vs platforms charging 30% commission
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ── Rate button after delivery ── */}
-        {delivered && (
-          <motion.div
-            initial={{ opacity:0, y:16 }}
-            animate={{ opacity:1, y:0  }}
-            transition={{ delay:0.3, type:'spring' }}
-          >
-            <Button
-              fullWidth variant="contained" size="large"
-              sx={{ mt:3, mb:4, py:1.8, borderRadius:4, fontSize:16,
-                background:'linear-gradient(135deg,#E53935,#FF5722)',
-                boxShadow:'0 8px 32px rgba(229,57,53,0.45)',
-              }}
-              onClick={() => navigate('/restaurants')}
-            >
-              🌟 Rate Your Experience
-            </Button>
-          </motion.div>
-        )}
-      </Box>
-    </Box>
+          {step >= STATUS_STEPS.length - 1 && (
+            <div style={{ marginTop: 8 }}>
+              <BrandButton onClick={() => navigate('/orders')}>View Order History</BrandButton>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
-};
+}
 
-export default OrderTrackingPage;
+function CityMap({ progress, pathRef, riderPos }) {
+  return (
+    <div style={{ position: 'absolute', inset: 0,
+      background: 'linear-gradient(180deg, #E8F4F1 0%, #F0F4ED 100%)' }}>
+      <svg viewBox="0 0 400 440" preserveAspectRatio="xMidYMid slice"
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+        <defs>
+          <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="rgba(0,0,0,0.04)" strokeWidth="1"/>
+          </pattern>
+          <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#A6D5E8"/>
+            <stop offset="1" stopColor="#7EBED4"/>
+          </linearGradient>
+          <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3"/></filter>
+        </defs>
+
+        {/* parks */}
+        <ellipse cx="80" cy="100" rx="65" ry="38" fill="#C8E5BF" opacity="0.8"/>
+        <ellipse cx="320" cy="320" rx="80" ry="50" fill="#C8E5BF" opacity="0.7"/>
+
+        {/* water */}
+        <path d="M340 0 L400 0 L400 440 L355 440 C360 380 370 280 360 200 C350 100 345 40 340 0 Z"
+          fill="url(#water)" opacity="0.7"/>
+
+        <rect width="400" height="440" fill="url(#grid)"/>
+
+        {/* roads */}
+        <g stroke="#fff" strokeLinecap="round" fill="none">
+          <path d="M0 200 L400 240" strokeWidth="14"/>
+          <path d="M0 200 L400 240" strokeWidth="11" stroke="#F4ECDC"/>
+          <path d="M120 0 L160 440" strokeWidth="10"/>
+          <path d="M120 0 L160 440" strokeWidth="7" stroke="#F4ECDC"/>
+          <path d="M260 0 L290 440" strokeWidth="8"/>
+          <path d="M260 0 L290 440" strokeWidth="5" stroke="#F4ECDC"/>
+          <path d="M0 360 Q200 340 400 380" strokeWidth="9"/>
+          <path d="M0 360 Q200 340 400 380" strokeWidth="6" stroke="#F4ECDC"/>
+        </g>
+
+        {/* buildings */}
+        <g fill="#E5E5E5">
+          <rect x="40" y="160" width="22" height="22" rx="2"/>
+          <rect x="68" y="155" width="18" height="28" rx="2"/>
+          <rect x="195" y="170" width="24" height="22" rx="2"/>
+          <rect x="225" y="160" width="20" height="32" rx="2"/>
+          <rect x="60" y="260" width="22" height="22" rx="2"/>
+        </g>
+
+        {/* dotted route */}
+        <path d={ROUTE_PATH} stroke="rgba(229,57,53,0.3)" strokeWidth="4"
+          strokeDasharray="2 8" strokeLinecap="round" fill="none"/>
+
+        {/* traveled route — animated */}
+        <motion.path d={ROUTE_PATH}
+          stroke="var(--fb-primary)" strokeWidth="4" strokeLinecap="round" fill="none"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: progress }}
+          transition={{ duration: 1.2, ease: 'easeInOut' }}/>
+
+        {/* hidden path — only for getTotalLength() */}
+        <path ref={pathRef} d={ROUTE_PATH} fill="none" stroke="none"/>
+
+        {/* restaurant pin */}
+        <g transform="translate(50 360)">
+          <circle r="14" fill="var(--fb-primary)" filter="url(#shadow)"/>
+          <circle r="20" fill="var(--fb-primary)" opacity="0.18"/>
+          <g transform="translate(-6 -7)" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" fill="none">
+            <path d="M3 1v6a3 3 0 0 0 6 0V1M6 7v6M10 1c-1 0-2 1.5-2 3.5s.5 3.5 2 3.5v5"/>
+          </g>
+        </g>
+
+        {/* destination pin */}
+        <g transform="translate(340 120)">
+          <circle r="14" fill="var(--fb-accent)" filter="url(#shadow)"/>
+          <motion.circle r="14" fill="none" stroke="var(--fb-accent)" strokeWidth="2"
+            animate={{ r: [14, 26], opacity: [0.6, 0] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}/>
+          <g transform="translate(-6 -7)" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+            <path d="M2 8 L6 3 L11 8 V12 H2 Z"/>
+          </g>
+        </g>
+
+        {/* rider dot — follows path via JS */}
+        <motion.g
+          animate={{ x: riderPos.x, y: riderPos.y }}
+          transition={{ duration: 1.2, ease: 'easeInOut' }}
+          style={{ x: 50, y: 360 }}>
+          <circle r="20" fill="var(--fb-primary)" opacity="0.18"/>
+          <circle r="12" fill="#fff" filter="url(#shadow)"/>
+          <g transform="translate(-6 -6)" stroke="var(--fb-primary)" strokeWidth="1.8" fill="none" strokeLinecap="round">
+            <circle cx="4" cy="11" r="2"/>
+            <circle cx="11" cy="11" r="2"/>
+            <path d="M4 11 L7 6 H10 L11.5 9"/>
+          </g>
+        </motion.g>
+      </svg>
+    </div>
+  );
+}

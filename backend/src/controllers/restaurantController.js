@@ -8,6 +8,14 @@ exports.getRestaurants = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+exports.getMyRestaurant = async (req, res, next) => {
+  try {
+    const restaurant = await Restaurant.findByOwner(req.user.id);
+    if (!restaurant) return res.status(404).json({ success: false, message: 'No restaurant found for this account' });
+    res.status(200).json({ success: true, data: restaurant });
+  } catch (err) { next(err); }
+};
+
 exports.getRestaurant = async (req, res, next) => {
   try {
     const restaurant = await Restaurant.findById(req.params.id);

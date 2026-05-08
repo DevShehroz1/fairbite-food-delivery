@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getRestaurants, getRestaurant, createRestaurant, updateRestaurant, deleteRestaurant,
+  getRestaurants, getRestaurant, getMyRestaurant, createRestaurant, updateRestaurant, deleteRestaurant,
   addMenuItem, updateMenuItem, deleteMenuItem,
 } = require('../controllers/restaurantController');
 const { protect, authorize } = require('../middleware/auth');
+
+router.get('/my', protect, authorize('restaurant', 'admin'), getMyRestaurant);
 
 router.route('/')
   .get(getRestaurants)

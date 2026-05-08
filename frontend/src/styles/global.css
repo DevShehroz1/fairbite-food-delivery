@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --fb-primary: #E53935;
+  --fb-accent:  #FF7043;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: #fff;
+}
+
+button { font-family: inherit; }
+
+.fb-no-scrollbar::-webkit-scrollbar { display: none; }
+.fb-no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@keyframes fb-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

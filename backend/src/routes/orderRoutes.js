@@ -4,6 +4,7 @@ const { getOrders, getOrder, createOrder, updateOrderStatus, cancelOrder, getAva
 const { protect, authorize } = require('../middleware/auth');
 
 router.get('/available', protect, authorize('rider'), getAvailableOrders);
+router.get('/restaurant', protect, authorize('restaurant', 'admin'), getOrders);
 
 router.route('/')
   .get(protect, getOrders)

@@ -1,473 +1,494 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Container, Grid, Card, CardContent, Typography, Box, Button, Switch, Chip, Divider, LinearProgress } from '@mui/material';
-import { AttachMoney, CheckCircle, LocationOn, MyLocation, TwoWheeler } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
-import socket from '../../services/socket';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import socket from '../../services/socket';
+import { Icons, PKR, Pressable, SmartImg } from '../../components/ui';
 
-// ─── Mini route map ────────────────────────────────────────────────────────────
-const MiniMap = ({ phase }) => {
-  // phase: 'waiting' (rider at restaurant) | 'riding' (en route)
-  const riderX = phase === 'riding' ? 50 : 18;
+export default function RiderDashboard() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const [available, setAvailable] = useState(true);
+  const [availableOrders, setOrders] = useState([]);
+  const [activeOrder, setActiveOrder] = useState(null);
+  const [earnings, setEarnings] = useState({ today: 0, week: 0, trips: 0, rating: 4.9, onlineHours: '0h 0m' });
+  const [loading, setLoading] = useState(true);
 
-  return (
-    <Box sx={{ height:140, borderRadius:3, bgcolor:'#F2EFE9', position:'relative', overflow:'hidden' }}>
-      <svg viewBox="0 0 100 55" preserveAspectRatio="none" style={{ position:'absolute', inset:0, width:'100%', height:'100%' }}>
-        <rect width="100" height="55" fill="#F2EFE9"/>
-        <rect x="0"  y="24" width="42" height="7" fill="#EAE7E0"/>
-        <rect x="40" y="24" width="7"  height="7" fill="white"/>
-        <rect x="45" y="0"  width="7"  height="55" fill="#EAE7E0"/>
-        <rect x="45" y="24" width="42" height="7" fill="white"/>
-
-        {/* Route highlight */}
-        <rect x="18" y="25.5" width={phase === 'riding' ? 62 : 0} height="4" fill="#E53935" opacity="0.7"
-          style={{ transition:'width 0.8s ease' }}/>
-
-        {/* Dashes */}
-        <line x1="0" y1="27.5" x2="100" y2="27.5" stroke="white" strokeWidth="0.8" strokeDasharray="5,4" opacity="0.6"/>
-        <line x1="48.5" y1="0" x2="48.5" y2="55" stroke="white" strokeWidth="0.8" strokeDasharray="5,4" opacity="0.6"/>
-
-        {/* Restaurant pin */}
-        <circle cx="18" cy="27.5" r="4" fill="#E53935"/>
-        <text x="18" y="28.8" fontSize="4.5" textAnchor="middle" dominantBaseline="middle">🍽️</text>
-
-        {/* Destination pin */}
-        <circle cx="80" cy="27.5" r="4" fill="#1976D2"/>
-        <text x="80" y="28.8" fontSize="4.5" textAnchor="middle" dominantBaseline="middle">🏠</text>
-
-        {/* Rider */}
-        <motion.g animate={{ x: riderX === 18 ? 0 : 32 }} transition={{ duration: 0.8, ease:'easeInOut' }}>
-          <circle cx={18} cy={22} r="5" fill="white" stroke="#E53935" strokeWidth="1.2"/>
-          <text x={18} y={23.5} fontSize="6" textAnchor="middle" dominantBaseline="middle">🏍️</text>
-          {phase === 'waiting' && (
-            <motion.circle cx={18} cy={22} r="6" fill="none" stroke="#9C27B0" strokeWidth="0.8"
-              animate={{ r:[5,9], opacity:[0.8,0] }} transition={{ duration:1.2, repeat:Infinity }}/>
-          )}
-        </motion.g>
-      </svg>
-
-      <Chip
-        label={phase === 'waiting' ? '⏳ At Restaurant' : '🔴 En Route'}
-        size="small"
-        sx={{
-          position:'absolute', bottom:8, left:10,
-          bgcolor: phase === 'waiting' ? '#7B1FA2' : '#E53935',
-          color:'white', fontWeight:700, fontSize:10,
-        }}
-      />
-    </Box>
-  );
-};
-
-// ─── Incoming order card map ───────────────────────────────────────────────────
-const IncomingMap = () => (
-  <Box sx={{ height:110, borderRadius:3, bgcolor:'#F2EFE9', position:'relative', overflow:'hidden', mt:1.5 }}>
-    <svg viewBox="0 0 100 45" preserveAspectRatio="none" style={{ position:'absolute', inset:0, width:'100%', height:'100%' }}>
-      <rect width="100" height="45" fill="#F2EFE9"/>
-      <rect x="0"  y="18" width="100" height="7"  fill="white"/>
-      <rect x="60" y="0"  width="7"   height="45" fill="#EAE7E0"/>
-      <line x1="0" y1="21.5" x2="100" y2="21.5" stroke="white" strokeWidth="0.8" strokeDasharray="5,4" opacity="0.5"/>
-      <line x1="63.5" y1="0" x2="63.5" y2="45" stroke="white" strokeWidth="0.8" strokeDasharray="5,4" opacity="0.5"/>
-      {/* Dashed route */}
-      <polyline points="15,21.5 63.5,21.5 63.5,35" fill="none" stroke="#E53935" strokeWidth="1.5" strokeDasharray="4,3" strokeLinecap="round"/>
-      {/* Pins */}
-      <circle cx="15" cy="21.5" r="4" fill="#E53935"/>
-      <text x="15" y="22.8" fontSize="4.5" textAnchor="middle" dominantBaseline="middle">🍽️</text>
-      <circle cx="63.5" cy="35" r="4" fill="#1976D2"/>
-      <text x="63.5" y="36.3" fontSize="4.5" textAnchor="middle" dominantBaseline="middle">🏠</text>
-      {/* Animated rider */}
-      <motion.g animate={{ x:[0,8,16,8,0] }} transition={{ duration:2.5, repeat:Infinity, ease:'easeInOut' }}>
-        <circle cx="35" cy="16" r="4.5" fill="white" stroke="#E53935" strokeWidth="1.2"/>
-        <text x="35" y="17.5" fontSize="5.5" textAnchor="middle" dominantBaseline="middle">🏍️</text>
-      </motion.g>
-    </svg>
-  </Box>
-);
-
-// ─── Dashboard ─────────────────────────────────────────────────────────────────
-const RiderDashboard = () => {
-  const [online, setOnline]         = useState(false);
-  const [pendingOrders, setPending] = useState([]);
-  const [activeOrder, setActive]    = useState(null);
-  const [deliveryPhase, setPhase]   = useState('idle'); // idle | heading | waiting | riding
-  const [waitSeconds, setWaitSecs]  = useState(6);
-  const [earnings, setEarnings]     = useState(0);
-  const [delivered, setDelivered]   = useState(0);
-  const watchRef                    = useRef(null);
-  const phaseTimerRef               = useRef(null);
-  const countdownRef                = useRef(null);
-
-  // Join rider room once; listen for order_taken (another rider grabbed it)
-  useEffect(() => {
-    socket.emit('join_rider');
-    socket.on('order_taken', ({ orderId }) => {
-      setPending(prev => prev.filter(o => o.orderId !== orderId));
-    });
-    return () => { socket.off('order_taken'); };
-  }, []);
-
-  // Poll /orders/available every 5s when online — works across all devices/deployments
-  useEffect(() => {
-    if (!online) { setPending([]); return; }
-    const fetchAvailable = async () => {
-      try {
-        const { data } = await api.get('/orders/available');
-        setPending((data.data || []).map(o => ({
-          orderId:         o.id,
-          orderNumber:     o.orderNumber,
-          restaurantName:  o.restaurant?.name || 'Restaurant',
-          deliveryAddress: o.deliveryAddress,
-          items:           o.items,
-          pricing:         o.pricing,
-        })));
-      } catch {}
-    };
-    fetchAvailable();
-    const interval = setInterval(fetchAvailable, 5000);
-    return () => clearInterval(interval);
-  }, [online]);
-
-  const goOnline = (val) => {
-    setOnline(val);
-    if (!val) setPending([]);
-    toast(val ? '🟢 You are now Online!' : '⚫ You are Offline', {
-      position:'bottom-center', autoClose:2500,
-      style:{ borderRadius:14, background: val ? '#2E7D32' : '#424242', color:'white', fontWeight:700 },
-    });
+  const fetchOrders = () => {
+    api.get('/orders/available')
+      .then(r => setOrders(r.data.data || []))
+      .catch(() => {});
   };
 
-  const acceptOrder = async (order) => {
+  useEffect(() => {
+    fetchOrders();
+    setLoading(false);
+    const poll = setInterval(fetchOrders, 5000);
+    socket.emit('join_rider');
+    socket.on('new_order', fetchOrders);
+    return () => { clearInterval(poll); socket.off('new_order', fetchOrders); };
+  }, []);
+
+  const acceptOrder = async (orderId) => {
     try {
-      setPending(prev => prev.filter(o=>o.orderId!==order.orderId));
-      setActive(order);
-      setPhase('heading');
-      await api.put(`/orders/${order.orderId}/accept`).catch(()=>{});
-
-      toast('🏍️ Order accepted! Head to the restaurant.', {
-        position:'bottom-center', autoClose:3000,
-        style:{ borderRadius:14, background:'#E53935', color:'white', fontWeight:700 },
-      });
-
-      // After 6s → "at restaurant waiting"
-      phaseTimerRef.current = setTimeout(() => {
-        setPhase('waiting');
-        setWaitSecs(6);
-        let s = 6;
-        countdownRef.current = setInterval(() => {
-          s--;
-          setWaitSecs(s);
-          if (s <= 0) {
-            clearInterval(countdownRef.current);
-            setPhase('riding');
-            toast('🚀 Start riding! Customer is waiting.', {
-              position:'bottom-center', autoClose:3000,
-              style:{ borderRadius:14, background:'#E53935', color:'white', fontWeight:700 },
-            });
-          }
-        }, 1000);
-      }, 6000);
-    } catch {
-      toast.error('Could not accept order');
+      const { data } = await api.put(`/orders/${orderId}/accept`);
+      setActiveOrder(data.data);
+      setOrders(prev => prev.filter(o => o.id !== orderId));
+      setEarnings(e => ({ ...e, today: e.today + 150, trips: e.trips + 1 }));
+      toast.success('Order accepted!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not accept order');
     }
   };
 
-  const startBroadcastingLocation = () => {
-    if (!activeOrder || !navigator.geolocation) return;
-    watchRef.current = navigator.geolocation.watchPosition(
-      (pos) => socket.emit('rider_location', {
-        orderId: activeOrder.orderId,
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-      }),
-      null,
-      { enableHighAccuracy:true, maximumAge:2000 }
-    );
-    toast('📍 Live location sharing started!', {
-      position:'bottom-center', autoClose:2500,
-      style:{ borderRadius:14, background:'#1565C0', color:'white', fontWeight:700 },
-    });
+  const updateStatus = async (status) => {
+    if (!activeOrder) return;
+    try {
+      await api.put(`/orders/${activeOrder.id}/status`, { status });
+      if (status === 'delivered') {
+        setEarnings(e => ({ ...e, today: e.today + 80 }));
+        setActiveOrder(null);
+        toast.success('Delivery completed!');
+      } else {
+        setActiveOrder(prev => ({ ...prev, status }));
+      }
+    } catch {
+      toast.error('Status update failed');
+    }
   };
 
-  const markDelivered = () => {
-    if (watchRef.current)   navigator.geolocation.clearWatch(watchRef.current);
-    if (phaseTimerRef.current) clearTimeout(phaseTimerRef.current);
-    if (countdownRef.current)  clearInterval(countdownRef.current);
-
-    socket.emit('rider_location', { orderId: activeOrder.orderId, delivered: true });
-    api.put(`/orders/${activeOrder.orderId}/status`, { status:'delivered' }).catch(()=>{});
-
-    setEarnings(e => e + Math.round((activeOrder.pricing?.deliveryFee || 50) * 0.8));
-    setDelivered(d => d + 1);
-    setActive(null);
-    setPhase('idle');
-
-    toast('🎉 Delivery complete! Great job!', {
-      position:'bottom-center', autoClose:3500,
-      style:{ borderRadius:14, background:'#2E7D32', color:'white', fontWeight:700 },
-    });
-  };
-
-  const phaseLabel = {
-    heading: '🏍️ Heading to Restaurant',
-    waiting: `🍽️ At Restaurant — food being packed`,
-    riding:  '🚀 Riding to Customer',
-  };
+  const ACTIVE_STEPS = ['on-the-way', 'delivered'];
+  const activeStepIndex = activeOrder ? ACTIVE_STEPS.indexOf(activeOrder.status) : -1;
 
   return (
-    <Container sx={{ py:3, pb:10, maxWidth:480 }}>
-      <Typography variant="h5" fontWeight={800} gutterBottom>Rider Dashboard</Typography>
+    <div style={{ background: '#F5F5F5', minHeight: '100vh', paddingBottom: 40 }}>
 
-      {/* ── Online toggle ── */}
-      <Card sx={{
-        p:2.5, mb:3,
-        background: online
-          ? 'linear-gradient(135deg,#2E7D32,#388E3C)'
-          : 'linear-gradient(135deg,#F5F5F5,#EEEEEE)',
-        transition:'background 0.5s',
+      {/* Header */}
+      <div style={{
+        background: '#fff', padding: '52px 18px 0',
+        borderBottomLeftRadius: 28, borderBottomRightRadius: 28,
+        overflow: 'hidden',
       }}>
-        <Box sx={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <Box>
-            <Typography variant="h6" fontWeight={800} color={online ? 'white' : 'text.primary'}>
-              {online ? '🟢 Online' : '⚫ Offline'}
-            </Typography>
-            <Typography variant="body2" sx={{ color: online ? 'rgba(255,255,255,0.8)' : 'text.secondary', mt:0.3 }}>
-              {online ? 'Ready to receive delivery requests' : 'Toggle ON to start earning'}
-            </Typography>
-          </Box>
-          <Switch
-            checked={online}
-            onChange={e => goOnline(e.target.checked)}
-            sx={{
-              '& .MuiSwitch-thumb':{ bgcolor:'white' },
-              '& .MuiSwitch-track':{ bgcolor: online ? 'rgba(255,255,255,0.35) !important' : undefined },
-            }}
-          />
-        </Box>
-      </Card>
+        {/* Top row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <SmartImg
+              src={user?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop'}
+              style={{ width: 44, height: 44, borderRadius: 14 }}
+            />
+            <div>
+              <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                FairBite Rider
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: '#111', marginTop: 1 }}>
+                Hey, {user?.name?.split(' ')[0] || 'Rider'}!
+              </div>
+            </div>
+          </div>
+          <Pressable onClick={() => { logout(); navigate('/'); }} style={{
+            width: 40, height: 40, borderRadius: 12, background: '#F5F5F5',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icons.LogOut size={18} stroke="#374151" />
+          </Pressable>
+        </div>
 
-      {/* ── Stats ── */}
-      <Grid container spacing={2} mb={3}>
-        <Grid item xs={6}>
-          <Card sx={{ p:2 }}>
-            <AttachMoney sx={{ color:'#E53935', mb:0.5 }}/>
-            <Typography variant="h5" fontWeight={800}>PKR {earnings}</Typography>
-            <Typography variant="caption" color="text.secondary">Today's Earnings</Typography>
-          </Card>
-        </Grid>
-        <Grid item xs={6}>
-          <Card sx={{ p:2 }}>
-            <CheckCircle sx={{ color:'#2E7D32', mb:0.5 }}/>
-            <Typography variant="h5" fontWeight={800}>{delivered}</Typography>
-            <Typography variant="caption" color="text.secondary">Deliveries Today</Typography>
-          </Card>
-        </Grid>
-      </Grid>
+        {/* Earnings gradient card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #E53935 0%, #FF7043 100%)',
+          borderRadius: 20, padding: '18px 18px 14px', color: '#fff',
+          marginBottom: 16,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.85, letterSpacing: 0.6, textTransform: 'uppercase' }}>
+                Today's earnings
+              </div>
+              <div style={{ fontSize: 34, fontWeight: 800, marginTop: 4, letterSpacing: -1 }}>
+                {PKR(earnings.today)}
+              </div>
+              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>
+                {earnings.trips} trips completed
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+              <MiniStat label="Rating" value={`${earnings.rating}★`} />
+              <MiniStat label="Online" value={earnings.onlineHours} />
+              <MiniStat label="Week" value={PKR(earnings.week)} />
+            </div>
+          </div>
 
-      {/* ── Active delivery ── */}
-      <AnimatePresence>
-        {activeOrder && (
-          <motion.div
-            initial={{ opacity:0, y:20 }}
-            animate={{ opacity:1, y:0  }}
-            exit={{    opacity:0, y:-10 }}
-            transition={{ type:'spring', stiffness:280, damping:22 }}
-          >
-            <Card sx={{ mb:3, border:'2px solid #E53935', boxShadow:'0 4px 24px rgba(229,57,53,0.2)' }}>
-              <CardContent>
-                {/* Phase header */}
-                <Box sx={{ display:'flex', alignItems:'center', justifyContent:'space-between', mb:1.5 }}>
-                  <Box>
-                    <Typography variant="overline" color="text.secondary" fontWeight={700} fontSize={10}>
-                      ACTIVE DELIVERY
-                    </Typography>
-                    <Typography variant="subtitle1" fontWeight={800} color="primary">
-                      #{activeOrder.orderNumber}
-                    </Typography>
-                  </Box>
-                  <Chip
-                    label={phaseLabel[deliveryPhase] || '🏍️ Accepted'}
-                    size="small"
-                    sx={{
-                      bgcolor: deliveryPhase==='waiting' ? '#F3E5F5' : deliveryPhase==='riding' ? '#FFEBEE' : '#E8F5E9',
-                      color: deliveryPhase==='waiting' ? '#7B1FA2' : deliveryPhase==='riding' ? '#C62828' : '#2E7D32',
-                      fontWeight:700, fontSize:10,
-                    }}
-                  />
-                </Box>
-
-                {/* Mini map */}
-                <MiniMap phase={deliveryPhase === 'riding' ? 'riding' : 'waiting'}/>
-
-                {/* Countdown when waiting */}
-                {deliveryPhase === 'waiting' && (
-                  <Box sx={{ mt:1.5 }}>
-                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                      Rider starts in {waitSeconds}s...
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={((6 - waitSeconds) / 6) * 100}
-                      sx={{ mt:0.5, height:5, borderRadius:4,
-                        bgcolor:'#F3E5F5',
-                        '& .MuiLinearProgress-bar':{ bgcolor:'#9C27B0' },
-                      }}
-                    />
-                  </Box>
-                )}
-
-                {/* Addresses */}
-                <Box sx={{ mt:2 }}>
-                  <Box sx={{ display:'flex', gap:1.5, mb:0.75, alignItems:'center' }}>
-                    <LocationOn sx={{ color:'#E53935', fontSize:18 }}/>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary" fontWeight={700}>PICKUP</Typography>
-                      <Typography variant="body2" fontWeight={600}>{activeOrder.restaurantName}</Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ display:'flex', gap:1.5, alignItems:'center' }}>
-                    <LocationOn sx={{ color:'#2E7D32', fontSize:18 }}/>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary" fontWeight={700}>DELIVER TO</Typography>
-                      <Typography variant="body2" fontWeight={600}>
-                        {activeOrder.deliveryAddress?.street}, {activeOrder.deliveryAddress?.city}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-
-                <Box sx={{ mt:1.5, p:1.5, bgcolor:'#FFF8F8', borderRadius:3, border:'1px solid #FFCDD2' }}>
-                  <Typography variant="body2" color="primary" fontWeight={700}>
-                    💰 Your earnings: PKR {Math.round((activeOrder.pricing?.deliveryFee || 50) * 0.8)}
-                  </Typography>
-                </Box>
-
-                <Divider sx={{ my:2, borderColor:'#FFF0EE' }}/>
-
-                <Box sx={{ display:'flex', gap:1.5 }}>
-                  <Button
-                    variant="outlined" startIcon={<MyLocation/>}
-                    onClick={startBroadcastingLocation} fullWidth
-                    sx={{ borderRadius:12, borderColor:'#E53935', color:'#E53935', fontSize:12 }}
-                  >
-                    Share GPS
-                  </Button>
-                  <Button
-                    variant="contained" color="success"
-                    onClick={markDelivered} fullWidth
-                    disabled={deliveryPhase !== 'riding'}
-                    sx={{ borderRadius:12, fontSize:12,
-                      background: deliveryPhase==='riding' ? 'linear-gradient(135deg,#2E7D32,#388E3C)' : undefined,
-                    }}
-                  >
-                    Mark Delivered ✅
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Incoming orders ── */}
-      {online && !activeOrder && (
-        <>
-          {pendingOrders.length === 0 ? (
-            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}>
-              <Card sx={{ p:4, textAlign:'center', bgcolor:'#FFF8F8' }}>
-                <motion.div animate={{ y:[0,-8,0] }} transition={{ duration:2, repeat:Infinity }}>
-                  <TwoWheeler sx={{ fontSize:64, color:'#E53935', opacity:0.5 }}/>
-                </motion.div>
-                <Typography variant="h6" fontWeight={700} mt={1}>Waiting for orders...</Typography>
-                <Typography variant="body2" color="text.secondary" mt={0.5}>
-                  New orders will appear here instantly
-                </Typography>
-              </Card>
-            </motion.div>
-          ) : (
-            <Box sx={{ mb:1.5, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-              <Typography variant="subtitle1" fontWeight={800}>
-                📦 {pendingOrders.length} order{pendingOrders.length>1?'s':''} nearby
-              </Typography>
-              <Chip label="NEW" size="small" sx={{ bgcolor:'#E53935', color:'white', fontWeight:700, fontSize:10, animation:'pulse 1.5s infinite' }}/>
-            </Box>
-          )}
-
-          <AnimatePresence>
-            {pendingOrders.map(order => (
+          {/* Bar chart */}
+          <div style={{ display: 'flex', gap: 5, marginTop: 14, alignItems: 'flex-end', height: 36 }}>
+            {[40, 65, 50, 80, 45, 90, 35].map((h, i) => (
               <motion.div
-                key={order.orderId}
-                initial={{ opacity:0, x:60, scale:0.95 }}
-                animate={{ opacity:1, x:0,  scale:1    }}
-                exit={{    opacity:0, x:-60, scale:0.95 }}
-                transition={{ type:'spring', stiffness:300, damping:24 }}
-              >
-                <Card sx={{ mb:2, border:'1.5px solid #FFCDD2', boxShadow:'0 4px 24px rgba(229,57,53,0.12)' }}>
-                  <CardContent>
-                    <Box sx={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', mb:1 }}>
-                      <Box>
-                        <Typography variant="subtitle1" fontWeight={800}>#{order.orderNumber}</Typography>
-                        <Typography variant="caption" color="text.secondary">{order.items?.length || 1} item(s)</Typography>
-                      </Box>
-                      <Chip
-                        label={`+PKR ${Math.round((order.pricing?.deliveryFee||50)*0.8)}`}
-                        sx={{ bgcolor:'#E53935', color:'white', fontWeight:800, fontSize:13 }}
-                      />
-                    </Box>
-
-                    <IncomingMap/>
-
-                    <Box sx={{ mt:2 }}>
-                      <Box sx={{ display:'flex', gap:1.5, mb:0.75, alignItems:'center' }}>
-                        <LocationOn sx={{ color:'#E53935', fontSize:16 }}/>
-                        <Typography variant="body2"><strong>From:</strong> {order.restaurantName}</Typography>
-                      </Box>
-                      <Box sx={{ display:'flex', gap:1.5, alignItems:'center' }}>
-                        <LocationOn sx={{ color:'#2E7D32', fontSize:16 }}/>
-                        <Typography variant="body2"><strong>To:</strong> {order.deliveryAddress?.street}, {order.deliveryAddress?.city}</Typography>
-                      </Box>
-                    </Box>
-
-                    <Box sx={{ display:'flex', gap:1.5, mt:2 }}>
-                      <Button
-                        variant="outlined" color="inherit" fullWidth
-                        onClick={() => setPending(p=>p.filter(o=>o.orderId!==order.orderId))}
-                        sx={{ borderRadius:12, color:'text.secondary', borderColor:'#E0E0E0', fontSize:13 }}
-                      >
-                        Decline
-                      </Button>
-                      <Button
-                        variant="contained" fullWidth
-                        onClick={() => acceptOrder(order)}
-                        sx={{ borderRadius:12, fontSize:13,
-                          background:'linear-gradient(135deg,#E53935,#FF5722)',
-                          boxShadow:'0 4px 16px rgba(229,57,53,0.4)',
-                        }}
-                      >
-                        Accept 🏍️
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                key={i}
+                initial={{ height: 0 }}
+                animate={{ height: `${h}%` }}
+                transition={{ delay: i * 0.06, duration: 0.4 }}
+                style={{
+                  flex: 1, borderRadius: 4,
+                  background: i === 6 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)',
+                  alignSelf: 'flex-end',
+                }}
+              />
             ))}
-          </AnimatePresence>
-        </>
-      )}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+              <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: 9, fontWeight: 700, opacity: i === 6 ? 1 : 0.55 }}>{d}</div>
+            ))}
+          </div>
+        </div>
 
-      {/* ── Fair wage note ── */}
-      <Card sx={{ mt:3, p:2.5, background:'linear-gradient(135deg,#E8F5E9,#F1F8E9)', border:'1px solid #C8E6C9' }}>
-        <Typography variant="subtitle2" fontWeight={800} color="#1B5E20" gutterBottom>
-          FairBite Rider Promise 🤝
-        </Typography>
-        <Typography variant="caption" color="#2E7D32">
-          You keep <strong>80% of every delivery fee</strong>. Platform takes only 20% — no hidden deductions, ever.
-        </Typography>
-      </Card>
+        {/* Availability toggle */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 16px',
+          borderRadius: 16,
+          background: available ? 'rgba(16,185,129,0.06)' : '#F8F8F8',
+          border: `1.5px solid ${available ? '#10b981' : '#E5E5E5'}`,
+          marginBottom: 16,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: available ? '#10b981' : '#D1D5DB',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Icons.Power size={18} stroke="#fff" sw={2.5} />
+            </div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>
+                {available ? 'Online — Accepting orders' : 'Offline'}
+              </div>
+              <div style={{ fontSize: 11, color: '#6b7280' }}>Tap to toggle availability</div>
+            </div>
+          </div>
+          <Pressable onClick={() => setAvailable(!available)} style={{
+            width: 50, height: 28, borderRadius: 999, position: 'relative',
+            background: available ? '#10b981' : '#D1D5DB', transition: 'background .25s',
+          }}>
+            <motion.div
+              animate={{ x: available ? 22 : 2 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              style={{
+                position: 'absolute', top: 2, width: 24, height: 24,
+                borderRadius: 999, background: '#fff',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.18)',
+              }}
+            />
+          </Pressable>
+        </div>
+      </div>
 
-      <style>{`@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(229,57,53,0.4)}50%{box-shadow:0 0 0 6px rgba(229,57,53,0)}}`}</style>
-    </Container>
+      <div style={{ padding: '16px 16px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+        {/* Active order */}
+        <AnimatePresence>
+          {activeOrder && (
+            <motion.div
+              key="active"
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
+              style={{ background: '#fff', borderRadius: 20, padding: 16, border: '1.5px solid var(--fb-primary)' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <motion.div
+                  animate={{ scale: [1, 1.3, 1] }}
+                  transition={{ duration: 1.2, repeat: Infinity }}
+                  style={{ width: 8, height: 8, borderRadius: 999, background: '#10b981' }}
+                />
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Active Delivery
+                </span>
+              </div>
+
+              {/* Route rows */}
+              <RouteRow
+                icon="🍴"
+                color="var(--fb-primary)"
+                title={activeOrder.restaurant?.name || 'Restaurant'}
+                sub={activeOrder.restaurant?.address?.street || 'Pickup point'}
+                tag="Pickup"
+              />
+              <div style={{ marginLeft: 18, height: 14, borderLeft: '2px dashed #E5E5E5' }} />
+              <RouteRow
+                icon="🏠"
+                color="var(--fb-accent)"
+                title={activeOrder.customer?.name || 'Customer'}
+                sub={activeOrder.deliveryAddress?.street || 'Drop point'}
+                tag="Drop"
+              />
+
+              {/* Progress bar */}
+              <div style={{ display: 'flex', gap: 5, marginTop: 14 }}>
+                {['Picked up', 'On the way', 'Delivered'].map((step, i) => (
+                  <div key={i} style={{ flex: 1 }}>
+                    <div style={{
+                      height: 4, borderRadius: 999,
+                      background: i <= activeStepIndex + 1 ? 'var(--fb-primary)' : '#F0F0F0',
+                    }} />
+                    <div style={{ fontSize: 9, color: '#9CA3AF', marginTop: 3, fontWeight: 600 }}>{step}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                {activeOrder.status !== 'on-the-way' && (
+                  <Pressable
+                    onClick={() => updateStatus('on-the-way')}
+                    style={{
+                      flex: 1, height: 46, borderRadius: 12,
+                      background: 'var(--fb-primary)', color: '#fff',
+                      fontSize: 13, fontWeight: 700,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    }}
+                  >
+                    <Icons.Bike size={14} />On The Way
+                  </Pressable>
+                )}
+                <Pressable
+                  onClick={() => updateStatus('delivered')}
+                  style={{
+                    flex: 1, height: 46, borderRadius: 12,
+                    background: '#10b981', color: '#fff',
+                    fontSize: 13, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    boxShadow: '0 4px 14px rgba(16,185,129,0.35)',
+                  }}
+                >
+                  <Icons.Check size={14} sw={3} />Delivered
+                </Pressable>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Stats row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <StatTile icon={<Icons.Tag size={16} stroke="var(--fb-primary)" />} label="Weekly" value={PKR(earnings.week)} color="var(--fb-primary)" />
+          <StatTile icon={<Icons.Bike size={16} stroke="#3b82f6" />} label="Total Trips" value={earnings.trips} color="#3b82f6" />
+        </div>
+
+        {/* Available orders header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: '#111' }}>
+            Available Orders
+          </div>
+          <div style={{
+            padding: '4px 10px', borderRadius: 8,
+            background: availableOrders.length > 0 ? 'rgba(229,57,53,0.1)' : '#F5F5F5',
+            color: availableOrders.length > 0 ? 'var(--fb-primary)' : '#9CA3AF',
+            fontSize: 12, fontWeight: 700,
+          }}>
+            {availableOrders.length} new
+          </div>
+        </div>
+
+        {/* Orders list */}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+              <Icons.Bike size={32} />
+            </motion.div>
+          </div>
+        ) : availableOrders.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            style={{
+              background: '#fff', borderRadius: 20, padding: 32,
+              textAlign: 'center', border: '1px dashed #E5E5E5',
+            }}
+          >
+            <div style={{ fontSize: 36, marginBottom: 8 }}>🛵</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Waiting for orders…</div>
+            <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4 }}>
+              New orders will appear here automatically
+            </div>
+          </motion.div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <AnimatePresence>
+              {availableOrders.map(order => (
+                <OrderCard key={order.id} order={order} onAccept={() => acceptOrder(order.id)} />
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
+    </div>
   );
-};
+}
 
-export default RiderDashboard;
+function MiniStat({ label, value }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11 }}>
+      <span style={{ opacity: 0.75 }}>{label}</span>
+      <span style={{ fontWeight: 800 }}>{value}</span>
+    </div>
+  );
+}
+
+function StatTile({ icon, label, value, color }) {
+  return (
+    <div style={{
+      background: '#fff', borderRadius: 16, padding: '14px 16px',
+      border: '1px solid #F0F0F0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 10,
+          background: `${color}15`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {icon}
+        </div>
+        <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+          {label}
+        </span>
+      </div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: '#111' }}>{value}</div>
+    </div>
+  );
+}
+
+function RouteRow({ icon, color, title, sub, tag }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0' }}>
+      <div style={{
+        width: 36, height: 36, borderRadius: 12, flexShrink: 0,
+        background: `${color === 'var(--fb-primary)' ? '#E5393515' : '#FF704315'}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+      }}>
+        {icon}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{title}</div>
+        <div style={{ fontSize: 11, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>
+      </div>
+      <div style={{
+        fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+        background: color === 'var(--fb-primary)' ? 'rgba(229,57,53,0.1)' : 'rgba(255,112,67,0.1)',
+        color,
+      }}>
+        {tag}
+      </div>
+    </div>
+  );
+}
+
+function OrderCard({ order, onAccept }) {
+  const [countdown, setCountdown] = useState(30);
+  useEffect(() => {
+    const t = setInterval(() => setCountdown(c => {
+      if (c <= 1) { clearInterval(t); return 0; }
+      return c - 1;
+    }), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+      style={{
+        background: '#fff', borderRadius: 20, padding: 16,
+        border: '1px solid #F0F0F0', boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+      }}
+    >
+      {/* Order header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '4px 10px', borderRadius: 8,
+            background: 'rgba(229,57,53,0.08)', color: 'var(--fb-primary)',
+            fontSize: 11, fontWeight: 800, letterSpacing: 0.4 }}>
+            <motion.span
+              animate={{ scale: [1, 1.4, 1] }}
+              transition={{ duration: 1, repeat: Infinity }}
+              style={{ width: 5, height: 5, borderRadius: 999, background: 'var(--fb-primary)' }}
+            />
+            NEW ORDER
+          </div>
+          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>
+            #{order.orderNumber} · {(order.items || []).length} item(s)
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#111' }}>
+            {PKR(order.pricing?.total || 0)}
+          </div>
+          {/* countdown ring */}
+          <svg width="36" height="36" style={{ marginTop: 4 }}>
+            <circle cx="18" cy="18" r="14" fill="none" stroke="#F0F0F0" strokeWidth="3" />
+            <motion.circle
+              cx="18" cy="18" r="14" fill="none"
+              stroke={countdown > 10 ? 'var(--fb-primary)' : '#f59e0b'}
+              strokeWidth="3" strokeLinecap="round"
+              animate={{ pathLength: countdown / 30 }}
+              style={{ rotate: -90, transformOrigin: '50% 50%' }}
+            />
+            <text x="18" y="23" textAnchor="middle" fontSize="10" fontWeight="800" fill="#111">{countdown}</text>
+          </svg>
+        </div>
+      </div>
+
+      {/* Route */}
+      <div style={{ background: '#F8F8F8', borderRadius: 14, padding: '12px 14px', marginBottom: 12 }}>
+        <RouteRow
+          icon="🍴"
+          color="var(--fb-primary)"
+          title={order.restaurant?.name || 'Restaurant'}
+          sub={order.restaurant?.address?.street || ''}
+          tag="Pickup"
+        />
+        <div style={{ marginLeft: 18, height: 12, borderLeft: '2px dashed #E0E0E0', margin: '6px 0 6px 18px' }} />
+        <RouteRow
+          icon="🏠"
+          color="var(--fb-accent)"
+          title={order.deliveryAddress?.city || 'Customer'}
+          sub={order.deliveryAddress?.street || ''}
+          tag="Drop"
+        />
+      </div>
+
+      {/* Meta info */}
+      <div style={{
+        display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap',
+        padding: '8px 12px', borderRadius: 10, background: '#F8F8F8',
+        fontSize: 12,
+      }}>
+        <span><b>~4 km</b> total</span>
+        <span style={{ color: '#D1D5DB' }}>·</span>
+        <span><b>~18 min</b></span>
+        <span style={{ color: '#D1D5DB' }}>·</span>
+        <span style={{ color: '#10b981', fontWeight: 700 }}>+Rs. 40 surge</span>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Pressable style={{
+          flex: 1, height: 46, borderRadius: 12,
+          border: '1px solid #E5E5E5', background: '#fff',
+          color: '#374151', fontSize: 13, fontWeight: 600,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          Decline
+        </Pressable>
+        <Pressable
+          onClick={onAccept}
+          style={{
+            flex: 2, height: 46, borderRadius: 12,
+            background: 'var(--fb-primary)', color: '#fff',
+            fontSize: 14, fontWeight: 700,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            boxShadow: '0 4px 16px rgba(229,57,53,0.32)',
+          }}
+        >
+          <Icons.Check size={15} sw={3} />Accept Order
+        </Pressable>
+      </div>
+    </motion.div>
+  );
+}
