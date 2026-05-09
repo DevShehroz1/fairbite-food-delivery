@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import useCart from '../../hooks/useCart';
 import api from '../../services/api';
 import {
-  Icons, PKR, Pressable, SmartImg, Stars, Ribbon, BrandButton,
+  Icons, Pressable, SmartImg,
   BigRestaurantCard, BottomNav,
 } from '../../components/ui';
 
@@ -46,7 +46,7 @@ const CATEGORIES = [
 
 export default function HomePage() {
   const navigate  = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { itemCount } = useCart();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading]         = useState(true);

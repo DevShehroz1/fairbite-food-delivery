@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import api from '../../services/api';
 import useCart from '../../hooks/useCart';
 import {
-  Icons, PKR, Pressable, SmartImg, Stars, Ribbon, Stepper, BrandButton,
+  Icons, PKR, Pressable, SmartImg, Stars, Stepper,
 } from '../../components/ui';
 
 const CAT_LABELS = {
@@ -18,7 +18,7 @@ const CAT_LABELS = {
 export default function RestaurantDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { items: cartItems, itemCount, subtotal, addItem, updateQuantity, restaurantId } = useCart();
+  const { items: cartItems, subtotal, addItem, updateQuantity, restaurantId } = useCart();
   const scrollRef = useRef(null);
 
   const [restaurant, setRestaurant] = useState(null);

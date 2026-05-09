@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 import socket from '../../services/socket';
-import { Icons, PKR, Pressable, SmartImg, Stars, BrandButton } from '../../components/ui';
+import { Icons, Pressable, SmartImg, BrandButton } from '../../components/ui';
 
 const STATUS_STEPS = [
   { key: 'pending',    label: 'Order Placed',  sub: 'We received your order' },

@@ -10,7 +10,7 @@ import { Icons, PKR, Pressable, SmartImg, Stepper, BrandButton } from '../../com
 export default function CartPage() {
   const navigate = useNavigate();
   const { user }  = useAuth();
-  const { items, restaurantId, restaurantName, itemCount, subtotal, updateQuantity, removeItem, clearCart } = useCart();
+  const { items, restaurantId, restaurantName, subtotal, updateQuantity, removeItem, clearCart } = useCart();
   const [pay, setPay]         = useState('cash');
   const [placing, setPlacing] = useState(false);
 
