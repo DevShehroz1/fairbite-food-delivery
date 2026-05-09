@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../context/AuthContext';
 import useCart from '../../hooks/useCart';
 import api from '../../services/api';
 import {
@@ -46,7 +45,6 @@ const CATEGORIES = [
 
 export default function HomePage() {
   const navigate  = useNavigate();
-  const { user } = useAuth();
   const { itemCount } = useCart();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading]         = useState(true);
