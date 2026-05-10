@@ -69,7 +69,7 @@ exports.updateStatus = async (id, status, note) => {
 
 exports.findAvailable = async () => {
   const { data, error } = await supabase.from('orders').select(JOINS)
-    .eq('status', 'pending')
+    .in('status', ['ready', 'pending'])
     .is('rider_id', null)
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
@@ -102,12 +102,11 @@ exports.findAvailableRider = async (onlineRiderIds = []) => {
 };
 
 exports.acceptOrder = async (id, riderId) => {
-  const { data: current } = await supabase.from('orders').select('status_history,rider_id').eq('id', id).single();
+  const { data: current } = await supabase.from('orders').select('status_history,rider_id,status').eq('id', id).single();
   if (current?.rider_id) throw new Error('Order already taken');
-  const history = [...(current?.status_history || []), { status: 'picked-up', note: 'Rider accepted', time: new Date() }];
+  const history = [...(current?.status_history || []), { status: current.status, note: 'Rider assigned', time: new Date() }];
   const { data, error } = await supabase.from('orders').update({
     rider_id:       riderId,
-    status:         'picked-up',
     status_history: history,
     updated_at:     new Date(),
   }).eq('id', id).select(JOINS).single();

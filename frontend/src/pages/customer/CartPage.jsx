@@ -1,45 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import useCart from '../../hooks/useCart';
 import api from '../../services/api';
-import { Icons, PKR, Pressable, SmartImg, Stepper, BrandButton } from '../../components/ui';
+import { Icons, PKR, Pressable } from '../../components/ui';
+
+const STEPS = [
+  { n: 1, label: 'Menu' },
+  { n: 2, label: 'Cart' },
+  { n: 3, label: 'Checkout' },
+];
 
 export default function CartPage() {
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
   const { user }  = useAuth();
-  const { items, restaurantId, restaurantName, subtotal, updateQuantity, removeItem, clearCart } = useCart();
-  const [pay, setPay]         = useState('cash');
-  const [placing, setPlacing] = useState(false);
+  const { items, restaurantId, restaurantName, subtotal, updateQuantity, removeItem, clearCart, addItem } = useCart();
+  const [placing, setPlacing]         = useState(false);
+  const [deliveryMode, setDeliveryMode] = useState('delivery');
+  const [cutlery, setCutlery]         = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
 
-  const delivery     = items.length ? 49 : 0;
-  const fairFee      = 0;
-  const competitorFee = items.length ? 80 : 0;
-  const tax          = Math.round(subtotal * 0.05);
-  const total        = subtotal + delivery + fairFee + tax;
-  const savings      = competitorFee + Math.round(subtotal * 0.07);
+  useEffect(() => {
+    if (!restaurantId) return;
+    api.get(`/restaurants/${restaurantId}`)
+      .then(r => {
+        const menu = r.data.data?.menu || [];
+        const inCart = new Set(items.map(i => i._id || i.id));
+        setSuggestions(menu.filter(m => !inCart.has(m.id)).slice(0, 6));
+      })
+      .catch(() => {});
+  }, [restaurantId, items]);
+
+  const tax   = Math.round(subtotal * 0.05);
+  const total = subtotal + tax;
+  const discountedTotal = Math.round(total * 0.9);
 
   const handlePlace = async () => {
     if (!items.length) return;
     if (!user) { navigate('/'); return; }
     setPlacing(true);
     try {
-      const orderItems = items.map(i => ({
-        menuItemId: i._id || i.id,
-        quantity:   i.quantity,
-      }));
+      const orderItems = items.map(i => ({ menuItemId: i._id || i.id, quantity: i.quantity }));
       const { data } = await api.post('/orders', {
         restaurantId,
         items: orderItems,
         deliveryAddress: {
-          street: 'Flat 4B, Sea Breeze Plaza',
-          city:   'Karachi',
-          state:  'Sindh',
-          zipCode: '75600',
+          street: '1-KM Raiwind Road, Thokar Niaz Baig',
+          city:   'Lahore',
+          state:  'Punjab',
+          zipCode: '54000',
         },
-        payment: { method: pay, status: 'pending' },
+        payment: { method: 'cash', status: 'pending' },
       });
       clearCart();
       toast.success('Order placed!');
@@ -54,21 +67,18 @@ export default function CartPage() {
   if (!items.length) {
     return (
       <div style={{ height: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
-        <CartHeader onBack={() => navigate(-1)}/>
+        <CartHeader onBack={() => navigate(-1)} subtitle={restaurantName}/>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 30, textAlign: 'center' }}>
-          <div style={{ width: 88, height: 88, borderRadius: 999, background: '#F5F5F5',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+          <div style={{ width: 88, height: 88, borderRadius: 999, background: '#F5F5F5', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
             <Icons.Cart size={36} stroke="#9CA3AF"/>
           </div>
           <div style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>Your cart is empty</div>
           <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6, maxWidth: 240 }}>
             Browse restaurants and add items — checkout is fast and fair.
           </div>
-          <Pressable onClick={() => navigate('/restaurants')} style={{
-            marginTop: 20, padding: '12px 28px', borderRadius: 16,
-            background: 'var(--fb-primary)', color: '#fff',
-            fontSize: 14, fontWeight: 700,
-          }}>Browse Restaurants</Pressable>
+          <Pressable onClick={() => navigate('/restaurants')} style={{ marginTop: 20, padding: '12px 28px', borderRadius: 16, background: 'var(--fb-primary)', color: '#fff', fontSize: 14, fontWeight: 700 }}>
+            Browse Restaurants
+          </Pressable>
         </div>
       </div>
     );
@@ -76,202 +86,250 @@ export default function CartPage() {
 
   return (
     <div style={{ background: '#fff', minHeight: '100vh', paddingBottom: 110 }}>
+
+      {/* ── Header ───────────────────────────────────────────── */}
       <CartHeader onBack={() => navigate(-1)} subtitle={restaurantName}/>
 
-      {/* items */}
-      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <AnimatePresence>
-          {items.map(it => (
-            <SwipeRow key={it._id} onDelete={() => removeItem(it._id)}>
-              <div style={{ display: 'flex', gap: 12, padding: 12, background: '#fff',
-                border: '1px solid #F0F0F0', borderRadius: 16 }}>
-                {it.image && <SmartImg src={it.image} radius={12} style={{ width: 64, height: 64, flexShrink: 0 }}/>}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#111',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.name}</div>
-                  <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>No special requests</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{PKR(it.price * it.quantity)}</div>
-                    <Stepper value={it.quantity}
-                      onChange={(v) => v === 0 ? removeItem(it._id) : updateQuantity(it._id, v)}
-                      min={0}/>
-                  </div>
+      {/* ── 3-step progress ──────────────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', padding: '14px 20px 6px' }}>
+        {STEPS.map((step, i) => (
+          <React.Fragment key={step.n}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: 999,
+                background: step.n <= 2 ? '#1f2937' : '#E5E5E5',
+                color: step.n <= 2 ? '#fff' : '#9CA3AF',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 13, fontWeight: 800,
+              }}>{step.n}</div>
+              <span style={{ fontSize: 11, fontWeight: 600, color: step.n <= 2 ? '#111' : '#9CA3AF' }}>
+                {step.label}
+              </span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div style={{ flex: 1, height: 2, background: i === 0 ? '#1f2937' : '#E5E5E5', marginTop: 13, marginBottom: 16 }}/>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* ── Delivery / Pick-up toggle ─────────────────────────── */}
+      <div style={{ margin: '8px 16px', display: 'flex', background: '#F5F5F5', borderRadius: 30, padding: 3, gap: 0 }}>
+        {[
+          { id: 'delivery', label: '🏍️  Delivery' },
+          { id: 'pickup',   label: '🚶  Pick-up' },
+        ].map(opt => (
+          <Pressable key={opt.id} onClick={() => setDeliveryMode(opt.id)} style={{
+            flex: 1, padding: '10px 0', borderRadius: 28,
+            background: deliveryMode === opt.id ? '#fff' : 'transparent',
+            textAlign: 'center', fontSize: 14, fontWeight: 700,
+            color: deliveryMode === opt.id ? '#111' : '#6b7280',
+            boxShadow: deliveryMode === opt.id ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+          }}>
+            {opt.label}
+          </Pressable>
+        ))}
+      </div>
+
+      {/* ── Delivery time row ────────────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px 14px' }}>
+        <span style={{ fontSize: 14, color: '#374151' }}>
+          Delivery: <strong>25–40 min</strong>
+        </span>
+        <Pressable style={{ fontSize: 13, fontWeight: 700, color: '#111', textDecoration: 'underline' }}>
+          Change
+        </Pressable>
+      </div>
+
+      {/* ── Cart items ───────────────────────────────────────── */}
+      <div style={{ borderTop: '1px solid #F5F5F5', padding: '10px 16px' }}>
+        {items.map(it => {
+          const lineOriginal    = it.price * it.quantity;
+          const lineDiscounted  = Math.round(lineOriginal * 0.9);
+          return (
+            <div key={it._id} style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: '1px solid #F5F5F5', alignItems: 'center' }}>
+              {/* Thumbnail */}
+              <div style={{ width: 64, height: 64, borderRadius: 10, background: '#F5F5F5', flexShrink: 0, overflow: 'hidden' }}>
+                {it.image
+                  ? <img src={it.image} alt={it.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                  : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🍛</div>
+                }
+              </div>
+              {/* Name + controls */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {it.name}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginTop: 8, border: '1.5px solid #E5E5E5', borderRadius: 20, width: 'fit-content', padding: '2px 4px' }}>
+                  <Pressable onClick={() => removeItem(it._id)} style={{ width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icons.Trash size={14} stroke="#374151"/>
+                  </Pressable>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: '#111', minWidth: 22, textAlign: 'center' }}>
+                    {it.quantity}
+                  </span>
+                  <Pressable onClick={() => updateQuantity(it._id, it.quantity + 1)} style={{ width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icons.Plus size={16} stroke="#374151" sw={2}/>
+                  </Pressable>
                 </div>
               </div>
-            </SwipeRow>
-          ))}
-        </AnimatePresence>
-      </div>
-
-      {/* delivery address */}
-      <div style={{ padding: '8px 16px' }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280',
-          textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Delivery to</div>
-        <div style={{
-          width: '100%', display: 'flex', gap: 12, alignItems: 'center',
-          padding: '12px 14px', borderRadius: 14, border: '1px solid #F0F0F0',
-        }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(229,57,53,0.1)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Icons.Home size={18} stroke="var(--fb-primary)" sw={2.5}/>
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>Home</div>
-            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
-              Flat 4B, Sea Breeze Plaza, Clifton, Karachi
+              {/* Price */}
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--fb-primary)' }}>
+                  {PKR(lineDiscounted)}
+                </div>
+                <div style={{ fontSize: 12, color: '#9CA3AF', textDecoration: 'line-through', marginTop: 2 }}>
+                  {PKR(lineOriginal)}
+                </div>
+              </div>
             </div>
-          </div>
-          <Icons.ChevronR size={18} stroke="#9CA3AF"/>
-        </div>
+          );
+        })}
+
+        {/* Add more items */}
+        <Pressable onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 0', color: '#374151', fontSize: 14, fontWeight: 700 }}>
+          <span style={{ fontSize: 18, lineHeight: 1 }}>+</span>
+          <span>Add more items</span>
+        </Pressable>
       </div>
 
-      {/* payment */}
-      <div style={{ padding: '14px 16px' }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280',
-          textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Payment</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-          {[
-            { id: 'cash',   label: 'Cash',   Icon: Icons.Cash },
-            { id: 'card',   label: 'Card',   Icon: Icons.Card },
-            { id: 'wallet', label: 'Wallet', Icon: Icons.Wallet },
-          ].map(p => {
-            const a = pay === p.id;
-            return (
-              <Pressable key={p.id} onClick={() => setPay(p.id)} style={{
-                padding: '12px 8px', borderRadius: 14,
-                background: a ? 'rgba(229,57,53,0.06)' : '#fff',
-                border: a ? '1.5px solid var(--fb-primary)' : '1px solid #F0F0F0',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                color: a ? 'var(--fb-primary)' : '#374151',
-              }}>
-                <p.Icon size={20} sw={2}/>
-                <span style={{ fontSize: 12, fontWeight: 700 }}>{p.label}</span>
-              </Pressable>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* price breakdown */}
-      <div style={{ padding: '12px 16px' }}>
-        <div style={{ background: '#F8F8F8', borderRadius: 16, padding: 14,
-          display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
-          <BreakRow label="Subtotal"     value={PKR(subtotal)}/>
-          <BreakRow label="Delivery fee" value={PKR(delivery)}/>
-          <BreakRow label={
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              FairBite fee
-              <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 5,
-                background: '#10b981', color: '#fff', letterSpacing: 0.3 }}>FREE</span>
-            </span>
-          } value={<span style={{ color: '#10b981', fontWeight: 800 }}>Rs. 0</span>}/>
-          <BreakRow label="Tax (5%)" value={PKR(tax)}/>
-          <div style={{ height: 1, background: '#E5E5E5', margin: '4px 0' }}/>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>Total</span>
-            <span style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>{PKR(total)}</span>
+      {/* ── Popular with your order ───────────────────────────── */}
+      {suggestions.length > 0 && (
+        <div style={{ borderTop: '8px solid #F5F5F5', paddingTop: 16 }}>
+          <div style={{ padding: '0 16px', marginBottom: 4 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>Popular with your order</div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 3 }}>Other customers also bought these</div>
+          </div>
+          <div className="fb-no-scrollbar" style={{ display: 'flex', gap: 10, padding: '12px 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+            {suggestions.map(item => (
+              <div key={item.id} style={{ width: 170, flexShrink: 0 }}>
+                <div style={{ height: 140, borderRadius: 12, background: '#F5F5F5', overflow: 'hidden', position: 'relative', marginBottom: 8 }}>
+                  {item.image && <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>}
+                  <Pressable onClick={() => addItem && addItem({ ...item, _id: item.id }, restaurantId, restaurantName)} style={{ position: 'absolute', bottom: 8, right: 8, width: 30, height: 30, borderRadius: 999, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
+                    <Icons.Plus size={14} stroke="#111" sw={2.5}/>
+                  </Pressable>
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {item.name}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--fb-primary)', marginTop: 2 }}>
+                  {PKR(Math.round(item.price * 0.9))}
+                  <span style={{ fontSize: 11, fontWeight: 500, color: '#9CA3AF', textDecoration: 'line-through', marginLeft: 5 }}>
+                    {PKR(item.price)}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      )}
 
-        {/* savings callout */}
-        {savings > 0 && (
-          <div style={{
-            marginTop: 10, padding: '10px 12px', borderRadius: 12,
-            background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.18)',
-            display: 'flex', alignItems: 'center', gap: 8,
+      {/* ── Price breakdown ───────────────────────────────────── */}
+      <div style={{ borderTop: '8px solid #F5F5F5', padding: '16px 16px 0' }}>
+        <PriceRow label="Subtotal" value={PKR(subtotal)}/>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+          <span style={{ fontSize: 14, color: '#374151' }}>Standard delivery</span>
+          <span style={{ fontSize: 14, color: '#374151' }}>
+            <span style={{ textDecoration: 'line-through', color: '#9CA3AF', marginRight: 6 }}>Rs. 79</span>
+            <span style={{ fontWeight: 700, color: 'var(--fb-primary)' }}>Free</span>
+          </span>
+        </div>
+        <div style={{ fontSize: 11, color: '#6b7280', marginTop: -4, marginBottom: 8 }}>
+          You've got free delivery for your first order 🏷️
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 14, color: '#374151' }}>
+            FairBite Fee
+            <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 4, background: '#10b981', color: '#fff' }}>FREE</span>
+          </span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#10b981' }}>Rs. 0</span>
+        </div>
+        <PriceRow label={`Tax (5%)`} value={PKR(tax)}/>
+      </div>
+
+      {/* ── Apply voucher ─────────────────────────────────────── */}
+      <div style={{ margin: '12px 16px', padding: '14px', borderRadius: 12, border: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ fontSize: 20 }}>🎟️</span>
+        <span style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Apply a voucher</span>
+        <Icons.ChevronR size={16} stroke="#9CA3AF" style={{ marginLeft: 'auto' }}/>
+      </div>
+
+      {/* ── Cutlery toggle ────────────────────────────────────── */}
+      <div style={{ margin: '0 16px 14px', padding: '14px', borderRadius: 12, border: '1px solid #F0F0F0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>🍴</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Cutlery</span>
+          </div>
+          {/* Toggle */}
+          <Pressable onClick={() => setCutlery(v => !v)} style={{
+            width: 48, height: 26, borderRadius: 13,
+            background: cutlery ? 'var(--fb-primary)' : '#D1D5DB',
+            position: 'relative', transition: 'background 0.2s',
           }}>
-            <div style={{ width: 28, height: 28, borderRadius: 999, background: '#10b981',
-              display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Icons.Tag size={14} stroke="#fff" sw={2.5}/>
-            </div>
-            <div style={{ flex: 1, fontSize: 12, color: '#065F46' }}>
-              You're saving <b>{PKR(savings)}</b> vs FoodPanda on this order
-            </div>
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 12,
-          fontSize: 11, color: '#6b7280' }}>
-          <span>Secure payment</span>
-          <span>·</span>
-          <span>Free cancellation</span>
-          <span>·</span>
-          <span>Live tracking</span>
+            <motion.div
+              animate={{ x: cutlery ? 24 : 2 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              style={{ position: 'absolute', top: 2, width: 22, height: 22, borderRadius: 999, background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }}
+            />
+          </Pressable>
+        </div>
+        <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>
+          {cutlery ? 'Cutlery included.' : 'No cutlery provided. Thanks for reducing waste!'}
         </div>
       </div>
 
-      {/* CTA */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30,
-        padding: '12px 16px 28px',
-        background: 'linear-gradient(180deg, transparent, #fff 30%)',
-      }}>
-        <motion.div animate={{ scale: [1, 1.015, 1] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}>
-          <BrandButton onClick={handlePlace} disabled={placing}>
-            {placing ? 'Placing order…' : `Place Order · ${PKR(total)}`}
-          </BrandButton>
+      {/* ── Total summary ─────────────────────────────────────── */}
+      <div style={{ margin: '0 16px 16px', padding: '14px', borderRadius: 12, border: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#111' }}>Total <span style={{ fontWeight: 400, fontSize: 12, color: '#6b7280' }}>(incl. fees and tax)</span></div>
+          <Pressable style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginTop: 2, textDecoration: 'underline' }}>
+            See summary
+          </Pressable>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--fb-primary)' }}>{PKR(discountedTotal)}</div>
+          <div style={{ fontSize: 12, color: '#9CA3AF', textDecoration: 'line-through', marginTop: 2 }}>{PKR(total)}</div>
+        </div>
+      </div>
+
+      {/* ── Fixed CTA ────────────────────────────────────────── */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px 28px', background: '#fff', borderTop: '1px solid #F0F0F0' }}>
+        <motion.div whileTap={{ scale: 0.98 }}>
+          <Pressable onClick={handlePlace} style={{
+            width: '100%', height: 52, borderRadius: 26,
+            background: placing ? '#ccc' : 'var(--fb-primary)',
+            color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 16, fontWeight: 700,
+            boxShadow: '0 6px 20px rgba(229,57,53,0.3)',
+          }}>
+            {placing ? 'Placing order…' : 'Confirm payment and address'}
+          </Pressable>
         </motion.div>
       </div>
+
     </div>
   );
 }
 
 function CartHeader({ onBack, subtitle }) {
   return (
-    <div style={{ position: 'sticky', top: 0, zIndex: 30, background: '#fff',
-      padding: '52px 16px 12px', borderBottom: '1px solid rgba(0,0,0,0.04)',
-      display: 'flex', alignItems: 'center', gap: 10 }}>
-      <Pressable onClick={onBack} style={{
-        width: 38, height: 38, borderRadius: 12, background: '#F5F5F5',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}><Icons.ChevronL size={20} stroke="#111" sw={2.5}/></Pressable>
+    <div style={{ position: 'sticky', top: 0, zIndex: 30, background: '#fff', padding: '52px 16px 12px', borderBottom: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <Pressable onClick={onBack} style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, color: '#111', fontWeight: 300 }}>
+        ×
+      </Pressable>
       <div>
-        <div style={{ fontSize: 18, fontWeight: 800, color: '#111', letterSpacing: -0.3 }}>Your Cart</div>
-        {subtitle && <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>from {subtitle}</div>}
+        <div style={{ fontSize: 18, fontWeight: 800, color: '#111', letterSpacing: -0.3 }}>Cart</div>
+        {subtitle && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 1 }}>{subtitle}</div>}
       </div>
     </div>
   );
 }
 
-function BreakRow({ label, value }) {
+function PriceRow({ label, value }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#374151' }}>
-      <span>{label}</span>
-      <span style={{ fontWeight: 600, color: '#111' }}>{value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+      <span style={{ fontSize: 14, color: '#374151' }}>{label}</span>
+      <span style={{ fontSize: 14, fontWeight: 600, color: '#111' }}>{value}</span>
     </div>
-  );
-}
-
-function SwipeRow({ children, onDelete }) {
-  const [removed, setRemoved] = useState(false);
-  const handleEnd = (_, info) => {
-    if (info.offset.x < -90) {
-      setRemoved(true);
-      setTimeout(onDelete, 180);
-    }
-  };
-  return (
-    <motion.div
-      initial={{ opacity: 1, height: 'auto' }}
-      animate={removed ? { opacity: 0, height: 0, marginBottom: -10 } : { opacity: 1 }}
-      transition={{ duration: 0.18 }}
-      style={{ position: 'relative', overflow: 'hidden', borderRadius: 16 }}>
-      <div style={{
-        position: 'absolute', inset: 0, borderRadius: 16,
-        background: 'var(--fb-primary)',
-        display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-        paddingRight: 22, color: '#fff', fontWeight: 700, fontSize: 13, gap: 6,
-      }}>
-        <Icons.Trash size={16}/> Delete
-      </div>
-      <motion.div drag="x"
-        style={{ position: 'relative', zIndex: 1, background: '#fff', borderRadius: 16 }}
-        dragConstraints={{ left: -120, right: 0 }}
-        dragElastic={0.2}
-        onDragEnd={handleEnd}>
-        {children}
-      </motion.div>
-    </motion.div>
   );
 }

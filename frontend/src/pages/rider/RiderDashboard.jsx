@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import socket from '../../services/socket';
 import { Icons, PKR, Pressable, SmartImg } from '../../components/ui';
 
 export default function RiderDashboard() {
@@ -16,60 +15,77 @@ export default function RiderDashboard() {
   const [earnings, setEarnings] = useState({ today: 0, week: 0, trips: 0, rating: 4.9, onlineHours: '0h 0m' });
   const [loading, setLoading] = useState(true);
 
+  const activeOrderRef = useRef(null);
+
   const fetchOrders = () => {
     api.get('/orders/available')
       .then(r => setOrders(r.data.data || []))
       .catch(() => {});
   };
 
+  const fetchActive = () => {
+    api.get('/orders').then(r => {
+      const myOrders = r.data.data || [];
+
+      // Calculate earnings from delivered orders
+      const deliveredOrders = myOrders.filter(o => o.status === 'delivered');
+      const today = new Date().toDateString();
+      const todayDelivered = deliveredOrders.filter(o => new Date(o.updated_at || o.created_at).toDateString() === today);
+      const todayEarnings = todayDelivered.reduce((sum, o) => sum + (o.pricing?.deliveryFee || 50), 0);
+      const weekEarnings = deliveredOrders.reduce((sum, o) => sum + (o.pricing?.deliveryFee || 50), 0);
+      setEarnings(e => ({
+        ...e,
+        today: todayEarnings,
+        week: weekEarnings,
+        trips: deliveredOrders.length,
+      }));
+
+      const assigned = myOrders.find(o => !['delivered', 'cancelled'].includes(o.status));
+      if (assigned) {
+        if (!activeOrderRef.current || activeOrderRef.current.id !== assigned.id) {
+          activeOrderRef.current = assigned;
+          setActiveOrder(assigned);
+          setOrders(prev => prev.filter(o => o.id !== assigned.id));
+          toast(`New delivery assigned! 🛵 #${assigned.orderNumber}`, {
+            icon: '🎯',
+            style: { background: '#fff', color: '#111', fontWeight: 700 },
+          });
+        } else {
+          // Update status without re-triggering toast
+          activeOrderRef.current = assigned;
+          setActiveOrder(assigned);
+        }
+      } else if (activeOrderRef.current) {
+        activeOrderRef.current = null;
+        setActiveOrder(null);
+      }
+    }).catch(() => {});
+  };
+
   useEffect(() => {
     fetchOrders();
+    fetchActive();
     setLoading(false);
-    const poll = setInterval(fetchOrders, 5000);
-
-    // Join with userId so backend can route auto-assignments to this rider
-    socket.emit('join_rider', { userId: user?.id });
-
-    socket.on('new_order', fetchOrders);
-
-    // Auto-assigned by backend when restaurant marks order ready
-    socket.on('order_assigned', (order) => {
-      setActiveOrder(order);
-      setOrders(prev => prev.filter(o => o.id !== order.id));
-      toast(`Order assigned to you! 🛵 #${order.orderNumber}`, {
-        icon: '🎯',
-        style: { background: '#fff', color: '#111', fontWeight: 700 },
-      });
-    });
-
+    const pollOrders = setInterval(fetchOrders, 5000);
+    const pollActive = setInterval(fetchActive, 4000);
     return () => {
-      clearInterval(poll);
-      socket.off('new_order', fetchOrders);
-      socket.off('order_assigned');
+      clearInterval(pollOrders);
+      clearInterval(pollActive);
     };
-  }, [user?.id]);
-
-  const acceptOrder = async (orderId) => {
-    try {
-      const { data } = await api.put(`/orders/${orderId}/accept`);
-      setActiveOrder(data.data);
-      setOrders(prev => prev.filter(o => o.id !== orderId));
-      setEarnings(e => ({ ...e, today: e.today + 150, trips: e.trips + 1 }));
-      toast.success('Order accepted!');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Could not accept order');
-    }
-  };
+  }, []);
 
   const updateStatus = async (status) => {
     if (!activeOrder) return;
     try {
       await api.put(`/orders/${activeOrder.id}/status`, { status });
       if (status === 'delivered') {
-        setEarnings(e => ({ ...e, today: e.today + 80 }));
+        activeOrderRef.current = null;
+        const earnedFee = activeOrder.pricing?.deliveryFee || 50;
+        setEarnings(e => ({ ...e, today: e.today + earnedFee, trips: e.trips + 1 }));
         setActiveOrder(null);
-        toast.success('Delivery completed!');
+        toast.success('Delivery completed! 🎉');
       } else {
+        activeOrderRef.current = { ...activeOrder, status };
         setActiveOrder(prev => ({ ...prev, status }));
       }
     } catch {
@@ -77,8 +93,8 @@ export default function RiderDashboard() {
     }
   };
 
-  const ACTIVE_STEPS = ['on-the-way', 'delivered'];
-  const activeStepIndex = activeOrder ? ACTIVE_STEPS.indexOf(activeOrder.status) : -1;
+  const STATUS_TO_STEP = { ready: 0, 'picked-up': 1, delivered: 2 };
+  const activeStepIndex = activeOrder ? (STATUS_TO_STEP[activeOrder.status] ?? -1) : -1;
 
   return (
     <div style={{ background: '#F5F5F5', minHeight: '100vh', paddingBottom: 40 }}>
@@ -242,11 +258,11 @@ export default function RiderDashboard() {
 
               {/* Progress bar */}
               <div style={{ display: 'flex', gap: 5, marginTop: 14 }}>
-                {['Picked up', 'On the way', 'Delivered'].map((step, i) => (
+                {['Assigned', 'Picked Up', 'Delivered'].map((step, i) => (
                   <div key={i} style={{ flex: 1 }}>
                     <div style={{
                       height: 4, borderRadius: 999,
-                      background: i <= activeStepIndex + 1 ? 'var(--fb-primary)' : '#F0F0F0',
+                      background: i <= activeStepIndex ? 'var(--fb-primary)' : '#F0F0F0',
                     }} />
                     <div style={{ fontSize: 9, color: '#9CA3AF', marginTop: 3, fontWeight: 600 }}>{step}</div>
                   </div>
@@ -254,31 +270,34 @@ export default function RiderDashboard() {
               </div>
 
               <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                {activeOrder.status !== 'on-the-way' && (
+                {activeOrder.status === 'ready' && (
                   <Pressable
-                    onClick={() => updateStatus('on-the-way')}
+                    onClick={() => updateStatus('picked-up')}
                     style={{
                       flex: 1, height: 46, borderRadius: 12,
-                      background: 'var(--fb-primary)', color: '#fff',
+                      background: '#10b981', color: '#fff',
                       fontSize: 13, fontWeight: 700,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      boxShadow: '0 4px 14px rgba(16,185,129,0.35)',
                     }}
                   >
-                    <Icons.Bike size={14} />On The Way
+                    <Icons.Check size={14} sw={3} />Confirm Pickup
                   </Pressable>
                 )}
-                <Pressable
-                  onClick={() => updateStatus('delivered')}
-                  style={{
-                    flex: 1, height: 46, borderRadius: 12,
-                    background: '#10b981', color: '#fff',
-                    fontSize: 13, fontWeight: 700,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    boxShadow: '0 4px 14px rgba(16,185,129,0.35)',
-                  }}
-                >
-                  <Icons.Check size={14} sw={3} />Delivered
-                </Pressable>
+                {(activeOrder.status === 'picked-up' || activeOrder.status === 'on-the-way') && (
+                  <Pressable
+                    onClick={() => updateStatus('delivered')}
+                    style={{
+                      flex: 1, height: 46, borderRadius: 12,
+                      background: '#10b981', color: '#fff',
+                      fontSize: 13, fontWeight: 700,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      boxShadow: '0 4px 14px rgba(16,185,129,0.35)',
+                    }}
+                  >
+                    <Icons.Check size={14} sw={3} />Mark Delivered
+                  </Pressable>
+                )}
               </div>
             </motion.div>
           )}
@@ -330,7 +349,7 @@ export default function RiderDashboard() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <AnimatePresence>
               {availableOrders.map(order => (
-                <OrderCard key={order.id} order={order} onAccept={() => acceptOrder(order.id)} />
+                <OrderCard key={order.id} order={order} />
               ))}
             </AnimatePresence>
           </div>
@@ -397,7 +416,7 @@ function RouteRow({ icon, color, title, sub, tag }) {
   );
 }
 
-function OrderCard({ order, onAccept }) {
+function OrderCard({ order }) {
   const [countdown, setCountdown] = useState(30);
   useEffect(() => {
     const t = setInterval(() => setCountdown(c => {
@@ -484,29 +503,7 @@ function OrderCard({ order, onAccept }) {
         <span style={{ color: '#10b981', fontWeight: 700 }}>+Rs. 40 surge</span>
       </div>
 
-      {/* Actions */}
-      <div style={{ display: 'flex', gap: 8 }}>
-        <Pressable style={{
-          flex: 1, height: 46, borderRadius: 12,
-          border: '1px solid #E5E5E5', background: '#fff',
-          color: '#374151', fontSize: 13, fontWeight: 600,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          Decline
-        </Pressable>
-        <Pressable
-          onClick={onAccept}
-          style={{
-            flex: 2, height: 46, borderRadius: 12,
-            background: 'var(--fb-primary)', color: '#fff',
-            fontSize: 14, fontWeight: 700,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            boxShadow: '0 4px 16px rgba(229,57,53,0.32)',
-          }}
-        >
-          <Icons.Check size={15} sw={3} />Accept Order
-        </Pressable>
-      </div>
+      {/* Auto-assigned — no manual accept needed */}
     </motion.div>
   );
 }

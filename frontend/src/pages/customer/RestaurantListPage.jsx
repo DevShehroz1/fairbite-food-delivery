@@ -60,6 +60,7 @@ export default function RestaurantListPage() {
             <input
               value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Search restaurants, dishes…"
+              autoFocus
               style={{
                 flex: 1, border: 0, background: 'transparent', outline: 0,
                 fontSize: 14, fontWeight: 500, color: '#111',
@@ -80,18 +81,41 @@ export default function RestaurantListPage() {
       </div>
 
       <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {loading
-          ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i}/>)
-          : sorted.length === 0
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i}/>)
+        ) : sorted.length === 0 ? (
+          search
             ? <EmptySearch query={search} onClear={() => setSearch('')}/>
-            : sorted.map((r, i) => (
+            : (
+              <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                <Icons.Compass size={48} stroke="#D1D5DB"/>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#111', marginTop: 16 }}>
+                  No restaurants available
+                </div>
+                <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>
+                  Check back soon — new restaurants are joining!
+                </div>
+              </div>
+            )
+        ) : (
+          <>
+            {!search && (
+              <div style={{
+                fontSize: 13, fontWeight: 700, color: '#9CA3AF',
+                textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4,
+              }}>
+                All Restaurants ({sorted.length})
+              </div>
+            )}
+            {sorted.map((r, i) => (
               <motion.div key={r.id}
                 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05, duration: 0.3 }}>
                 <BigRestaurantCard r={r} onClick={() => navigate(`/restaurants/${r.id}`)}/>
               </motion.div>
-            ))
-        }
+            ))}
+          </>
+        )}
       </div>
 
       <BottomNav tab={tab} onTab={handleTab}/>

@@ -34,7 +34,6 @@ exports.login = async (req, res, next) => {
     const isMatch = await User.matchPassword(password, user.password);
     if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
-    await User.update(user.id, { last_login: new Date() });
     sendToken(user, 200, res);
   } catch (err) { next(err); }
 };
@@ -58,7 +57,7 @@ exports.googleAuth = async (req, res, next) => {
     if (!user) {
       user = await User.createGoogleUser({ name, email, avatar: picture, googleId, role: 'customer' });
     } else {
-      await User.update(user.id, { avatar: picture || user.avatar, last_login: new Date() });
+      await User.update(user.id, { avatar: picture || user.avatar });
       user.avatar = picture || user.avatar;
     }
 
@@ -74,14 +73,16 @@ exports.googleAuth = async (req, res, next) => {
 // Google OAuth — access token flow (used with useGoogleLogin hook)
 exports.googleTokenAuth = async (req, res, next) => {
   try {
-    const { email, name, avatar, googleId } = req.body;
+    const { email, name, avatar, googleId, role } = req.body;
     if (!email) return res.status(400).json({ success: false, message: 'No email provided' });
 
     let user = await User.findByEmail(email);
     if (!user) {
-      user = await User.createGoogleUser({ name, email, avatar, googleId, role: 'customer' });
+      const allowed = ['customer', 'restaurant', 'rider'];
+      const assignedRole = allowed.includes(role) ? role : 'customer';
+      user = await User.createGoogleUser({ name, email, avatar, googleId, role: assignedRole });
     } else {
-      if (avatar) await User.update(user.id, { avatar, last_login: new Date() });
+      if (avatar) await User.update(user.id, { avatar });
       user.avatar = avatar || user.avatar;
     }
 

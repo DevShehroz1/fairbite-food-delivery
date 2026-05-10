@@ -7,19 +7,18 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { Icons, Pressable, BrandButton, FBLogoMark } from '../../components/ui';
 
-const DEMO_ROLES = [
-  { label: 'Customer',   email: 'customer@demo.com',   password: 'demo123' },
-  { label: 'Rider',      email: 'rider@demo.com',       password: 'demo123' },
-  { label: 'Restaurant', email: 'restaurant@demo.com', password: 'demo123' },
-  { label: 'Admin',      email: 'admin@demo.com',       password: 'demo123' },
-];
-
 const ROLE_ROUTES = {
   customer:   '/home',
   rider:      '/dashboard/rider',
   restaurant: '/dashboard/restaurant',
   admin:      '/dashboard/admin',
 };
+
+const ROLES = [
+  { key: 'customer',   label: 'Customer',   sub: 'Order food',      emoji: '🛒' },
+  { key: 'restaurant', label: 'Restaurant', sub: 'Manage orders',   emoji: '🍽️' },
+  { key: 'rider',      label: 'Rider',      sub: 'Deliver food',    emoji: '🛵' },
+];
 
 const FOOD_IMGS = [
   'photo-1568901346375-23c9450c58cd',
@@ -36,20 +35,14 @@ const FOOD_IMGS = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [selectedRole, setSelectedRole] = useState('customer');
   const [tab, setTab]         = useState('login');
-  const [role, setRole]       = useState('Customer');
-  const [email, setEmail]     = useState('customer@demo.com');
-  const [password, setPass]   = useState('demo123');
+  const [email, setEmail]     = useState('');
+  const [password, setPass]   = useState('');
   const [name, setName]       = useState('');
   const [showPw, setShowPw]   = useState(false);
   const [loading, setLoading] = useState(false);
   const [gLoading, setGLoading] = useState(false);
-
-  const selectDemo = (r) => {
-    setRole(r.label);
-    setEmail(r.email);
-    setPass(r.password);
-  };
 
   const handleSubmit = async () => {
     if (!email || !password) return toast.error('Enter email and password');
@@ -59,7 +52,7 @@ export default function LandingPage() {
       const endpoint = tab === 'login' ? '/auth/login' : '/auth/register';
       const payload  = tab === 'login'
         ? { email, password }
-        : { name, email, password, role: role.toLowerCase() };
+        : { name, email, password, role: selectedRole };
       const { data } = await api.post(endpoint, payload);
       login(data.token, data.user);
       toast.success(`Welcome${data.user.name ? ', ' + data.user.name.split(' ')[0] : ''}!`);
@@ -71,28 +64,25 @@ export default function LandingPage() {
     }
   };
 
-  // Google One-Tap / popup login
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setGLoading(true);
       try {
-        // Get user info from Google
         const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
         const profile = await profileRes.json();
-
-        // Send to our backend
         const { data } = await api.post('/auth/google-token', {
           email: profile.email,
           name:  profile.name,
           avatar: profile.picture,
           googleId: profile.sub,
+          role: selectedRole,
         });
         login(data.token, data.user);
         toast.success(`Welcome, ${data.user.name.split(' ')[0]}!`);
         navigate(ROLE_ROUTES[data.user.role] || '/home');
-      } catch (err) {
+      } catch {
         toast.error('Google sign-in failed. Try email login.');
       } finally {
         setGLoading(false);
@@ -101,169 +91,142 @@ export default function LandingPage() {
     onError: () => toast.error('Google sign-in was cancelled'),
   });
 
-  const stagger = {
-    hidden: {},
-    show: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
-  };
-  const item = {
-    hidden: { opacity: 0, y: 14 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.2, 0, 0, 1] } },
-  };
+  const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } } };
+  const item = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.2, 0, 0, 1] } } };
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden', background: '#0b0b0b' }}>
       {/* food collage bg */}
-      <div style={{
-        position: 'fixed', inset: 0,
-        display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(3, 1fr)',
-      }}>
+      <div style={{ position: 'fixed', inset: 0, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(3, 1fr)' }}>
         {FOOD_IMGS.map((id, i) => (
           <img key={i} src={`https://images.unsplash.com/${id}?w=400&auto=format&fit=crop`}
             alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
         ))}
       </div>
-      {/* blur overlay */}
       <div style={{
         position: 'fixed', inset: 0,
         backdropFilter: 'blur(28px) saturate(140%)',
         WebkitBackdropFilter: 'blur(28px) saturate(140%)',
-        background: 'linear-gradient(180deg, rgba(15,10,10,0.55), rgba(20,10,10,0.82))',
+        background: 'linear-gradient(180deg, rgba(15,10,10,0.55), rgba(20,10,10,0.85))',
       }}/>
 
       <motion.div variants={stagger} initial="hidden" animate="show"
         style={{
           position: 'relative', zIndex: 1,
           minHeight: '100vh', maxWidth: 430, margin: '0 auto',
-          padding: '60px 24px 40px',
+          padding: '52px 24px 40px',
           display: 'flex', flexDirection: 'column', color: '#fff',
         }}>
 
         {/* logo */}
-        <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+        <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FBLogoMark size={28}/>
           </div>
           <div>
             <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.3 }}>FairBite</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>Fair prices. No hidden fees.</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Fair prices. No hidden fees.</div>
           </div>
         </motion.div>
 
-        <motion.h1 variants={item} style={{
-          fontSize: 32, fontWeight: 800, letterSpacing: -0.6,
-          margin: '20px 0 6px', lineHeight: 1.1,
-        }}>
-          Welcome back to a <span style={{ color: 'var(--fb-accent)' }}>fair</span> deal.
+        <motion.h1 variants={item} style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, margin: '0 0 4px', lineHeight: 1.15 }}>
+          Welcome to a <span style={{ color: 'var(--fb-accent)' }}>fair</span> deal.
         </motion.h1>
-        <motion.p variants={item} style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, margin: '0 0 22px' }}>
+        <motion.p variants={item} style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, margin: '0 0 20px' }}>
           Sign in or create an account in seconds.
         </motion.p>
 
+        {/* Role selector */}
+        <motion.div variants={item} style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>
+            I am a…
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            {ROLES.map(r => {
+              const active = selectedRole === r.key;
+              return (
+                <Pressable key={r.key} onClick={() => setSelectedRole(r.key)} style={{
+                  padding: '12px 8px', borderRadius: 14, textAlign: 'center',
+                  background: active ? 'rgba(229,57,53,0.18)' : 'rgba(255,255,255,0.07)',
+                  border: `1.5px solid ${active ? 'var(--fb-primary)' : 'rgba(255,255,255,0.12)'}`,
+                  transition: 'all .2s',
+                }}>
+                  <div style={{ fontSize: 22, marginBottom: 4 }}>{r.emoji}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: active ? '#fff' : 'rgba(255,255,255,0.8)' }}>{r.label}</div>
+                  <div style={{ fontSize: 10, color: active ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)', marginTop: 2 }}>{r.sub}</div>
+                </Pressable>
+              );
+            })}
+          </div>
+        </motion.div>
+
         {/* Google button */}
-        <motion.div variants={item} style={{ marginBottom: 16 }}>
-          <Pressable
-            onClick={() => googleLogin()}
-            disabled={gLoading}
-            style={{
-              width: '100%', height: 52, borderRadius: 16,
-              background: '#fff', color: '#111',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-              fontSize: 15, fontWeight: 700,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-              opacity: gLoading ? 0.7 : 1,
-            }}
-          >
-            {gLoading ? (
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                <Icons.Settings size={18} stroke="#666" />
-              </motion.div>
-            ) : (
-              <Icons.Google size={20} />
-            )}
-            {gLoading ? 'Signing in with Google…' : 'Continue with Google'}
+        <motion.div variants={item} style={{ marginBottom: 14 }}>
+          <Pressable onClick={() => googleLogin()} disabled={gLoading} style={{
+            width: '100%', height: 52, borderRadius: 16,
+            background: '#fff', color: '#111',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+            fontSize: 15, fontWeight: 700,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            opacity: gLoading ? 0.7 : 1,
+          }}>
+            {gLoading
+              ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}><Icons.Settings size={18} stroke="#666"/></motion.div>
+              : <Icons.Google size={20}/>
+            }
+            {gLoading ? 'Signing in…' : `Continue with Google as ${ROLES.find(r => r.key === selectedRole)?.label}`}
           </Pressable>
         </motion.div>
 
         {/* divider */}
-        <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.15)' }}/>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>or sign in with email</span>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.15)' }}/>
+        <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }}/>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>or sign in with email</span>
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }}/>
         </motion.div>
 
-        {/* tab switcher */}
+        {/* login / register tab */}
         <motion.div variants={item} style={{
-          display: 'flex', background: 'rgba(255,255,255,0.12)', borderRadius: 16,
-          padding: 4, marginBottom: 16,
+          display: 'flex', background: 'rgba(255,255,255,0.1)', borderRadius: 14, padding: 4, marginBottom: 14,
         }}>
           {['login', 'register'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
-              flex: 1, padding: '11px 0', borderRadius: 12,
+              flex: 1, padding: '10px 0', borderRadius: 10,
               background: tab === t ? '#fff' : 'transparent',
-              color: tab === t ? '#111' : 'rgba(255,255,255,0.85)',
-              border: 0, fontSize: 14, fontWeight: 700, cursor: 'pointer',
-              textTransform: 'capitalize', transition: 'all .25s',
-            }}>{t}</button>
+              color: tab === t ? '#111' : 'rgba(255,255,255,0.8)',
+              border: 0, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              textTransform: 'capitalize', transition: 'all .2s',
+            }}>{t === 'login' ? 'Sign In' : 'Register'}</button>
           ))}
         </motion.div>
 
         <AnimatePresence>
           {tab === 'register' && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden', marginBottom: 12 }}>
+              exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden', marginBottom: 10 }}>
               <FloatField label="Full Name" value={name} onChange={setName}/>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <motion.div variants={item} style={{ marginBottom: 12 }}>
+        <motion.div variants={item} style={{ marginBottom: 10 }}>
           <FloatField label="Email" value={email} onChange={setEmail} type="email"/>
         </motion.div>
-        <motion.div variants={item} style={{ marginBottom: 14 }}>
+        <motion.div variants={item} style={{ marginBottom: 18 }}>
           <FloatField label="Password" value={password} onChange={setPass}
             type={showPw ? 'text' : 'password'}
             trailing={
-              <Pressable onClick={() => setShowPw(!showPw)}
-                style={{ color: 'rgba(255,255,255,0.7)', padding: 6 }}>
+              <Pressable onClick={() => setShowPw(!showPw)} style={{ color: 'rgba(255,255,255,0.6)', padding: 6 }}>
                 {showPw ? <Icons.EyeOff size={18}/> : <Icons.Eye size={18}/>}
               </Pressable>
             }/>
         </motion.div>
 
-        {/* demo role picker */}
         <motion.div variants={item}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 8,
-            textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 600 }}>
-            Quick demo — sign in as
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {DEMO_ROLES.map(r => (
-              <Pressable key={r.label} onClick={() => selectDemo(r)} style={{
-                padding: '10px 12px', borderRadius: 12,
-                background: role === r.label ? 'var(--fb-primary)' : 'rgba(255,255,255,0.1)',
-                border: role === r.label ? '1px solid var(--fb-primary)' : '1px solid rgba(255,255,255,0.18)',
-                color: '#fff', fontSize: 13, fontWeight: 600,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              }}>
-                {r.label}
-                {role === r.label && <Icons.Check size={14} sw={3}/>}
-              </Pressable>
-            ))}
-          </div>
-        </motion.div>
-
-        <div style={{ flex: 1, minHeight: 24 }}/>
-
-        <motion.div variants={item} style={{ marginTop: 18 }}>
           <BrandButton onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Signing in…' : (tab === 'login' ? `Sign In as ${role}` : 'Create Account')}
+            {loading ? 'Please wait…' : (tab === 'login' ? 'Sign In' : `Create ${ROLES.find(r => r.key === selectedRole)?.label} Account`)}
           </BrandButton>
-        </motion.div>
-        <motion.div variants={item} style={{
-          textAlign: 'center', marginTop: 12, fontSize: 11.5, color: 'rgba(255,255,255,0.55)',
-        }}>
-          Google sign-in creates a customer account · Demo accounts for all roles
         </motion.div>
       </motion.div>
     </div>
@@ -275,15 +238,15 @@ function FloatField({ label, value, onChange, type = 'text', trailing }) {
   const float = focus || value;
   return (
     <div style={{
-      position: 'relative', height: 56, borderRadius: 16,
-      background: 'rgba(255,255,255,0.08)',
-      border: `1px solid ${focus ? 'rgba(255,112,67,0.6)' : 'rgba(255,255,255,0.15)'}`,
+      position: 'relative', height: 54, borderRadius: 14,
+      background: 'rgba(255,255,255,0.07)',
+      border: `1px solid ${focus ? 'rgba(255,112,67,0.6)' : 'rgba(255,255,255,0.13)'}`,
       transition: 'border .2s',
     }}>
       <label style={{
         position: 'absolute', left: 16, pointerEvents: 'none',
-        top: float ? 8 : 18, fontSize: float ? 11 : 14,
-        color: float ? 'var(--fb-accent)' : 'rgba(255,255,255,0.55)',
+        top: float ? 7 : 17, fontSize: float ? 10 : 14,
+        color: float ? 'var(--fb-accent)' : 'rgba(255,255,255,0.5)',
         fontWeight: float ? 600 : 500, transition: 'all .2s',
       }}>{label}</label>
       <input
@@ -291,11 +254,11 @@ function FloatField({ label, value, onChange, type = 'text', trailing }) {
         onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
         style={{
           width: '100%', height: '100%', background: 'transparent',
-          border: 0, outline: 0, padding: '20px 50px 6px 16px',
-          color: '#fff', fontSize: 15, fontWeight: 500,
+          border: 0, outline: 0, padding: '18px 46px 6px 16px',
+          color: '#fff', fontSize: 14, fontWeight: 500,
         }}/>
       {trailing && (
-        <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}>
+        <div style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)' }}>
           {trailing}
         </div>
       )}

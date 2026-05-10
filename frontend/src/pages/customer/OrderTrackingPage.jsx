@@ -2,53 +2,72 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
-import socket from '../../services/socket';
 import { Icons, Pressable, SmartImg, BrandButton } from '../../components/ui';
 
-const STATUS_STEPS = [
-  { key: 'pending',    label: 'Order Placed',  sub: 'We received your order' },
-  { key: 'confirmed',  label: 'Confirmed',     sub: 'Restaurant accepted' },
-  { key: 'preparing',  label: 'Preparing',     sub: 'Chefs are on it' },
-  { key: 'ready',      label: 'Ready',         sub: 'Awaiting pickup' },
-  { key: 'picked-up',  label: 'Picked Up',     sub: 'Rider has your food' },
-  { key: 'on-the-way', label: 'On The Way',    sub: '1.2 km away' },
-  { key: 'delivered',  label: 'Delivered',     sub: 'Enjoy your meal!' },
+// ─── 4-step customer UI mapping ──────────────────────────────────────────────
+const UI_STEPS = [
+  { label: 'Order Placed',  sub: 'We received your order' },
+  { label: 'Preparing',     sub: 'Restaurant is cooking your order' },
+  { label: 'On the Way',    sub: 'Rider is heading to you' },
+  { label: 'Delivered',     sub: 'Enjoy your meal! 🎉' },
 ];
+
+function backendToStep(status) {
+  switch (status) {
+    case 'pending':    return 0;
+    case 'confirmed':
+    case 'preparing':
+    case 'ready':      return 1;
+    case 'picked-up':
+    case 'on-the-way': return 2;
+    case 'delivered':  return 3;
+    default:           return 0;
+  }
+}
 
 const ROUTE_PATH = "M50,360 C90,320 130,300 165,280 S220,240 250,200 S290,140 340,120";
 
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function OrderTrackingPage() {
-  const { id }    = useParams();
-  const navigate  = useNavigate();
-  const pathRef   = useRef(null);
+  const { id }   = useParams();
+  const navigate = useNavigate();
+  const pathRef  = useRef(null);
 
-  const [order, setOrder]   = useState(null);
+  const [order, setOrder]     = useState(null);
   const [loading, setLoading] = useState(true);
-  const [step, setStep]     = useState(0);
-  const [eta, setEta]       = useState(28 * 60);
+  const [step, setStep]       = useState(0);
+  const [cancelled, setCancelled] = useState(false);
+  const [eta, setEta]         = useState(28 * 60);
   const [riderPos, setRiderPos] = useState({ x: 50, y: 360 });
 
+  // Initial fetch
   useEffect(() => {
     api.get(`/orders/${id}`)
       .then(r => {
         const o = r.data.data;
         setOrder(o);
-        const idx = STATUS_STEPS.findIndex(s => s.key === o.status);
-        setStep(Math.max(0, idx));
+        if (o.status === 'cancelled') { setCancelled(true); return; }
+        setStep(backendToStep(o.status));
+        const mins = o.restaurant?.delivery?.estimatedTime;
+        if (mins) setEta(mins * 60);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [id]);
 
-  // Socket.io real-time updates
+  // Poll every 3 seconds
   useEffect(() => {
-    socket.emit('join_order', id);
-    socket.on(`order_${id}_status`, ({ status, rider }) => {
-      const idx = STATUS_STEPS.findIndex(s => s.key === status);
-      if (idx >= 0) setStep(idx);
-      if (rider) setOrder(prev => prev ? { ...prev, rider } : prev);
-    });
-    return () => { socket.off(`order_${id}_status`); };
+    const poll = setInterval(() => {
+      api.get(`/orders/${id}`)
+        .then(r => {
+          const o = r.data.data;
+          setOrder(o);
+          if (o.status === 'cancelled') { setCancelled(true); return; }
+          setStep(backendToStep(o.status));
+        })
+        .catch(() => {});
+    }, 3000);
+    return () => clearInterval(poll);
   }, [id]);
 
   // ETA countdown
@@ -57,27 +76,20 @@ export default function OrderTrackingPage() {
     return () => clearInterval(t);
   }, []);
 
-  // Demo: auto-advance step every 9s
-  useEffect(() => {
-    if (step >= STATUS_STEPS.length - 1) return;
-    const t = setTimeout(() => setStep(s => Math.min(STATUS_STEPS.length - 1, s + 1)), 9000);
-    return () => clearTimeout(t);
-  }, [step]);
+  // Rider dot — only moves when step >= 2
+  const mapProgress = step >= 2 ? Math.min(1, (step - 1) / 2) : 0;
 
-  // Rider dot position along path
   useEffect(() => {
     const el = pathRef.current;
     if (!el) return;
     try {
       const total = el.getTotalLength();
-      const progress = Math.min(1, step / (STATUS_STEPS.length - 1));
-      const pt = el.getPointAtLength(progress * total);
+      const pt = el.getPointAtLength(mapProgress * total);
       setRiderPos({ x: pt.x, y: pt.y });
     } catch (_) {}
-  }, [step]);
+  }, [mapProgress]);
 
-  const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-  const progress = Math.min(1, step / (STATUS_STEPS.length - 1));
+  const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
   if (loading) return (
     <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -87,55 +99,80 @@ export default function OrderTrackingPage() {
     </div>
   );
 
-  const currentStep = STATUS_STEPS[step];
+  if (cancelled) return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 }}>
+      <div style={{ fontSize: 48 }}>😔</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: '#111' }}>Order Cancelled</div>
+      <div style={{ fontSize: 14, color: '#6b7280', textAlign: 'center' }}>
+        Your order #{order?.orderNumber} has been cancelled.
+      </div>
+      <BrandButton onClick={() => navigate('/restaurants')}>Order Again</BrandButton>
+    </div>
+  );
+
+  const currentUIStep = UI_STEPS[step];
   const rider = order?.rider;
 
   return (
-    <div style={{ height: '100vh', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      {/* map — top 60% */}
-      <div style={{ position: 'relative', flex: '0 0 60%', overflow: 'hidden' }}>
-        <CityMap progress={progress} pathRef={pathRef} riderPos={riderPos}/>
+    <div style={{ height: '100vh', background: '#fff', display: 'flex',
+      flexDirection: 'column', overflow: 'hidden' }}>
 
-        {/* back btn */}
+      {/* ── Map – top 60% ── */}
+      <div style={{ position: 'relative', flex: '0 0 60%', overflow: 'hidden' }}>
+        <CityMap progress={mapProgress} pathRef={pathRef} riderPos={riderPos} riderMoving={step >= 2}/>
+
+        {/* Back button */}
         <Pressable onClick={() => navigate(-1)} style={{
           position: 'absolute', top: 52, left: 16, zIndex: 5,
-          width: 40, height: 40, borderRadius: 999, background: 'rgba(255,255,255,0.96)',
-          backdropFilter: 'blur(10px)',
+          width: 40, height: 40, borderRadius: 999,
+          background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(10px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-        }}><Icons.ChevronL size={20} stroke="#111" sw={2.5}/></Pressable>
+        }}>
+          <Icons.ChevronL size={20} stroke="#111" sw={2.5}/>
+        </Pressable>
 
         {/* ETA pill */}
         <div style={{
           position: 'absolute', top: 52, right: 16, zIndex: 5,
-          padding: '8px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.96)',
-          backdropFilter: 'blur(10px)', boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+          padding: '8px 14px', borderRadius: 999,
+          background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(10px)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
           display: 'flex', alignItems: 'center', gap: 6,
         }}>
-          <motion.div animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.4, repeat: Infinity }}
+          <motion.div
+            animate={{ opacity: [1, 0.3, 1] }}
+            transition={{ duration: 1.4, repeat: Infinity }}
             style={{ width: 8, height: 8, borderRadius: 999, background: '#10b981' }}/>
           <span style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>
             Arriving in <span style={{ color: 'var(--fb-primary)' }}>{fmt(eta)}</span>
           </span>
         </div>
 
-        {/* distance pill */}
-        <div style={{
-          position: 'absolute', top: 106, right: 16, zIndex: 5,
-          padding: '6px 10px', borderRadius: 12, background: 'rgba(17,17,17,0.85)',
-          backdropFilter: 'blur(8px)', color: '#fff',
-          fontSize: 11, fontWeight: 700,
-          display: 'flex', alignItems: 'center', gap: 5,
-        }}>
-          <Icons.Bike size={12} stroke="var(--fb-accent)" sw={2.5}/>
-          1.2 km away
-        </div>
+        {/* Distance pill — only show when rider is on the way */}
+        <AnimatePresence>
+          {step >= 2 && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              style={{
+                position: 'absolute', top: 106, right: 16, zIndex: 5,
+                padding: '6px 10px', borderRadius: 12,
+                background: 'rgba(17,17,17,0.85)', backdropFilter: 'blur(8px)',
+                color: '#fff', fontSize: 11, fontWeight: 700,
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}>
+              <Icons.Bike size={12} stroke="var(--fb-accent)" sw={2.5}/>
+              1.2 km away
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* social proof */}
+        {/* Social proof */}
         <div style={{
           position: 'absolute', bottom: 14, left: 16, zIndex: 5,
-          padding: '6px 10px', borderRadius: 12, background: 'rgba(255,255,255,0.96)',
-          backdropFilter: 'blur(8px)',
+          padding: '6px 10px', borderRadius: 12,
+          background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(8px)',
           fontSize: 11, fontWeight: 600, color: '#374151',
           boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
         }}>
@@ -143,44 +180,54 @@ export default function OrderTrackingPage() {
         </div>
       </div>
 
-      {/* status panel — bottom 40% */}
+      {/* ── Bottom panel – bottom 40% ── */}
       <div style={{
         flex: 1, background: '#fff', overflow: 'auto',
         borderTopLeftRadius: 28, borderTopRightRadius: 28,
         marginTop: -28, position: 'relative', zIndex: 4,
         boxShadow: '0 -10px 30px rgba(0,0,0,0.08)',
       }}>
+        {/* Drag handle */}
         <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 6px' }}>
           <div style={{ width: 40, height: 4, borderRadius: 999, background: '#E5E5E5' }}/>
         </div>
 
-        <div style={{ padding: '6px 18px 18px' }}>
-          <div>
+        <div style={{ padding: '6px 18px 24px' }}>
+
+          {/* Order number + current status label */}
+          <div style={{ marginBottom: 16 }}>
             <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>
               Order #{order?.orderNumber || '—'}
             </div>
             <div style={{ fontSize: 22, fontWeight: 800, color: '#111', letterSpacing: -0.3, marginTop: 2 }}>
-              {currentStep.label}
+              {currentUIStep.label}
             </div>
-            <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>{currentStep.sub}</div>
+            <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>
+              {currentUIStep.sub}
+            </div>
           </div>
 
-          {/* rider card (shows after pickup) */}
+          {/* ── Horizontal 4-step stepper ── */}
+          <HorizontalStepper step={step}/>
+
+          {/* Rider card — shows when rider is moving (step >= 2) */}
           <AnimatePresence>
-            {step >= 4 && (
+            {step >= 2 && (
               <motion.div
-                initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 14 }}
                 style={{
-                  marginTop: 14, padding: 12, borderRadius: 16,
+                  marginTop: 16, padding: 12, borderRadius: 16,
                   background: 'linear-gradient(135deg, #111 0%, #1f1f1f 100%)',
                   display: 'flex', alignItems: 'center', gap: 12,
                 }}>
                 {rider?.avatar
                   ? <SmartImg src={rider.avatar} style={{ width: 48, height: 48, flexShrink: 0 }} radius={999}/>
-                  : <div style={{ width: 48, height: 48, borderRadius: 999, background: '#333',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  : (
+                    <div style={{ width: 48, height: 48, borderRadius: 999, background: '#333',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Icons.User size={24} stroke="#fff"/>
                     </div>
+                  )
                 }
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>
@@ -194,54 +241,16 @@ export default function OrderTrackingPage() {
                   width: 40, height: 40, borderRadius: 999, background: '#10b981',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: '#fff', boxShadow: '0 4px 12px rgba(16,185,129,0.4)',
-                }}><Icons.Phone size={16}/></Pressable>
+                }}>
+                  <Icons.Phone size={16}/>
+                </Pressable>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* vertical stepper */}
-          <div style={{ marginTop: 18 }}>
-            {STATUS_STEPS.map((s, i) => {
-              const reached  = i <= step;
-              const current  = i === step;
-              return (
-                <div key={s.key} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <div style={{ width: 32, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <motion.div
-                      initial={false}
-                      animate={{
-                        scale: current ? [1, 1.18, 1] : 1,
-                        backgroundColor: reached ? '#10b981' : '#F5F5F5',
-                        boxShadow: current ? '0 0 0 6px rgba(16,185,129,0.18)' : '0 0 0 0 rgba(0,0,0,0)',
-                      }}
-                      transition={{ scale: { duration: 1.4, repeat: current ? Infinity : 0, ease: 'easeInOut' } }}
-                      style={{
-                        width: 26, height: 26, borderRadius: 999,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                      {reached
-                        ? <Icons.Check size={13} sw={3} stroke="#fff"/>
-                        : <span style={{ width: 8, height: 8, borderRadius: 999, background: '#D1D5DB', display: 'block' }}/>}
-                    </motion.div>
-                    {i < STATUS_STEPS.length - 1 && (
-                      <div style={{ width: 2, flex: 1, minHeight: 22,
-                        background: i < step ? '#10b981' : '#F0F0F0' }}/>
-                    )}
-                  </div>
-                  <div style={{ flex: 1, paddingBottom: 14 }}>
-                    <div style={{ fontSize: 14, fontWeight: reached ? 700 : 500,
-                      color: reached ? '#111' : '#9CA3AF' }}>{s.label}</div>
-                    <div style={{ fontSize: 11, color: reached ? '#6b7280' : '#D1D5DB', marginTop: 2 }}>
-                      {s.sub}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {step >= STATUS_STEPS.length - 1 && (
-            <div style={{ marginTop: 8 }}>
+          {/* CTA when delivered */}
+          {step >= 3 && (
+            <div style={{ marginTop: 16 }}>
               <BrandButton onClick={() => navigate('/orders')}>View Order History</BrandButton>
             </div>
           )}
@@ -251,7 +260,85 @@ export default function OrderTrackingPage() {
   );
 }
 
-function CityMap({ progress, pathRef, riderPos }) {
+// ─── Horizontal 4-step stepper ───────────────────────────────────────────────
+function HorizontalStepper({ step }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+      padding: '4px 0 8px', position: 'relative' }}>
+      {UI_STEPS.map((s, i) => {
+        const isPast    = i < step;
+        const isCurrent = i === step;
+        const isFuture  = i > step;
+
+        return (
+          <React.Fragment key={i}>
+            {/* connector line (before each step except the first) */}
+            {i > 0 && (
+              <div style={{
+                flex: 1,
+                height: 3,
+                marginTop: isCurrent || (i - 1 < step) ? 12 : 10,
+                borderRadius: 999,
+                background: i <= step ? '#10b981' : '#E5E5E5',
+                alignSelf: 'flex-start',
+                flexShrink: 0,
+              }}/>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: 5, flexShrink: 0 }}>
+
+              {/* Circle */}
+              {isCurrent ? (
+                <motion.div
+                  animate={{
+                    boxShadow: [
+                      '0 0 0 0px rgba(229,57,53,0.18)',
+                      '0 0 0 6px rgba(229,57,53,0.18)',
+                      '0 0 0 0px rgba(229,57,53,0.0)',
+                    ],
+                  }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                  style={{
+                    width: 28, height: 28, borderRadius: 999,
+                    background: 'var(--fb-primary)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 999, background: '#fff' }}/>
+                </motion.div>
+              ) : isPast ? (
+                <div style={{
+                  width: 22, height: 22, borderRadius: 999, background: '#10b981',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icons.Check size={11} sw={3} stroke="#fff"/>
+                </div>
+              ) : (
+                /* future */
+                <div style={{
+                  width: 22, height: 22, borderRadius: 999,
+                  border: '2px solid #D1D5DB', background: '#fff',
+                }}/>
+              )}
+
+              {/* Label */}
+              <div style={{
+                fontSize: 10, fontWeight: isCurrent ? 700 : isFuture ? 400 : 600,
+                color: isCurrent ? 'var(--fb-primary)' : isFuture ? '#9CA3AF' : '#374151',
+                textAlign: 'center', maxWidth: 60, lineHeight: 1.2,
+              }}>
+                {s.label}
+              </div>
+            </div>
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── City map SVG ─────────────────────────────────────────────────────────────
+function CityMap({ progress, pathRef, riderPos, riderMoving }) {
   return (
     <div style={{ position: 'absolute', inset: 0,
       background: 'linear-gradient(180deg, #E8F4F1 0%, #F0F4ED 100%)' }}>
@@ -303,14 +390,14 @@ function CityMap({ progress, pathRef, riderPos }) {
         <path d={ROUTE_PATH} stroke="rgba(229,57,53,0.3)" strokeWidth="4"
           strokeDasharray="2 8" strokeLinecap="round" fill="none"/>
 
-        {/* traveled route — animated */}
+        {/* traveled route — only animates when rider is moving */}
         <motion.path d={ROUTE_PATH}
           stroke="var(--fb-primary)" strokeWidth="4" strokeLinecap="round" fill="none"
           initial={{ pathLength: 0 }}
-          animate={{ pathLength: progress }}
+          animate={{ pathLength: riderMoving ? progress : 0 }}
           transition={{ duration: 1.2, ease: 'easeInOut' }}/>
 
-        {/* hidden path — only for getTotalLength() */}
+        {/* hidden path for getTotalLength() */}
         <path ref={pathRef} d={ROUTE_PATH} fill="none" stroke="none"/>
 
         {/* restaurant pin */}
@@ -328,19 +415,21 @@ function CityMap({ progress, pathRef, riderPos }) {
           <motion.circle r="14" fill="none" stroke="var(--fb-accent)" strokeWidth="2"
             animate={{ r: [14, 26], opacity: [0.6, 0] }}
             transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}/>
-          <g transform="translate(-6 -7)" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+          <g transform="translate(-6 -7)" stroke="#fff" strokeWidth="1.6"
+            strokeLinecap="round" strokeLinejoin="round" fill="none">
             <path d="M2 8 L6 3 L11 8 V12 H2 Z"/>
           </g>
         </g>
 
-        {/* rider dot — follows path via JS */}
+        {/* rider dot */}
         <motion.g
           animate={{ x: riderPos.x, y: riderPos.y }}
           transition={{ duration: 1.2, ease: 'easeInOut' }}
           style={{ x: 50, y: 360 }}>
           <circle r="20" fill="var(--fb-primary)" opacity="0.18"/>
           <circle r="12" fill="#fff" filter="url(#shadow)"/>
-          <g transform="translate(-6 -6)" stroke="var(--fb-primary)" strokeWidth="1.8" fill="none" strokeLinecap="round">
+          <g transform="translate(-6 -6)" stroke="var(--fb-primary)" strokeWidth="1.8"
+            fill="none" strokeLinecap="round">
             <circle cx="4" cy="11" r="2"/>
             <circle cx="11" cy="11" r="2"/>
             <path d="M4 11 L7 6 H10 L11.5 9"/>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import useCart from '../../hooks/useCart';
 import api from '../../services/api';
 import {
@@ -8,47 +8,45 @@ import {
   BigRestaurantCard, BottomNav,
 } from '../../components/ui';
 
-const HERO_BANNERS = [
-  {
-    id: 'b1',
-    title: 'Fair prices,\nzero hidden fees',
-    sub: 'Save up to Rs. 200 per order',
-    bg: 'linear-gradient(135deg, var(--fb-primary), var(--fb-accent))',
-    img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&auto=format&fit=crop',
-  },
-  {
-    id: 'b2',
-    title: '50% off\nyour first order',
-    sub: 'Use code FAIRBITE50',
-    bg: 'linear-gradient(135deg, #1f2937, #4b5563)',
-    img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop',
-  },
-  {
-    id: 'b3',
-    title: 'Free delivery\nall weekend',
-    sub: 'On orders over Rs. 800',
-    bg: 'linear-gradient(135deg, #047857, #10b981)',
-    img: 'https://images.unsplash.com/photo-1633237308525-cd587cf71926?w=600&auto=format&fit=crop',
-  },
+const FOOD_CATEGORIES = [
+  { id: 'fast-food',  label: 'Fast Food',   img: 'https://images.unsplash.com/photo-1562967916-eb82221dfb92?w=300&auto=format&fit=crop' },
+  { id: 'biryani',    label: 'Biryani',     img: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop' },
+  { id: 'pizza',      label: 'Pizza',       img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=300&auto=format&fit=crop' },
+  { id: 'pakistani',  label: 'Pakistani',   img: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=300&auto=format&fit=crop' },
+  { id: 'burgers',    label: 'Burgers',     img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&auto=format&fit=crop' },
+  { id: 'ice-cream',  label: 'Ice Cream',   img: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=300&auto=format&fit=crop' },
+  { id: 'paratha',    label: 'Paratha',     img: 'https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=300&auto=format&fit=crop' },
+  { id: 'halwa-puri', label: 'Halwa Puri',  img: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=300&auto=format&fit=crop' },
+  { id: 'chinese',    label: 'Chinese',     img: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300&auto=format&fit=crop' },
+  { id: 'desserts',   label: 'Desserts',    img: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300&auto=format&fit=crop' },
+  { id: 'pasta',      label: 'Pasta',       img: 'https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=300&auto=format&fit=crop' },
+  { id: 'pulao',      label: 'Pulao',       img: 'https://images.unsplash.com/photo-1604908554007-1ec5d4f1f8b3?w=300&auto=format&fit=crop' },
+  { id: 'shawarma',   label: 'Shawarma',    img: 'https://images.unsplash.com/photo-1561651823-34feb02250e4?w=300&auto=format&fit=crop' },
+  { id: 'haleem',     label: 'Haleem',      img: 'https://images.unsplash.com/photo-1574653853027-5382a3d23a15?w=300&auto=format&fit=crop' },
 ];
 
-const CATEGORIES = [
-  { id: 'burgers', label: 'Burgers', img: 'https://images.unsplash.com/photo-1550317138-10000687a72b?w=300&auto=format&fit=crop' },
-  { id: 'pizza',   label: 'Pizza',   img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=300&auto=format&fit=crop' },
-  { id: 'desi',    label: 'Desi',    img: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=300&auto=format&fit=crop' },
-  { id: 'sushi',   label: 'Sushi',   img: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=300&auto=format&fit=crop' },
-  { id: 'sweets',  label: 'Desserts',img: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=300&auto=format&fit=crop' },
-  { id: 'bbq',     label: 'BBQ',     img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=300&auto=format&fit=crop' },
-  { id: 'biryani', label: 'Biryani', img: 'https://images.unsplash.com/photo-1604908554007-1ec5d4f1f8b3?w=300&auto=format&fit=crop' },
-  { id: 'drinks',  label: 'Drinks',  img: 'https://images.unsplash.com/photo-1437418747212-8d9709afab22?w=300&auto=format&fit=crop' },
+const TOP_BRANDS = [
+  { id: 'kfc',        name: 'KFC',            sub: 'From 25 min', logo: 'https://logo.clearbit.com/kfc.com',         isLogo: true  },
+  { id: 'burgerking', name: 'Burger King',    sub: 'From 30 min', logo: 'https://logo.clearbit.com/burgerking.com',  isLogo: true  },
+  { id: 'mcdonalds',  name: "McDonald's",     sub: 'From 20 min', logo: 'https://logo.clearbit.com/mcdonalds.com',   isLogo: true  },
+  { id: 'dominos',    name: "Domino's",       sub: 'From 40 min', logo: 'https://logo.clearbit.com/dominos.com',     isLogo: true  },
+  { id: 'pizzahut',   name: 'Pizza Hut',      sub: 'From 35 min', logo: 'https://logo.clearbit.com/pizzahut.com',    isLogo: true  },
+  { id: 'subway',     name: 'Subway',         sub: 'From 20 min', logo: 'https://logo.clearbit.com/subway.com',      isLogo: true  },
+  { id: 'cheezious',  name: 'Cheezious',      sub: 'From 20 min', logo: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=300&auto=format&fit=crop', isLogo: false },
+  { id: 'burgerlab',  name: 'Burger Lab',     sub: 'From 15 min', logo: 'https://images.unsplash.com/photo-1550317138-10000687a72b?w=300&auto=format&fit=crop',    isLogo: false },
+];
+
+const DEAL_BANNERS = [
+  { id: 'd1', title: '50% off + free delivery', sub: 'On your first order! Code:', code: 'FAIRBITE50', bg: 'linear-gradient(135deg, var(--fb-primary) 0%, #b91c1c 100%)', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&auto=format&fit=crop' },
+  { id: 'd2', title: 'Up to 30% off',           sub: 'On weekend orders. Code:',   code: 'WEEKEND30',  bg: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',              img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&auto=format&fit=crop' },
+  { id: 'd3', title: 'Save Rs. 100',            sub: 'On orders above Rs. 800. Code:', code: 'SAVE100', bg: 'linear-gradient(135deg, #047857 0%, #10b981 100%)',            img: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop' },
 ];
 
 export default function HomePage() {
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
   const { itemCount } = useCart();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading]         = useState(true);
-  const [bannerIdx, setBannerIdx]     = useState(0);
   const [tab, setTab]                 = useState('home');
 
   useEffect(() => {
@@ -58,11 +56,6 @@ export default function HomePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    const t = setInterval(() => setBannerIdx(i => (i + 1) % HERO_BANNERS.length), 4500);
-    return () => clearInterval(t);
-  }, []);
-
   const handleTab = (t) => {
     setTab(t);
     if (t === 'search')  navigate('/restaurants');
@@ -70,38 +63,37 @@ export default function HomePage() {
     if (t === 'profile') navigate('/profile');
   };
 
-  const topRated = [...restaurants].sort((a, b) => (b.rating?.average || 0) - (a.rating?.average || 0)).slice(0, 5);
-
-  const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
-  const item    = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } };
+  const topRated = [...restaurants]
+    .sort((a, b) => (b.rating?.average || 0) - (a.rating?.average || 0))
+    .slice(0, 5);
 
   return (
-    <div style={{ background: '#fff', minHeight: '100vh', paddingBottom: 100 }}>
-      {/* sticky top bar */}
+    <div style={{ background: '#F5F5F5', minHeight: '100vh', paddingBottom: 100 }}>
+
+      {/* ── Pink hero section (not sticky, scrolls away) ── */}
       <div style={{
-        position: 'sticky', top: 0, zIndex: 30, background: '#fff',
-        padding: '52px 16px 12px',
-        borderBottom: '1px solid rgba(0,0,0,0.04)',
+        background: 'var(--fb-primary)',
+        paddingTop: 52,
+        paddingBottom: 36,
+        paddingLeft: 16,
+        paddingRight: 16,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600,
+        {/* Row: deliver to + cart */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 600,
               textTransform: 'uppercase', letterSpacing: 0.5 }}>Deliver to</div>
-            <Pressable style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-              <Icons.MapPin size={16} stroke="var(--fb-primary)" sw={2.5}/>
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>Karachi, DHA</span>
-              <Icons.ChevronD size={16} stroke="#111" sw={2.5}/>
-            </Pressable>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+              <Icons.MapPin size={16} stroke="#fff" sw={2.5}/>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>Lahore, UOL</span>
+            </div>
           </div>
-          <Pressable onClick={() => navigate('/restaurants')} style={{
-            width: 40, height: 40, borderRadius: 14, background: '#F5F5F5',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}><Icons.Search size={20} stroke="#111"/></Pressable>
           <Pressable onClick={() => navigate('/cart')} style={{
-            width: 40, height: 40, borderRadius: 14, background: '#F5F5F5',
+            width: 40, height: 40, borderRadius: 14,
+            background: 'rgba(255,255,255,0.2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
           }}>
-            <Icons.Cart size={20} stroke="#111"/>
+            <Icons.Cart size={20} stroke="#fff"/>
             {itemCount > 0 && (
               <motion.div key={itemCount}
                 initial={{ scale: 1 }} animate={{ scale: [1, 1.4, 1] }}
@@ -109,125 +101,217 @@ export default function HomePage() {
                 style={{
                   position: 'absolute', top: -4, right: -4,
                   minWidth: 18, height: 18, padding: '0 4px',
-                  borderRadius: 999, background: 'var(--fb-primary)',
-                  color: '#fff', fontSize: 10, fontWeight: 800,
+                  borderRadius: 999, background: '#fff',
+                  color: 'var(--fb-primary)', fontSize: 10, fontWeight: 800,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: '2px solid #fff',
+                  border: '2px solid var(--fb-primary)',
                 }}>{itemCount}</motion.div>
             )}
           </Pressable>
         </div>
+
+        {/* White pill search bar */}
+        <Pressable onClick={() => navigate('/restaurants')} style={{
+          width: '100%', height: 46, borderRadius: 23,
+          background: '#fff',
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '0 16px', marginBottom: 18,
+          boxSizing: 'border-box',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+        }}>
+          <Icons.Search size={18} stroke="#9CA3AF"/>
+          <span style={{ fontSize: 14, color: '#9CA3AF', fontWeight: 500 }}>
+            Search for restaurants and dishes
+          </span>
+        </Pressable>
+
+        {/* Hero text row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.2,
+              letterSpacing: -0.4, marginBottom: 14 }}>
+              Here&apos;s 50% off &amp; free delivery on your first order!
+            </div>
+            <Pressable onClick={() => navigate('/restaurants')} style={{
+              display: 'inline-flex', alignItems: 'center',
+              background: '#fff', borderRadius: 999,
+              padding: '8px 18px',
+              fontSize: 13, fontWeight: 700, color: 'var(--fb-primary)',
+            }}>
+              Start ordering &rsaquo;
+            </Pressable>
+          </div>
+          <div style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 16, overflow: 'hidden',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+            <img
+              src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&auto=format&fit=crop"
+              alt="pizza"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </div>
+        </div>
       </div>
 
-      <motion.div variants={stagger} initial="hidden" animate="show" style={{ padding: '14px 0' }}>
-        {/* hero banner carousel */}
-        <motion.div variants={item} style={{ padding: '0 16px' }}>
-          <div style={{ position: 'relative', height: 154, borderRadius: 20, overflow: 'hidden' }}>
-            <AnimatePresence mode="wait">
-              <motion.div key={bannerIdx}
-                initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
-                transition={{ duration: 0.5 }}
-                style={{
-                  position: 'absolute', inset: 0, background: HERO_BANNERS[bannerIdx].bg,
-                  display: 'flex', alignItems: 'stretch', overflow: 'hidden',
-                }}>
-                <div style={{ flex: 1, padding: '20px 18px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{
-                      display: 'inline-block', padding: '3px 8px', borderRadius: 6,
-                      background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(6px)',
-                      fontSize: 10, fontWeight: 700, color: '#fff', letterSpacing: 0.4,
-                      marginBottom: 8,
-                    }}>FAIRBITE EXCLUSIVE</div>
-                    <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', lineHeight: 1.15,
-                      whiteSpace: 'pre-line', letterSpacing: -0.3 }}>
-                      {HERO_BANNERS[bannerIdx].title}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>
-                    {HERO_BANNERS[bannerIdx].sub} →
-                  </div>
-                </div>
-                <div style={{ width: 130, position: 'relative' }}>
-                  <img src={HERO_BANNERS[bannerIdx].img} alt=""
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}/>
-                  <div style={{ position: 'absolute', inset: 0,
-                    background: 'linear-gradient(90deg, rgba(0,0,0,0.3), transparent 60%)' }}/>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-          <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 10 }}>
-            {HERO_BANNERS.map((_, i) => (
-              <motion.div key={i}
-                animate={{ width: i === bannerIdx ? 18 : 6, opacity: i === bannerIdx ? 1 : 0.3 }}
-                style={{ height: 6, borderRadius: 999, background: 'var(--fb-primary)' }}/>
-            ))}
-          </div>
-        </motion.div>
+      {/* ── White rounded card overlapping pink section ── */}
+      <div style={{
+        background: '#fff',
+        borderRadius: '20px 20px 0 0',
+        marginTop: -20,
+        minHeight: '100vh',
+      }}>
 
-        {/* categories */}
-        <motion.section variants={item} style={{ marginTop: 22 }}>
+        {/* Section 1 — Shortcuts row */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+          padding: '16px 16px',
+          borderBottom: '1px solid #F5F5F5',
+        }}>
+          {[
+            { id: 'offers',   label: 'Offers',   emoji: '🏷️' },
+            { id: 'pickup',   label: 'Pick-up',  emoji: '📦' },
+            { id: 'homechef', label: 'HomeChef', emoji: '🍳' },
+          ].map(s => (
+            <Pressable key={s.id} onClick={() => navigate('/restaurants')} style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+              flex: 1,
+            }}>
+              <div style={{
+                width: 60, height: 60, borderRadius: 16,
+                background: '#FFF0F0',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 26,
+              }}>
+                {s.emoji}
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#111' }}>{s.label}</span>
+            </Pressable>
+          ))}
+        </div>
+
+        {/* Section 2 — What are you craving? */}
+        <section style={{ marginTop: 20 }}>
           <SectionHeader title="What are you craving?" onSeeAll={() => navigate('/restaurants')}/>
-          <div style={{ display: 'flex', gap: 10, padding: '0 16px', overflowX: 'auto',
-            scrollbarWidth: 'none' }} className="fb-no-scrollbar">
-            {CATEGORIES.map(c => (
+          <div
+            className="fb-no-scrollbar"
+            style={{
+              display: 'flex', gap: 10, padding: '0 16px',
+              overflowX: 'auto', scrollbarWidth: 'none',
+            }}
+          >
+            {FOOD_CATEGORIES.map(c => (
               <Pressable key={c.id} onClick={() => navigate('/restaurants')} style={{
-                width: 78, flexShrink: 0, textAlign: 'center',
+                width: 76, flexShrink: 0, textAlign: 'center',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
               }}>
-                <div style={{ width: 70, height: 70, borderRadius: 18, overflow: 'hidden',
-                  background: '#F5F5F5', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
+                <div style={{
+                  width: 76, height: 76, borderRadius: 18, overflow: 'hidden',
+                  background: '#F5F5F5',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                }}>
                   <SmartImg src={c.img} style={{ width: '100%', height: '100%' }}/>
                 </div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#111' }}>{c.label}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#111' }}>{c.label}</div>
               </Pressable>
             ))}
           </div>
-        </motion.section>
+        </section>
 
-        {/* FairBite vs FoodPanda promo */}
-        <motion.section variants={item} style={{ padding: '0 16px', marginTop: 22 }}>
-          <div style={{
-            position: 'relative', overflow: 'hidden',
-            borderRadius: 20, padding: 18,
-            background: 'linear-gradient(135deg, #111 0%, #1f1f1f 100%)',
-            border: '1px solid rgba(255,255,255,0.08)',
-          }}>
-            <div style={{
-              position: 'absolute', right: -30, top: -30, width: 180, height: 180,
-              borderRadius: 999, background: 'radial-gradient(circle, rgba(229,57,53,0.4), transparent 70%)',
-            }}/>
-            <div style={{ position: 'relative' }}>
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-                padding: '4px 8px', borderRadius: 6, background: 'var(--fb-primary)',
-                fontSize: 10, fontWeight: 800, color: '#fff', letterSpacing: 0.5, marginBottom: 8,
-              }}><Icons.Tag size={10}/>SAVINGS</div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>
-                FairBite vs FoodPanda
-              </div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4, marginBottom: 12 }}>
-                Save up to <span style={{ color: 'var(--fb-accent)', fontWeight: 700 }}>15%</span> on every order. No service fees, ever.
-              </div>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>FoodPanda</div>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: 'rgba(255,255,255,0.5)', textDecoration: 'line-through', marginTop: 2 }}>Rs. 1,180</div>
+        {/* Section 3 — Today's Deals */}
+        <section style={{ marginTop: 24 }}>
+          <SectionHeader title="Today's Deals" onSeeAll={() => navigate('/restaurants')}/>
+          <div
+            className="fb-no-scrollbar"
+            style={{
+              display: 'flex', gap: 12, padding: '0 16px',
+              overflowX: 'auto', scrollbarWidth: 'none',
+            }}
+          >
+            {DEAL_BANNERS.map(d => (
+              <motion.div key={d.id}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => navigate('/restaurants')}
+                style={{
+                  width: 200, height: 120, flexShrink: 0,
+                  borderRadius: 16, overflow: 'hidden',
+                  background: d.bg,
+                  position: 'relative',
+                  cursor: 'pointer',
+                  padding: '14px 14px',
+                  boxSizing: 'border-box',
+                  display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                }}
+              >
+                {/* Food image — decorative background */}
+                <img
+                  src={d.img}
+                  alt=""
+                  style={{
+                    position: 'absolute', right: -10, top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: 90, height: 90,
+                    objectFit: 'cover', borderRadius: 12,
+                    opacity: 0.25,
+                    pointerEvents: 'none',
+                  }}
+                />
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff',
+                  lineHeight: 1.2, position: 'relative' }}>
+                  {d.title}
                 </div>
-                <Icons.ChevronR size={18} stroke="rgba(255,255,255,0.4)"/>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>FairBite</div>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--fb-accent)', marginTop: 2 }}>Rs. 1,000</div>
+                <div style={{ position: 'relative' }}>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)',
+                    fontWeight: 500, marginBottom: 4 }}>
+                    {d.sub}
+                  </div>
+                  <div style={{
+                    display: 'inline-block',
+                    background: 'rgba(255,255,255,0.25)',
+                    borderRadius: 6, padding: '3px 8px',
+                    fontSize: 11, fontWeight: 800, color: '#fff',
+                    letterSpacing: 0.4,
+                  }}>
+                    {d.code}
+                  </div>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            ))}
           </div>
-        </motion.section>
+        </section>
 
-        {/* top rated restaurants */}
-        <motion.section variants={item} style={{ marginTop: 22, padding: '0 16px' }}>
-          <SectionHeader title="Top Rated Near You" subtitle="Within 5 km" onSeeAll={() => navigate('/restaurants')}/>
+        {/* Section 4 — Top Brands */}
+        <section style={{ marginTop: 24 }}>
+          <SectionHeader title="Top Brands" onSeeAll={() => navigate('/restaurants')}/>
+          <div
+            className="fb-no-scrollbar"
+            style={{
+              display: 'flex', gap: 12, padding: '0 16px',
+              overflowX: 'auto', scrollbarWidth: 'none',
+            }}
+          >
+            {TOP_BRANDS.map(b => (
+              <Pressable key={b.id} onClick={() => navigate('/restaurants')} style={{
+                width: 86, flexShrink: 0,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+              }}>
+                <div style={{
+                  width: 86, height: 86, borderRadius: 20, overflow: 'hidden',
+                  border: '1px solid #F0F0F0', background: b.isLogo ? '#fff' : '#F5F5F5',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <img src={b.logo} alt={b.name} style={{ width: '100%', height: '100%', objectFit: b.isLogo ? 'contain' : 'cover', padding: b.isLogo ? 8 : 0 }}/>
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#111', textAlign: 'center', width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {b.name}
+                </div>
+                <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: -4 }}>{b.sub}</div>
+              </Pressable>
+            ))}
+          </div>
+        </section>
+
+        {/* Section 5 — Popular Restaurants */}
+        <section style={{ marginTop: 24, padding: '0 16px' }}>
+          <SectionHeader title="Popular Restaurants" onSeeAll={() => navigate('/restaurants')}/>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12 }}>
             {loading
               ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i}/>)
@@ -236,8 +320,9 @@ export default function HomePage() {
               ))
             }
           </div>
-        </motion.section>
-      </motion.div>
+        </section>
+
+      </div>{/* end white card */}
 
       <BottomNav tab={tab} onTab={handleTab}/>
     </div>
@@ -246,8 +331,10 @@ export default function HomePage() {
 
 function SectionHeader({ title, subtitle, onSeeAll }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-      padding: '0 16px', marginBottom: 10 }}>
+    <div style={{
+      display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+      padding: '0 16px', marginBottom: 10,
+    }}>
       <div>
         <div style={{ fontSize: 18, fontWeight: 800, color: '#111', letterSpacing: -0.3 }}>{title}</div>
         {subtitle && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{subtitle}</div>}
@@ -264,17 +351,24 @@ function SectionHeader({ title, subtitle, onSeeAll }) {
 function SkeletonCard() {
   return (
     <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
-      <div style={{ height: 152, background: '#EEE',
+      <div style={{
+        height: 152, background: '#EEE',
         backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-        backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite' }}/>
+        backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite',
+      }}/>
       <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ width: '60%', height: 14, borderRadius: 6, background: '#EEE',
+        <div style={{
+          width: '60%', height: 14, borderRadius: 6, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-          backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite' }}/>
-        <div style={{ width: '40%', height: 10, borderRadius: 6, background: '#EEE',
+          backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite',
+        }}/>
+        <div style={{
+          width: '40%', height: 10, borderRadius: 6, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-          backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite' }}/>
+          backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite',
+        }}/>
       </div>
     </div>
   );
 }
+

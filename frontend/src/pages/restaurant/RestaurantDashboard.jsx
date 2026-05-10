@@ -4,8 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import socket from '../../services/socket';
 import { Icons, PKR, Pressable } from '../../components/ui';
+
+const CAT_LABELS = {
+  'main-course': 'Main Course',
+  appetizer:     'Starters',
+  dessert:       'Desserts',
+  beverage:      'Drinks',
+};
 
 const STATUS_META = {
   pending:            { label: 'New',       color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',   next: 'confirmed',  nextLabel: 'Confirm Order' },
@@ -30,39 +36,36 @@ export default function RestaurantDashboard() {
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newOrderAlert, setNewOrderAlert] = useState(null);
-  const restaurantIdRef = useRef(null);
+  const prevOrderIdsRef = useRef(null);
 
   const fetchOrders = async () => {
     try {
       const r = await api.get('/orders/restaurant');
-      setOrders(r.data.data || []);
+      const newOrders = r.data.data || [];
+      if (prevOrderIdsRef.current !== null) {
+        const prevIds = new Set(prevOrderIdsRef.current);
+        const incoming = newOrders.filter(o => !prevIds.has(o.id) && o.status === 'pending');
+        if (incoming.length > 0) {
+          setNewOrderAlert(incoming[0]);
+          toast(`New order #${incoming[0].orderNumber || ''}!`, {
+            icon: '🔔',
+            style: { background: '#fff', color: '#111', fontWeight: 700 },
+          });
+        }
+      }
+      prevOrderIdsRef.current = newOrders.map(o => o.id);
+      setOrders(newOrders);
     } catch {}
   };
 
   useEffect(() => {
-    // Load restaurant info + orders
     api.get('/restaurants/my')
-      .then(r => {
-        setRestaurant(r.data.data);
-        restaurantIdRef.current = r.data.data?.id;
-        // Join restaurant-specific socket room
-        socket.emit('join_restaurant', { restaurantId: r.data.data?.id });
-      })
+      .then(r => setRestaurant(r.data.data))
       .catch(() => {});
 
     fetchOrders().finally(() => setLoading(false));
-
-    // Live: new order arrives → alert + refresh
-    socket.on('new_order', (data) => {
-      setNewOrderAlert(data);
-      fetchOrders();
-      toast(`New order #${data.orderNumber || ''}!`, {
-        icon: '🔔',
-        style: { background: '#fff', color: '#111', fontWeight: 700 },
-      });
-    });
-
-    return () => socket.off('new_order');
+    const poll = setInterval(fetchOrders, 4000);
+    return () => clearInterval(poll);
   }, []);
 
   const updateOrderStatus = async (orderId, newStatus) => {
@@ -131,9 +134,9 @@ export default function RestaurantDashboard() {
           marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12,
         }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 800 }}>Fair Commission Advantage</div>
+            <div style={{ fontSize: 12, fontWeight: 800 }}>Low Commission Rate</div>
             <div style={{ fontSize: 11, opacity: 0.85, marginTop: 3 }}>
-              FairBite <b>15%</b> vs Foodpanda 30% — you save up to <b>PKR 42K/month</b>
+              Keep more of what you earn — only <b>15% commission</b> on every order
             </div>
           </div>
           <div style={{ padding: '6px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.2)', fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap' }}>
@@ -387,7 +390,7 @@ function MenuTab({ restaurant }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {Object.entries(byCategory).map(([category, items]) => (
         <div key={category}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>{category}</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>{CAT_LABELS[category] || category}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {items.map(item => (
               <div key={item.id} style={{

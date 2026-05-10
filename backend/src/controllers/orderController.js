@@ -139,7 +139,7 @@ exports.updateOrderStatus = async (req, res, next) => {
 exports.acceptOrder = async (req, res, next) => {
   try {
     const order = await Order.acceptOrder(req.params.id, req.user.id);
-    emit(req, `order_${order.id}`, `order_${order.id}_status`, { status: 'picked-up', riderId: req.user.id });
+    emit(req, `order_${order.id}`, `order_${order.id}_status`, { status: order.status, riderId: req.user.id });
     emit(req, 'order_taken', 'order_taken', { orderId: order.id });
     res.status(200).json({ success: true, data: order });
   } catch (err) { next(err); }

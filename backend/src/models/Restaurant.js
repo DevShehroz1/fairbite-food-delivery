@@ -35,7 +35,7 @@ exports.findById = async (id) => {
 };
 
 exports.findByOwner = async (ownerId) => {
-  const { data } = await supabase.from('restaurants').select('*').eq('owner_id', ownerId).single();
+  const { data } = await supabase.from('restaurants').select('*').eq('owner_id', ownerId).limit(1).maybeSingle();
   return fmt(data);
 };
 
