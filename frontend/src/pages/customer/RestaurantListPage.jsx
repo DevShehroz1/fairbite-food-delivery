@@ -1,17 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
 import { Icons, Pressable, Chip, BigRestaurantCard, BottomNav } from '../../components/ui';
+import {
+  CATEGORY_LABEL, BRAND_LABEL, matchesCategory, matchesBrand,
+} from '../../utils/categoryMap';
 
-const FILTERS = ['Rating', 'Price', 'Distance', 'Cuisine'];
+const SORT_FILTERS = ['Rating', 'Price', 'Distance'];
 
 export default function RestaurantListPage() {
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const categoryParam = params.get('category') || '';
+  const brandParam    = params.get('brand') || '';
+
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading]         = useState(true);
-  const [filter, setFilter]           = useState('Rating');
+  const [sortBy, setSortBy]           = useState('Rating');
   const [search, setSearch]           = useState('');
+  const [cuisinePicked, setCuisine]   = useState('');
   const [tab, setTab]                 = useState('search');
 
   useEffect(() => {
@@ -28,17 +36,37 @@ export default function RestaurantListPage() {
     if (t === 'profile') navigate('/profile');
   };
 
-  const filtered = restaurants.filter(r =>
-    !search || r.name.toLowerCase().includes(search.toLowerCase()) ||
-    (r.cuisine || []).some(c => c.toLowerCase().includes(search.toLowerCase()))
-  );
+  const allCuisines = useMemo(() => {
+    const set = new Set();
+    restaurants.forEach(r => (r.cuisine || []).forEach(c => set.add(c)));
+    return [...set].sort();
+  }, [restaurants]);
+
+  const clearCategory = () => { params.delete('category'); setParams(params); };
+  const clearBrand    = () => { params.delete('brand'); setParams(params); };
+
+  const filtered = restaurants
+    .filter(r => matchesCategory(r, categoryParam))
+    .filter(r => matchesBrand(r, brandParam))
+    .filter(r => !cuisinePicked || (r.cuisine || []).map(c => c.toLowerCase()).includes(cuisinePicked.toLowerCase()))
+    .filter(r =>
+      !search ||
+      r.name.toLowerCase().includes(search.toLowerCase()) ||
+      (r.cuisine || []).some(c => c.toLowerCase().includes(search.toLowerCase()))
+    );
 
   const sorted = [...filtered].sort((a, b) => {
-    if (filter === 'Rating')   return (b.rating?.average || 0) - (a.rating?.average || 0);
-    if (filter === 'Price')    return (a.delivery?.fee || 0) - (b.delivery?.fee || 0);
-    if (filter === 'Distance') return (a.delivery?.estimatedTime || 0) - (b.delivery?.estimatedTime || 0);
+    if (sortBy === 'Rating')   return (b.rating?.average || 0) - (a.rating?.average || 0);
+    if (sortBy === 'Price')    return (a.delivery?.fee || 0) - (b.delivery?.fee || 0);
+    if (sortBy === 'Distance') return (a.delivery?.estimatedTime || 0) - (b.delivery?.estimatedTime || 0);
     return 0;
   });
+
+  const headerTitle = brandParam
+    ? (BRAND_LABEL[brandParam] || brandParam)
+    : categoryParam
+      ? CATEGORY_LABEL[categoryParam] || categoryParam
+      : null;
 
   return (
     <div style={{ background: '#fff', minHeight: '100vh', paddingBottom: 100 }}>
@@ -72,12 +100,41 @@ export default function RestaurantListPage() {
             )}
           </div>
         </div>
+
+        {/* Active category / brand chip */}
+        {headerTitle && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
+            <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 700, textTransform: 'uppercase' }}>Showing</span>
+            <Pressable onClick={brandParam ? clearBrand : clearCategory} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '4px 10px', borderRadius: 999,
+              background: 'var(--fb-primary)', color: '#fff',
+              fontSize: 12, fontWeight: 700,
+            }}>
+              {headerTitle}
+              <Icons.X size={12} stroke="#fff" sw={2.5}/>
+            </Pressable>
+          </div>
+        )}
+
+        {/* Sort chips */}
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginTop: 12, paddingBottom: 2 }}
           className="fb-no-scrollbar">
-          {FILTERS.map(f => (
-            <Chip key={f} active={filter === f} onClick={() => setFilter(f)}>{f}</Chip>
+          {SORT_FILTERS.map(f => (
+            <Chip key={f} active={sortBy === f} onClick={() => setSortBy(f)}>{f}</Chip>
           ))}
         </div>
+
+        {/* Cuisine filter row — only visible when there are cuisines + no category lock */}
+        {allCuisines.length > 0 && !categoryParam && !brandParam && (
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginTop: 8, paddingBottom: 2 }}
+            className="fb-no-scrollbar">
+            <Chip active={!cuisinePicked} onClick={() => setCuisine('')}>All</Chip>
+            {allCuisines.map(c => (
+              <Chip key={c} active={cuisinePicked === c} onClick={() => setCuisine(c === cuisinePicked ? '' : c)}>{c}</Chip>
+            ))}
+          </div>
+        )}
       </div>
 
       <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -86,17 +143,19 @@ export default function RestaurantListPage() {
         ) : sorted.length === 0 ? (
           search
             ? <EmptySearch query={search} onClear={() => setSearch('')}/>
-            : (
-              <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                <Icons.Compass size={48} stroke="#D1D5DB"/>
-                <div style={{ fontSize: 18, fontWeight: 800, color: '#111', marginTop: 16 }}>
-                  No restaurants available
+            : (brandParam || categoryParam)
+              ? <EmptyFiltered title={headerTitle} onClear={brandParam ? clearBrand : clearCategory}/>
+              : (
+                <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                  <Icons.Compass size={48} stroke="#D1D5DB"/>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#111', marginTop: 16 }}>
+                    No restaurants available
+                  </div>
+                  <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>
+                    Check back soon — new restaurants are joining!
+                  </div>
                 </div>
-                <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>
-                  Check back soon — new restaurants are joining!
-                </div>
-              </div>
-            )
+              )
         ) : (
           <>
             {!search && (
@@ -104,7 +163,7 @@ export default function RestaurantListPage() {
                 fontSize: 13, fontWeight: 700, color: '#9CA3AF',
                 textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4,
               }}>
-                All Restaurants ({sorted.length})
+                {headerTitle ? `${headerTitle} (${sorted.length})` : `All Restaurants (${sorted.length})`}
               </div>
             )}
             {sorted.map((r, i) => (
@@ -156,6 +215,25 @@ function EmptySearch({ query, onClear }) {
         background: 'var(--fb-primary)', color: '#fff',
         fontSize: 14, fontWeight: 700,
       }}>Clear search</Pressable>
+    </div>
+  );
+}
+
+function EmptyFiltered({ title, onClear }) {
+  return (
+    <div style={{ textAlign: 'center', padding: '60px 0' }}>
+      <Icons.Compass size={48} stroke="#D1D5DB"/>
+      <div style={{ fontSize: 18, fontWeight: 800, color: '#111', marginTop: 16 }}>
+        No {title} restaurants in your area yet
+      </div>
+      <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>
+        Try clearing the filter or pick another category.
+      </div>
+      <Pressable onClick={onClear} style={{
+        marginTop: 16, padding: '10px 20px', borderRadius: 12,
+        background: 'var(--fb-primary)', color: '#fff',
+        fontSize: 14, fontWeight: 700,
+      }}>Show all restaurants</Pressable>
     </div>
   );
 }
