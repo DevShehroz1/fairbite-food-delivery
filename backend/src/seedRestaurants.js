@@ -2,6 +2,44 @@ require('dotenv').config();
 const supabase = require('./config/supabase');
 const User     = require('./models/User');
 
+const IMG = (p) => `https://images.unsplash.com/${p}?w=400&auto=format&fit=crop`;
+
+const PIC = {
+  chickenKarahi:  IMG('photo-1567188040759-fb8a883dc6d8'),
+  muttonBiryani:  IMG('photo-1589302168068-964664d93dc0'),
+  seekhKebab:     IMG('photo-1599487488170-d11ec9c172f0'),
+  beefNihari:     IMG('photo-1574484284002-952d92456975'),
+  gulabJamun:     IMG('photo-1601050690597-df0568f70950'),
+  mangoLassi:     IMG('photo-1626200419199-391ae4be7a41'),
+  margherita:     IMG('photo-1604068549290-dea0e4a305ca'),
+  bbqPizza:       IMG('photo-1565299624946-b28f40a0ae38'),
+  garlicBread:    IMG('photo-1573140247632-f8fd74997d5c'),
+  pastaAlfredo:   IMG('photo-1645112411341-6c4fd023714a'),
+  lavaCake:       IMG('photo-1624353365286-3f8d62daad51'),
+  acaiBowl:       IMG('photo-1490474504059-bf2db5ab2348'),
+  quinoaSalad:    IMG('photo-1505253716362-afaea1d3d1af'),
+  avocadoToast:   IMG('photo-1603532648955-039310d9ed75'),
+  greenSmoothie:  IMG('photo-1610970881699-44a5587cabec'),
+  chickenBiryani: IMG('photo-1563379091339-03b21ab4a4f8'),
+  beefBiryani:    IMG('photo-1631452180519-c014fe946bc7'),
+  raita:          IMG('photo-1626200926749-cc8e8a3e0b22'),
+  kheer:          IMG('photo-1605197948919-3acd728d3c4d'),
+  smashBurger:    IMG('photo-1568901346375-23c9450c58cd'),
+  crispyChicken:  IMG('photo-1626082927389-6cd097cdc6ec'),
+  loadedFries:    IMG('photo-1573080496219-bb080dd4f877'),
+  chocoShake:     IMG('photo-1572490122747-3968b75cc699'),
+};
+
+const ADDON = {
+  raita:        { id:'a-raita',     name:'Raita (60g)',         price:60  },
+  salad:        { id:'a-salad',     name:'Fresh Salad',         price:80  },
+  shami:        { id:'a-shami',     name:'Shami Kebab (1pc)',   price:120 },
+  papad:        { id:'a-papad',     name:'Crispy Papad',        price:40  },
+  largeDrink:   { id:'a-large',     name:'Make it large',       price:80  },
+  bottle1_5L:   { id:'a-bottle',    name:'Bottle 1.5L',         price:180 },
+  extraStraw:   { id:'a-straw',     name:'Extra straws',        price:0   },
+};
+
 (async () => {
   const owner = await User.findByEmail('restaurant@demo.com');
   if (!owner) { console.error('Run seedDemoUsers first'); process.exit(1); }
@@ -23,12 +61,12 @@ const User     = require('./models/User');
       pricing: { commissionRate:15, minimumOrder:200 },
       status:  { isActive:true, isVerified:true, isFeatured:true },
       menu: [
-        { id:'m1', _id:'m1', name:'Chicken Karahi',    price:850, category:'main-course', description:'Classic spicy Karahi', dietaryTags:['halal'], spiceLevel:'hot',    calories:520, isAvailable:true },
-        { id:'m2', _id:'m2', name:'Mutton Biryani',    price:650, category:'main-course', description:'Aromatic basmati rice', dietaryTags:['halal'], spiceLevel:'medium', calories:680, isAvailable:true },
-        { id:'m3', _id:'m3', name:'Seekh Kebab (6pcs)',price:450, category:'appetizer',   description:'Juicy minced kebabs',  dietaryTags:['halal'], spiceLevel:'medium', calories:380, isAvailable:true },
-        { id:'m4', _id:'m4', name:'Beef Nihari',       price:780, category:'main-course', description:'Slow-cooked beef stew',dietaryTags:['halal'], spiceLevel:'hot',    calories:720, isAvailable:true },
-        { id:'m5', _id:'m5', name:'Gulab Jamun',       price:150, category:'dessert',     description:'Sweet milk dumplings', dietaryTags:['vegetarian'], spiceLevel:'mild', calories:280, isAvailable:true },
-        { id:'m6', _id:'m6', name:'Mango Lassi',       price:120, category:'beverage',    description:'Chilled mango yogurt', dietaryTags:['vegetarian'], spiceLevel:'mild', calories:180, isAvailable:true },
+        { id:'m1', _id:'m1', name:'Chicken Karahi',    price:850, category:'main-course', description:'Classic spicy Karahi', dietaryTags:['halal'], spiceLevel:'hot',    calories:520, isAvailable:true, image:PIC.chickenKarahi },
+        { id:'m2', _id:'m2', name:'Mutton Biryani',    price:650, category:'main-course', description:'Aromatic basmati rice', dietaryTags:['halal'], spiceLevel:'medium', calories:680, isAvailable:true, image:PIC.muttonBiryani, addOns:[ADDON.raita, ADDON.salad, ADDON.shami] },
+        { id:'m3', _id:'m3', name:'Seekh Kebab (6pcs)',price:450, category:'appetizer',   description:'Juicy minced kebabs',  dietaryTags:['halal'], spiceLevel:'medium', calories:380, isAvailable:true, image:PIC.seekhKebab },
+        { id:'m4', _id:'m4', name:'Beef Nihari',       price:780, category:'main-course', description:'Slow-cooked beef stew',dietaryTags:['halal'], spiceLevel:'hot',    calories:720, isAvailable:true, image:PIC.beefNihari },
+        { id:'m5', _id:'m5', name:'Gulab Jamun',       price:150, category:'dessert',     description:'Sweet milk dumplings', dietaryTags:['vegetarian'], spiceLevel:'mild', calories:280, isAvailable:true, image:PIC.gulabJamun },
+        { id:'m6', _id:'m6', name:'Mango Lassi',       price:120, category:'beverage',    description:'Chilled mango yogurt', dietaryTags:['vegetarian'], spiceLevel:'mild', calories:180, isAvailable:true, image:PIC.mangoLassi, addOns:[ADDON.largeDrink, ADDON.bottle1_5L] },
       ],
     },
     {
@@ -44,11 +82,11 @@ const User     = require('./models/User');
       pricing: { commissionRate:15, minimumOrder:300 },
       status:  { isActive:true, isVerified:true, isFeatured:false },
       menu: [
-        { id:'p1', _id:'p1', name:'Margherita Pizza (M)',  price:650, category:'main-course', description:'Tomato, mozzarella, basil', dietaryTags:['vegetarian'], spiceLevel:'mild', calories:760, isAvailable:true },
-        { id:'p2', _id:'p2', name:'BBQ Chicken Pizza (M)', price:850, category:'main-course', description:'Smoky BBQ chicken',          dietaryTags:['halal'],       spiceLevel:'mild', calories:920, isAvailable:true },
-        { id:'p3', _id:'p3', name:'Garlic Bread',          price:220, category:'appetizer',   description:'Toasted with garlic butter', dietaryTags:['vegetarian'], spiceLevel:'mild', calories:310, isAvailable:true },
-        { id:'p4', _id:'p4', name:'Pasta Alfredo',         price:550, category:'main-course', description:'Creamy mushroom pasta',      dietaryTags:['vegetarian'], spiceLevel:'mild', calories:680, isAvailable:true },
-        { id:'p5', _id:'p5', name:'Chocolate Lava Cake',   price:280, category:'dessert',     description:'Warm molten chocolate',      dietaryTags:['vegetarian'], spiceLevel:'mild', calories:420, isAvailable:true },
+        { id:'p1', _id:'p1', name:'Margherita Pizza (M)',  price:650, category:'main-course', description:'Tomato, mozzarella, basil', dietaryTags:['vegetarian'], spiceLevel:'mild', calories:760, isAvailable:true, image:PIC.margherita },
+        { id:'p2', _id:'p2', name:'BBQ Chicken Pizza (M)', price:850, category:'main-course', description:'Smoky BBQ chicken',          dietaryTags:['halal'],       spiceLevel:'mild', calories:920, isAvailable:true, image:PIC.bbqPizza },
+        { id:'p3', _id:'p3', name:'Garlic Bread',          price:220, category:'appetizer',   description:'Toasted with garlic butter', dietaryTags:['vegetarian'], spiceLevel:'mild', calories:310, isAvailable:true, image:PIC.garlicBread },
+        { id:'p4', _id:'p4', name:'Pasta Alfredo',         price:550, category:'main-course', description:'Creamy mushroom pasta',      dietaryTags:['vegetarian'], spiceLevel:'mild', calories:680, isAvailable:true, image:PIC.pastaAlfredo },
+        { id:'p5', _id:'p5', name:'Chocolate Lava Cake',   price:280, category:'dessert',     description:'Warm molten chocolate',      dietaryTags:['vegetarian'], spiceLevel:'mild', calories:420, isAvailable:true, image:PIC.lavaCake },
       ],
     },
     {
@@ -64,10 +102,10 @@ const User     = require('./models/User');
       pricing: { commissionRate:15, minimumOrder:250 },
       status:  { isActive:true, isVerified:true, isFeatured:false },
       menu: [
-        { id:'g1', _id:'g1', name:'Acai Bowl',     price:480, category:'main-course', description:'Acai with granola and fruit', dietaryTags:['vegan','gluten-free'], spiceLevel:'mild', calories:340, isAvailable:true },
-        { id:'g2', _id:'g2', name:'Quinoa Salad',  price:420, category:'main-course', description:'Tri-colour quinoa, tahini',   dietaryTags:['vegan','gluten-free'], spiceLevel:'mild', calories:290, isAvailable:true },
-        { id:'g3', _id:'g3', name:'Avocado Toast', price:350, category:'appetizer',   description:'Sourdough with avocado',     dietaryTags:['vegan'],               spiceLevel:'mild', calories:380, isAvailable:true },
-        { id:'g4', _id:'g4', name:'Green Smoothie',price:280, category:'beverage',    description:'Spinach, banana, almond',    dietaryTags:['vegan','gluten-free'], spiceLevel:'mild', calories:210, isAvailable:true },
+        { id:'g1', _id:'g1', name:'Acai Bowl',     price:480, category:'main-course', description:'Acai with granola and fruit', dietaryTags:['vegan','gluten-free'], spiceLevel:'mild', calories:340, isAvailable:true, image:PIC.acaiBowl },
+        { id:'g2', _id:'g2', name:'Quinoa Salad',  price:420, category:'main-course', description:'Tri-colour quinoa, tahini',   dietaryTags:['vegan','gluten-free'], spiceLevel:'mild', calories:290, isAvailable:true, image:PIC.quinoaSalad },
+        { id:'g3', _id:'g3', name:'Avocado Toast', price:350, category:'appetizer',   description:'Sourdough with avocado',     dietaryTags:['vegan'],               spiceLevel:'mild', calories:380, isAvailable:true, image:PIC.avocadoToast },
+        { id:'g4', _id:'g4', name:'Green Smoothie',price:280, category:'beverage',    description:'Spinach, banana, almond',    dietaryTags:['vegan','gluten-free'], spiceLevel:'mild', calories:210, isAvailable:true, image:PIC.greenSmoothie, addOns:[ADDON.largeDrink, ADDON.bottle1_5L, ADDON.extraStraw] },
       ],
     },
     {
@@ -83,10 +121,10 @@ const User     = require('./models/User');
       pricing: { commissionRate:15, minimumOrder:150 },
       status:  { isActive:true, isVerified:true, isFeatured:true },
       menu: [
-        { id:'b1', _id:'b1', name:'Chicken Biryani (Full)', price:600, category:'main-course', description:'Full pot dum biryani (serves 2)', dietaryTags:['halal'], spiceLevel:'medium', calories:850, isAvailable:true },
-        { id:'b2', _id:'b2', name:'Beef Biryani (Half)',    price:450, category:'main-course', description:'Half portion smoky beef',         dietaryTags:['halal'], spiceLevel:'hot',    calories:620, isAvailable:true },
-        { id:'b3', _id:'b3', name:'Raita',                 price:60,  category:'appetizer',   description:'Yogurt with cucumber and mint',   dietaryTags:['vegetarian'], spiceLevel:'mild', calories:80, isAvailable:true },
-        { id:'b4', _id:'b4', name:'Kheer',                 price:100, category:'dessert',     description:'Pakistani rice pudding',          dietaryTags:['vegetarian'], spiceLevel:'mild', calories:220, isAvailable:true },
+        { id:'b1', _id:'b1', name:'Chicken Biryani (Full)', price:600, category:'main-course', description:'Full pot dum biryani (serves 2)', dietaryTags:['halal'], spiceLevel:'medium', calories:850, isAvailable:true, image:PIC.chickenBiryani, addOns:[ADDON.raita, ADDON.salad, ADDON.shami, ADDON.papad] },
+        { id:'b2', _id:'b2', name:'Beef Biryani (Half)',    price:450, category:'main-course', description:'Half portion smoky beef',         dietaryTags:['halal'], spiceLevel:'hot',    calories:620, isAvailable:true, image:PIC.beefBiryani,    addOns:[ADDON.raita, ADDON.salad, ADDON.shami, ADDON.papad] },
+        { id:'b3', _id:'b3', name:'Raita',                 price:60,  category:'appetizer',   description:'Yogurt with cucumber and mint',   dietaryTags:['vegetarian'], spiceLevel:'mild', calories:80, isAvailable:true, image:PIC.raita },
+        { id:'b4', _id:'b4', name:'Kheer',                 price:100, category:'dessert',     description:'Pakistani rice pudding',          dietaryTags:['vegetarian'], spiceLevel:'mild', calories:220, isAvailable:true, image:PIC.kheer },
       ],
     },
     {
@@ -102,10 +140,10 @@ const User     = require('./models/User');
       pricing: { commissionRate:15, minimumOrder:400 },
       status:  { isActive:true, isVerified:false, isFeatured:false },
       menu: [
-        { id:'u1', _id:'u1', name:'Classic Smash Burger',  price:520, category:'main-course', description:'Double patty, cheese, secret sauce', dietaryTags:['halal'], spiceLevel:'mild',   calories:740, isAvailable:true },
-        { id:'u2', _id:'u2', name:'Spicy Crispy Chicken',  price:480, category:'main-course', description:'Crispy thigh, jalapeños, sriracha',  dietaryTags:['halal'], spiceLevel:'hot',    calories:680, isAvailable:true },
-        { id:'u3', _id:'u3', name:'Loaded Fries',          price:280, category:'appetizer',   description:'Fries with cheese and jalapeños',    dietaryTags:['vegetarian'], spiceLevel:'medium', calories:560, isAvailable:true },
-        { id:'u4', _id:'u4', name:'Chocolate Shake',       price:240, category:'beverage',    description:'Thick chocolate milkshake',          dietaryTags:['vegetarian'], spiceLevel:'mild', calories:480, isAvailable:true },
+        { id:'u1', _id:'u1', name:'Classic Smash Burger',  price:520, category:'main-course', description:'Double patty, cheese, secret sauce', dietaryTags:['halal'], spiceLevel:'mild',   calories:740, isAvailable:true, image:PIC.smashBurger },
+        { id:'u2', _id:'u2', name:'Spicy Crispy Chicken',  price:480, category:'main-course', description:'Crispy thigh, jalapeños, sriracha',  dietaryTags:['halal'], spiceLevel:'hot',    calories:680, isAvailable:true, image:PIC.crispyChicken },
+        { id:'u3', _id:'u3', name:'Loaded Fries',          price:280, category:'appetizer',   description:'Fries with cheese and jalapeños',    dietaryTags:['vegetarian'], spiceLevel:'medium', calories:560, isAvailable:true, image:PIC.loadedFries },
+        { id:'u4', _id:'u4', name:'Chocolate Shake',       price:240, category:'beverage',    description:'Thick chocolate milkshake',          dietaryTags:['vegetarian'], spiceLevel:'mild', calories:480, isAvailable:true, image:PIC.chocoShake, addOns:[ADDON.largeDrink, ADDON.bottle1_5L] },
       ],
     },
   ];
