@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
 import useCart from '../../hooks/useCart';
@@ -14,6 +14,64 @@ const CAT_LABELS = {
   dessert:       'Desserts',
   beverage:      'Drinks',
 };
+
+const CATEGORY_EMOJI = {
+  'main-course': '🍽️',
+  appetizer:     '🥗',
+  dessert:       '🍰',
+  beverage:      '🥤',
+};
+
+const NAME_EMOJI = [
+  [/biryani|pulao|rice/i, '🍚'],
+  [/pizza/i,              '🍕'],
+  [/burger|smash/i,       '🍔'],
+  [/karahi|nihari|curry/i,'🍛'],
+  [/kebab|seekh|tikka/i,  '🍢'],
+  [/shake|lassi|smoothie/i,'🥤'],
+  [/cake|kheer|jamun|chocolate/i, '🍰'],
+  [/fries/i,              '🍟'],
+  [/salad|bowl|quinoa|avocado/i, '🥗'],
+  [/bread|paratha|naan/i, '🫓'],
+  [/chicken/i,            '🍗'],
+];
+
+const guessEmoji = (item) => {
+  for (const [re, e] of NAME_EMOJI) if (re.test(item?.name || '')) return e;
+  return CATEGORY_EMOJI[item?.category] || '🍽️';
+};
+
+function MenuImage({ item, size }) {
+  const [errored, setErrored] = useState(false);
+  const showFallback = !item?.image || errored;
+  if (showFallback) {
+    return (
+      <div style={{
+        width: '100%', height: '100%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'linear-gradient(135deg, #FFF1E6 0%, #FFE5E5 100%)',
+        fontSize: size === 'lg' ? 38 : 30,
+      }}>{guessEmoji(item)}</div>
+    );
+  }
+  return (
+    <img src={item.image} alt={item.name} onError={() => setErrored(true)}
+      style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+  );
+}
+
+function copyCode(e, code) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  if (!code) return;
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(code).then(
+      () => toast.success(`Code "${code}" copied!`, { autoClose: 1500 }),
+      () => toast.error('Could not copy — long-press to select')
+    );
+  } else {
+    toast.info(`Copy code: ${code}`);
+  }
+}
 
 const DEMO_REVIEWS = [
   { id: 1, text: 'Amazing food! The karahi was perfectly spiced and naan was fresh out of the tandoor.', rating: 5, author: 'Usman K.', ago: '2 days ago' },
@@ -32,6 +90,8 @@ export default function RestaurantDetailPage() {
   const [scrollY, setScrollY]       = useState(0);
   const [activeTab, setActiveTab]   = useState('popular');
   const [menuSearch, setMenuSearch] = useState('');
+  const [addOnItem, setAddOnItem]   = useState(null);
+  const [pickedAddOns, setPickedAddOns] = useState([]);
 
   useEffect(() => {
     api.get(`/restaurants/${id}`)
@@ -67,8 +127,35 @@ export default function RestaurantDetailPage() {
     if (restaurantId && restaurantId !== id) {
       if (!window.confirm('Your cart has items from another restaurant. Clear it?')) return;
     }
+    if (menuItem.addOns && menuItem.addOns.length > 0) {
+      setAddOnItem(menuItem);
+      setPickedAddOns([]);
+      return;
+    }
     addItem({ ...menuItem, _id: menuItem.id || menuItem._id }, id, restaurant.name);
     toast.success(`${menuItem.name} added!`, { autoClose: 1200 });
+  };
+
+  const confirmAddOns = () => {
+    if (!addOnItem) return;
+    addItem(
+      { ...addOnItem, _id: addOnItem.id || addOnItem._id },
+      id,
+      restaurant.name,
+      { selectedAddOns: pickedAddOns },
+    );
+    const extras = pickedAddOns.length ? ` + ${pickedAddOns.length} extra` : '';
+    toast.success(`${addOnItem.name}${extras} added!`, { autoClose: 1500 });
+    setAddOnItem(null);
+    setPickedAddOns([]);
+  };
+
+  const toggleAddOn = (a) => {
+    setPickedAddOns(prev =>
+      prev.find(x => x.id === a.id)
+        ? prev.filter(x => x.id !== a.id)
+        : [...prev, a]
+    );
   };
 
   const headerBg = Math.min(1, scrollY / 100);
@@ -149,12 +236,15 @@ export default function RestaurantDetailPage() {
           <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--fb-primary)' }}>10% off</div>
           <div style={{ fontSize: 10, color: '#374151', marginTop: 3, lineHeight: 1.5 }}>minimum Rs. 0. Valid for all items. Auto-applied.</div>
         </div>
-        <div style={{ flex: 1, padding: '12px', borderRadius: 12, background: '#F9F9F9', border: '1px solid #F0F0F0', position: 'relative', overflow: 'hidden' }}>
+        <Pressable onClick={(e) => copyCode(e, 'PEHLAORDER')} style={{ flex: 1, padding: '12px', borderRadius: 12, background: '#F9F9F9', border: '1px dashed #D1D5DB', position: 'relative', overflow: 'hidden', textAlign: 'left' }}>
           <div style={{ position: 'absolute', right: -12, top: -12, width: 56, height: 56, borderRadius: '50%', background: 'rgba(0,0,0,0.04)' }}/>
           <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>50% off:</div>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#111' }}>PEHLAORDER</div>
-          <div style={{ fontSize: 10, color: '#374151', marginTop: 3, lineHeight: 1.5 }}>minimum Rs. 499. Valid for first order.</div>
-        </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#111', letterSpacing: 0.3 }}>PEHLAORDER</span>
+            <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--fb-primary)', padding: '2px 6px', borderRadius: 6, background: 'rgba(229,57,53,0.1)', letterSpacing: 0.4 }}>COPY</span>
+          </div>
+          <div style={{ fontSize: 10, color: '#374151', marginTop: 3, lineHeight: 1.5 }}>Tap to copy · min Rs. 499 · first order only.</div>
+        </Pressable>
       </div>
 
       {/* Search menu input */}
@@ -191,7 +281,7 @@ export default function RestaurantDetailPage() {
                 return (
                   <div key={item.id || item._id} style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
                     <div style={{ height: 110, background: '#F5F5F5', position: 'relative', overflow: 'hidden' }}>
-                      {item.image && <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>}
+                      <MenuImage item={item} size="lg"/>
                       {qty === 0 ? (
                         <Pressable onClick={() => handleAdd(item)} style={{ position: 'absolute', bottom: 8, right: 8, width: 30, height: 30, borderRadius: 999, background: '#fff', border: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
                           <Icons.Plus size={15} stroke="#111" sw={2.5}/>
@@ -258,7 +348,7 @@ export default function RestaurantDetailPage() {
                     )}
                   </div>
                   <div style={{ width: 88, height: 88, borderRadius: 12, background: '#F5F5F5', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
-                    {item.image && <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>}
+                    <MenuImage item={item}/>
                     {qty === 0 && (
                       <Pressable onClick={() => handleAdd(item)} style={{ position: 'absolute', bottom: 6, right: 6, width: 28, height: 28, borderRadius: 999, background: '#fff', border: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
                         <Icons.Plus size={14} stroke="#111" sw={2.5}/>
@@ -279,6 +369,73 @@ export default function RestaurantDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Add-ons bottom sheet */}
+      <AnimatePresence>
+        {addOnItem && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setAddOnItem(null)}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 60 }}
+            />
+            <motion.div
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 280, damping: 32 }}
+              style={{
+                position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 70,
+                background: '#fff', borderRadius: '20px 20px 0 0',
+                padding: '12px 16px 24px', maxHeight: '80vh', overflowY: 'auto',
+                boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
+              }}
+            >
+              <div style={{ width: 38, height: 4, borderRadius: 999, background: '#E5E5E5', margin: '0 auto 14px' }}/>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#111' }}>{addOnItem.name}</div>
+              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Make it your own — pick add-ons.</div>
+
+              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {(addOnItem.addOns || []).map(a => {
+                  const picked = !!pickedAddOns.find(x => x.id === a.id);
+                  return (
+                    <Pressable key={a.id} onClick={() => toggleAddOn(a)} style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      padding: '12px 14px', borderRadius: 12,
+                      border: `1.5px solid ${picked ? 'var(--fb-primary)' : '#F0F0F0'}`,
+                      background: picked ? 'rgba(229,57,53,0.05)' : '#fff',
+                      textAlign: 'left',
+                    }}>
+                      <div style={{
+                        width: 20, height: 20, borderRadius: 6,
+                        border: `2px solid ${picked ? 'var(--fb-primary)' : '#D1D5DB'}`,
+                        background: picked ? 'var(--fb-primary)' : '#fff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                      }}>
+                        {picked && <Icons.Check size={12} stroke="#fff" sw={3}/>}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{a.name}</div>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: a.price > 0 ? 'var(--fb-primary)' : '#10b981' }}>
+                        {a.price > 0 ? `+ ${PKR(a.price)}` : 'FREE'}
+                      </div>
+                    </Pressable>
+                  );
+                })}
+              </div>
+
+              <Pressable onClick={confirmAddOns} style={{
+                marginTop: 16, width: '100%', height: 52, borderRadius: 14,
+                background: 'var(--fb-primary)', color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                fontSize: 15, fontWeight: 800,
+                boxShadow: '0 6px 18px rgba(229,57,53,0.3)',
+              }}>
+                Add to cart · {PKR((addOnItem.price || 0) + pickedAddOns.reduce((s, a) => s + (a.price || 0), 0))}
+              </Pressable>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* FoodPanda-style cart CTA */}
       {totalCartQty > 0 && (

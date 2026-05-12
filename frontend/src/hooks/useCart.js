@@ -1,6 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+const lineKey = (menuItemId, addOns) => {
+  const ids = (addOns || []).map(a => a.id).sort().join(',');
+  return ids ? `${menuItemId}|${ids}` : String(menuItemId);
+};
+
+const linePrice = (item) => {
+  const addOnSum = (item.selectedAddOns || []).reduce((s, a) => s + (a.price || 0), 0);
+  return (item.price || 0) + addOnSum;
+};
+
 const useCartStore = create(
   persist(
     (set, get) => ({
@@ -8,8 +18,9 @@ const useCartStore = create(
       restaurantId: null,
       restaurantName: '',
 
-      addItem: (menuItem, restaurantId, restaurantName) => {
+      addItem: (menuItem, restaurantId, restaurantName, opts = {}) => {
         const { items, restaurantId: currentRestaurant } = get();
+        const selectedAddOns = opts.selectedAddOns || [];
 
         // Clear cart if switching restaurants
         if (currentRestaurant && currentRestaurant !== restaurantId) {
@@ -17,33 +28,44 @@ const useCartStore = create(
           set({ items: [], restaurantId: null, restaurantName: '' });
         }
 
-        const existing = items.find(i => i._id === menuItem._id);
+        const baseId = menuItem._id || menuItem.id;
+        const lineId = lineKey(baseId, selectedAddOns);
+        const existing = items.find(i => i.lineId === lineId);
+
         if (existing) {
-          set({ items: items.map(i => i._id === menuItem._id ? { ...i, quantity: i.quantity + 1 } : i) });
+          set({
+            items: items.map(i => i.lineId === lineId ? { ...i, quantity: i.quantity + 1 } : i),
+            restaurantId: restaurantId || currentRestaurant,
+            restaurantName: restaurantName || get().restaurantName,
+          });
         } else {
-          set({ items: [...items, { ...menuItem, quantity: 1 }], restaurantId, restaurantName });
+          const newLine = {
+            ...menuItem,
+            _id: baseId,
+            lineId,
+            selectedAddOns,
+            quantity: 1,
+            restaurantId,
+          };
+          set({ items: [...items, newLine], restaurantId, restaurantName });
         }
       },
 
-      removeItem: (itemId) => {
-        const items = get().items.filter(i => i._id !== itemId);
+      removeItem: (lineId) => {
+        const items = get().items.filter(i => i.lineId !== lineId && i._id !== lineId);
         set({ items, restaurantId: items.length ? get().restaurantId : null });
       },
 
-      updateQuantity: (itemId, quantity) => {
-        if (quantity <= 0) { get().removeItem(itemId); return; }
-        set({ items: get().items.map(i => i._id === itemId ? { ...i, quantity } : i) });
+      updateQuantity: (lineId, quantity) => {
+        if (quantity <= 0) { get().removeItem(lineId); return; }
+        set({
+          items: get().items.map(i =>
+            (i.lineId === lineId || i._id === lineId) ? { ...i, quantity } : i
+          ),
+        });
       },
 
       clearCart: () => set({ items: [], restaurantId: null, restaurantName: '' }),
-
-      get itemCount() {
-        return get().items.reduce((sum, i) => sum + i.quantity, 0);
-      },
-
-      get subtotal() {
-        return get().items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-      },
     }),
     { name: 'fairbite-cart' }
   )
@@ -51,12 +73,14 @@ const useCartStore = create(
 
 const useCart = () => {
   const store = useCartStore();
+  // Backfill lineId on legacy persisted carts so existing keys keep working.
+  const items = store.items.map(i => i.lineId ? i : { ...i, lineId: lineKey(i._id, i.selectedAddOns) });
   return {
-    items: store.items,
+    items,
     restaurantId: store.restaurantId,
     restaurantName: store.restaurantName,
-    itemCount: store.items.reduce((s, i) => s + i.quantity, 0),
-    subtotal: store.items.reduce((s, i) => s + i.price * i.quantity, 0),
+    itemCount: items.reduce((s, i) => s + i.quantity, 0),
+    subtotal:  items.reduce((s, i) => s + linePrice(i) * i.quantity, 0),
     addItem: store.addItem,
     removeItem: store.removeItem,
     updateQuantity: store.updateQuantity,
@@ -64,4 +88,5 @@ const useCart = () => {
   };
 };
 
+export { linePrice, lineKey };
 export default useCart;
