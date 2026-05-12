@@ -1,12 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { toast } from 'react-toastify';
 import useCart from '../../hooks/useCart';
 import api from '../../services/api';
+import { fallbackBrandLogo } from '../../utils/categoryMap';
 import {
   Icons, Pressable, SmartImg,
   BigRestaurantCard, BottomNav,
 } from '../../components/ui';
+
+const copyDealCode = (e, code) => {
+  if (e && e.stopPropagation) e.stopPropagation();
+  if (!code) return;
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(code).then(
+      () => toast.success(`Code "${code}" copied!`, { autoClose: 1500 }),
+      () => toast.error('Could not copy')
+    );
+  } else {
+    toast.info(`Copy code: ${code}`);
+  }
+};
+
+function BrandLogo({ brand }) {
+  const [errored, setErrored] = useState(false);
+  const src = (errored || !brand.isLogo) ? fallbackBrandLogo(brand.name) : brand.logo;
+  return (
+    <img src={src} alt={brand.name} onError={() => setErrored(true)}
+      style={{ width: '100%', height: '100%', objectFit: brand.isLogo && !errored ? 'contain' : 'cover', padding: brand.isLogo && !errored ? 8 : 0 }}/>
+  );
+}
 
 const FOOD_CATEGORIES = [
   { id: 'fast-food',  label: 'Fast Food',   img: 'https://images.unsplash.com/photo-1562967916-eb82221dfb92?w=300&auto=format&fit=crop' },
@@ -199,7 +223,7 @@ export default function HomePage() {
             }}
           >
             {FOOD_CATEGORIES.map(c => (
-              <Pressable key={c.id} onClick={() => navigate('/restaurants')} style={{
+              <Pressable key={c.id} onClick={() => navigate(`/restaurants?category=${c.id}`)} style={{
                 width: 76, flexShrink: 0, textAlign: 'center',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
               }}>
@@ -263,15 +287,16 @@ export default function HomePage() {
                     fontWeight: 500, marginBottom: 4 }}>
                     {d.sub}
                   </div>
-                  <div style={{
-                    display: 'inline-block',
+                  <Pressable onClick={(e) => copyDealCode(e, d.code)} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
                     background: 'rgba(255,255,255,0.25)',
                     borderRadius: 6, padding: '3px 8px',
                     fontSize: 11, fontWeight: 800, color: '#fff',
                     letterSpacing: 0.4,
                   }}>
-                    {d.code}
-                  </div>
+                    <span>{d.code}</span>
+                    <span style={{ fontSize: 8, padding: '1px 5px', borderRadius: 4, background: 'rgba(255,255,255,0.3)', letterSpacing: 0.5 }}>COPY</span>
+                  </Pressable>
                 </div>
               </motion.div>
             ))}
@@ -289,7 +314,7 @@ export default function HomePage() {
             }}
           >
             {TOP_BRANDS.map(b => (
-              <Pressable key={b.id} onClick={() => navigate('/restaurants')} style={{
+              <Pressable key={b.id} onClick={() => navigate(`/restaurants?brand=${b.id}`)} style={{
                 width: 86, flexShrink: 0,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
               }}>
@@ -298,7 +323,7 @@ export default function HomePage() {
                   border: '1px solid #F0F0F0', background: b.isLogo ? '#fff' : '#F5F5F5',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <img src={b.logo} alt={b.name} style={{ width: '100%', height: '100%', objectFit: b.isLogo ? 'contain' : 'cover', padding: b.isLogo ? 8 : 0 }}/>
+                  <BrandLogo brand={b}/>
                 </div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#111', textAlign: 'center', width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {b.name}
