@@ -309,50 +309,68 @@ export default function RiderDashboard() {
           <StatTile icon={<Icons.Bike size={16} stroke="#3b82f6" />} label="Total Trips" value={earnings.trips} color="#3b82f6" />
         </div>
 
-        {/* Available orders header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: 17, fontWeight: 800, color: '#111' }}>
-            Available Orders
-          </div>
-          <div style={{
-            padding: '4px 10px', borderRadius: 8,
-            background: availableOrders.length > 0 ? 'rgba(229,57,53,0.1)' : '#F5F5F5',
-            color: availableOrders.length > 0 ? 'var(--fb-primary)' : '#9CA3AF',
-            fontSize: 12, fontWeight: 700,
-          }}>
-            {availableOrders.length} new
-          </div>
-        </div>
-
-        {/* Orders list */}
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-              <Icons.Bike size={32} />
-            </motion.div>
-          </div>
-        ) : availableOrders.length === 0 ? (
+        {activeOrder ? (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             style={{
-              background: '#fff', borderRadius: 20, padding: 32,
+              background: '#fff', borderRadius: 20, padding: 24,
               textAlign: 'center', border: '1px dashed #E5E5E5',
             }}
           >
-            <div style={{ fontSize: 36, marginBottom: 8 }}>🛵</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Waiting for orders…</div>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>🚦</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>
+              Finish your active delivery to receive the next order.
+            </div>
             <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4 }}>
-              New orders will appear here automatically
+              One delivery at a time keeps things fair.
             </div>
           </motion.div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <AnimatePresence>
-              {availableOrders.map(order => (
-                <OrderCard key={order.id} order={order} />
-              ))}
-            </AnimatePresence>
-          </div>
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#111' }}>
+                Available Orders
+              </div>
+              <div style={{
+                padding: '4px 10px', borderRadius: 8,
+                background: availableOrders.length > 0 ? 'rgba(229,57,53,0.1)' : '#F5F5F5',
+                color: availableOrders.length > 0 ? 'var(--fb-primary)' : '#9CA3AF',
+                fontSize: 12, fontWeight: 700,
+              }}>
+                {availableOrders.length} new
+              </div>
+            </div>
+
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: 40, color: '#9CA3AF' }}>
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+                  <Icons.Bike size={32} />
+                </motion.div>
+              </div>
+            ) : availableOrders.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                style={{
+                  background: '#fff', borderRadius: 20, padding: 32,
+                  textAlign: 'center', border: '1px dashed #E5E5E5',
+                }}
+              >
+                <div style={{ fontSize: 36, marginBottom: 8 }}>🛵</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Waiting for orders…</div>
+                <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4 }}>
+                  New orders will appear here automatically
+                </div>
+              </motion.div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <AnimatePresence>
+                  {availableOrders.map(order => (
+                    <OrderCard key={order.id} order={order} />
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

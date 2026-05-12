@@ -77,11 +77,10 @@ exports.findAvailable = async () => {
 };
 
 exports.findAvailableRider = async (onlineRiderIds = []) => {
-  // Riders currently on an active delivery
   const { data: busy } = await supabase
     .from('orders')
     .select('rider_id')
-    .in('status', ['picked-up', 'on-the-way'])
+    .in('status', ['pending', 'confirmed', 'preparing', 'ready', 'ready-for-pickup', 'picked-up', 'on-the-way'])
     .not('rider_id', 'is', null);
 
   const busyIds = new Set((busy || []).map(o => o.rider_id));
