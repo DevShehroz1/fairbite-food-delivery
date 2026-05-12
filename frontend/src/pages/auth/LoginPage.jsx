@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Card, CardContent, TextField, Button, Typography, Link as MuiLink, Alert, Divider } from '@mui/material';
 import { useNavigate, Link } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -21,7 +20,6 @@ const LoginPage = () => {
     try {
       const { data } = await api.post('/auth/login', form);
       login(data.token, data.user);
-      toast.success(`Welcome back, ${data.user.name}!`);
       const routes = {
         customer:   '/home',
         restaurant: '/dashboard/restaurant',

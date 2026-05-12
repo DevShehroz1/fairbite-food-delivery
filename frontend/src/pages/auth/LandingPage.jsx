@@ -57,8 +57,6 @@ export default function LandingPage() {
       login(data.token, data.user);
       if (tab === 'login' && data.user.role !== selectedRole) {
         toast.info(`Signed in as ${data.user.role} (your account's existing role).`);
-      } else {
-        toast.success(`Welcome${data.user.name ? ', ' + data.user.name.split(' ')[0] : ''}!`);
       }
       navigate(ROLE_ROUTES[data.user.role] || '/home', { replace: true });
     } catch (err) {
@@ -84,8 +82,7 @@ export default function LandingPage() {
           role: selectedRole,
         });
         login(data.token, data.user);
-        toast.success(`Welcome, ${data.user.name.split(' ')[0]}!`);
-        navigate(ROLE_ROUTES[data.user.role] || '/home');
+        navigate(ROLE_ROUTES[data.user.role] || '/home', { replace: true });
       } catch {
         toast.error('Google sign-in failed. Try email login.');
       } finally {

@@ -4,10 +4,11 @@ import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import useCart from '../../hooks/useCart';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { fallbackBrandLogo } from '../../utils/categoryMap';
 import {
   Icons, Pressable, SmartImg,
-  BigRestaurantCard, BottomNav,
+  BigRestaurantCard, BottomNav, WelcomeBanner,
 } from '../../components/ui';
 
 const copyDealCode = (e, code) => {
@@ -69,15 +70,26 @@ const DEAL_BANNERS = [
 export default function HomePage() {
   const navigate = useNavigate();
   const { itemCount } = useCart();
+  const { user } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [tab, setTab]                 = useState('home');
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     api.get('/restaurants')
       .then(r => setRestaurants(r.data.data || []))
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('fb_just_logged_in') === '1') {
+        sessionStorage.removeItem('fb_just_logged_in');
+        setShowWelcome(true);
+      }
+    } catch (_) {}
   }, []);
 
   const handleTab = (t) => {
@@ -93,6 +105,14 @@ export default function HomePage() {
 
   return (
     <div style={{ background: '#F5F5F5', minHeight: '100vh', paddingBottom: 100 }}>
+
+      {showWelcome && (
+        <WelcomeBanner
+          name={user?.name}
+          avatar={user?.avatar}
+          onClose={() => setShowWelcome(false)}
+        />
+      )}
 
       {/* ── Pink hero section (not sticky, scrolls away) ── */}
       <div style={{

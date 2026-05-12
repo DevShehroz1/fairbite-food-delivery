@@ -23,6 +23,7 @@ export const AuthProvider = ({ children }) => {
   const login = (token, userData) => {
     localStorage.setItem('fairbite_token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    try { sessionStorage.setItem('fb_just_logged_in', '1'); } catch (_) {}
     setUser(userData);
   };
 
