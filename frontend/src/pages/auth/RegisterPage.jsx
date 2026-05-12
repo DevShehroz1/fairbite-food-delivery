@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Card, CardContent, TextField, Button, Typography, Link as MuiLink, Alert, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useNavigate, Link } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -21,7 +20,6 @@ const RegisterPage = () => {
     try {
       const { data } = await api.post('/auth/register', form);
       login(data.token, data.user);
-      toast.success(`Welcome to FairBite, ${data.user.name}!`);
       const routes = { restaurant: '/dashboard/restaurant', rider: '/dashboard/rider', admin: '/dashboard/admin' };
       navigate(routes[data.user.role] || '/');
     } catch (err) {

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const Ico = ({ d, size = 20, stroke = 'currentColor', sw = 2, fill = 'none', children }) => (
@@ -230,6 +230,105 @@ export function BottomNav({ tab, onTab }) {
         })}
       </div>
     </div>
+  );
+}
+
+// ─── WelcomeBanner ───────────────────────────────────────────────────────────
+function avatarBgFromName(name) {
+  const palette = ['#E53E3E', '#D97706', '#059669', '#2563EB', '#7C3AED', '#DB2777'];
+  let acc = 0;
+  for (let i = 0; i < (name || '').length; i++) acc += name.charCodeAt(i);
+  return palette[acc % palette.length];
+}
+
+const WELCOME_GREETINGS = [
+  "Glad to see you back",
+  "Let's grab something tasty",
+  "Hungry? We've got you",
+  "Your favourites are waiting",
+];
+
+export function WelcomeBanner({ name, avatar, autoDismissMs = 3500, onClose }) {
+  const [open, setOpen] = useState(true);
+
+  const first = (name || 'there').trim().split(/\s+/)[0];
+  const greeting = WELCOME_GREETINGS[((first || '').charCodeAt(0) || 0) % WELCOME_GREETINGS.length];
+  const initial = (first || 'U').charAt(0).toUpperCase();
+  const avBg = avatarBgFromName(first);
+
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => setOpen(false), autoDismissMs);
+    return () => clearTimeout(t);
+  }, [open, autoDismissMs]);
+
+  return (
+    <AnimatePresence onExitComplete={() => onClose && onClose()}>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, y: -24 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -24 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+          style={{
+            position: 'fixed', zIndex: 100,
+            top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+            left: '50%', transform: 'translateX(-50%)',
+            width: 'calc(100% - 24px)', maxWidth: 440,
+            pointerEvents: 'auto',
+          }}
+          role="status" aria-live="polite"
+        >
+          <div style={{
+            position: 'relative',
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '12px 14px',
+            background: '#fff',
+            borderRadius: 18,
+            boxShadow: '0 14px 36px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)',
+            border: '1px solid rgba(0,0,0,0.04)',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', left: 0, top: 0, bottom: 0, width: 4,
+              background: 'linear-gradient(180deg, var(--fb-primary), var(--fb-accent))',
+            }}/>
+            {avatar ? (
+              <img src={avatar} alt={first}
+                style={{ width: 40, height: 40, borderRadius: 999, objectFit: 'cover',
+                  flexShrink: 0, border: '2px solid #fff',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.12)' }}/>
+            ) : (
+              <div style={{
+                width: 40, height: 40, borderRadius: 999, background: avBg,
+                color: '#fff', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 17, fontWeight: 800,
+                boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+              }}>{initial}</div>
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#111',
+                letterSpacing: -0.2, overflow: 'hidden',
+                textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                Welcome, {first}!
+              </div>
+              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 1,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {greeting}
+              </div>
+            </div>
+            <Pressable onClick={() => setOpen(false)} aria-label="Dismiss" style={{
+              width: 30, height: 30, borderRadius: 999, color: '#9CA3AF',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Icons.X size={16} sw={2.2}/>
+            </Pressable>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
