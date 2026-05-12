@@ -22,8 +22,13 @@ const LoginPage = () => {
       const { data } = await api.post('/auth/login', form);
       login(data.token, data.user);
       toast.success(`Welcome back, ${data.user.name}!`);
-      const routes = { restaurant: '/dashboard/restaurant', rider: '/dashboard/rider', admin: '/dashboard/admin' };
-      navigate(routes[data.user.role] || '/');
+      const routes = {
+        customer:   '/home',
+        restaurant: '/dashboard/restaurant',
+        rider:      '/dashboard/rider',
+        admin:      '/dashboard/admin',
+      };
+      navigate(routes[data.user.role] || '/home', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {

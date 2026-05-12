@@ -55,8 +55,12 @@ export default function LandingPage() {
         : { name, email, password, role: selectedRole };
       const { data } = await api.post(endpoint, payload);
       login(data.token, data.user);
-      toast.success(`Welcome${data.user.name ? ', ' + data.user.name.split(' ')[0] : ''}!`);
-      navigate(ROLE_ROUTES[data.user.role] || '/home');
+      if (tab === 'login' && data.user.role !== selectedRole) {
+        toast.info(`Signed in as ${data.user.role} (your account's existing role).`);
+      } else {
+        toast.success(`Welcome${data.user.name ? ', ' + data.user.name.split(' ')[0] : ''}!`);
+      }
+      navigate(ROLE_ROUTES[data.user.role] || '/home', { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Authentication failed');
     } finally {
