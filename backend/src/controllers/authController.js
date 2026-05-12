@@ -77,13 +77,18 @@ exports.googleTokenAuth = async (req, res, next) => {
     if (!email) return res.status(400).json({ success: false, message: 'No email provided' });
 
     let user = await User.findByEmail(email);
+    const allowed = ['customer', 'restaurant', 'rider'];
     if (!user) {
-      const allowed = ['customer', 'restaurant', 'rider'];
       const assignedRole = allowed.includes(role) ? role : 'customer';
       user = await User.createGoogleUser({ name, email, avatar, googleId, role: assignedRole });
     } else {
-      if (avatar) await User.update(user.id, { avatar });
-      user.avatar = avatar || user.avatar;
+      const updates = {};
+      if (avatar) updates.avatar = avatar;
+      if (allowed.includes(role) && role !== user.role) updates.role = role;
+      if (Object.keys(updates).length) {
+        const updated = await User.update(user.id, updates);
+        user = { ...user, ...updates, ...(updated || {}) };
+      }
     }
 
     sendToken(user, 200, res);

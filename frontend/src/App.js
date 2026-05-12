@@ -28,6 +28,16 @@ const DASHBOARD_ROUTES = {
   admin:      '/dashboard/admin',
 };
 
+const RoleRoute = ({ allow, children }) => {
+  const { isAuthenticated, user, loading } = useAuth();
+  if (loading) return null;
+  if (!isAuthenticated) return <Navigate to="/" replace />;
+  if (allow && !allow.includes(user?.role)) {
+    return <Navigate to={DASHBOARD_ROUTES[user?.role] || '/'} replace />;
+  }
+  return children;
+};
+
 const App = () => {
   const { isAuthenticated, user, loading } = useAuth();
 
@@ -48,19 +58,19 @@ const App = () => {
       />
       <Route path="/register" element={<RegisterPage />} />
 
-      {/* Customer */}
-      <Route path="/home"                element={<HomePage />} />
-      <Route path="/restaurants"         element={<RestaurantListPage />} />
-      <Route path="/restaurants/:id"     element={<RestaurantDetailPage />} />
-      <Route path="/cart"                element={<CartPage />} />
-      <Route path="/orders"              element={<OrderHistoryPage />} />
-      <Route path="/orders/:id/track"    element={<OrderTrackingPage />} />
-      <Route path="/profile"             element={<ProfilePage />} />
+      {/* Customer-only */}
+      <Route path="/home"             element={<RoleRoute allow={['customer']}><HomePage /></RoleRoute>} />
+      <Route path="/restaurants"      element={<RoleRoute allow={['customer']}><RestaurantListPage /></RoleRoute>} />
+      <Route path="/restaurants/:id"  element={<RoleRoute allow={['customer']}><RestaurantDetailPage /></RoleRoute>} />
+      <Route path="/cart"             element={<RoleRoute allow={['customer']}><CartPage /></RoleRoute>} />
+      <Route path="/orders"           element={<RoleRoute allow={['customer']}><OrderHistoryPage /></RoleRoute>} />
+      <Route path="/orders/:id/track" element={<RoleRoute allow={['customer']}><OrderTrackingPage /></RoleRoute>} />
+      <Route path="/profile"          element={<RoleRoute allow={['customer']}><ProfilePage /></RoleRoute>} />
 
       {/* Role dashboards */}
-      <Route path="/dashboard/restaurant" element={<RestaurantDashboard />} />
-      <Route path="/dashboard/rider"      element={<RiderDashboard />} />
-      <Route path="/dashboard/admin"      element={<AdminDashboard />} />
+      <Route path="/dashboard/restaurant" element={<RoleRoute allow={['restaurant']}><RestaurantDashboard /></RoleRoute>} />
+      <Route path="/dashboard/rider"      element={<RoleRoute allow={['rider']}><RiderDashboard /></RoleRoute>} />
+      <Route path="/dashboard/admin"      element={<RoleRoute allow={['admin']}><AdminDashboard /></RoleRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
