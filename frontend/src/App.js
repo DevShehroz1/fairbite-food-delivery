@@ -15,6 +15,7 @@ import CartPage from './pages/customer/CartPage';
 import OrderTrackingPage from './pages/customer/OrderTrackingPage';
 import OrderHistoryPage from './pages/customer/OrderHistoryPage';
 import ProfilePage from './pages/customer/ProfilePage';
+import RewardsPage from './pages/customer/RewardsPage';
 
 // Pages — Role dashboards
 import RestaurantDashboard from './pages/restaurant/RestaurantDashboard';
@@ -66,6 +67,7 @@ const App = () => {
       <Route path="/orders"           element={<RoleRoute allow={['customer']}><OrderHistoryPage /></RoleRoute>} />
       <Route path="/orders/:id/track" element={<RoleRoute allow={['customer']}><OrderTrackingPage /></RoleRoute>} />
       <Route path="/profile"          element={<RoleRoute allow={['customer']}><ProfilePage /></RoleRoute>} />
+      <Route path="/rewards"          element={<RoleRoute allow={['customer']}><RewardsPage /></RoleRoute>} />
 
       {/* Role dashboards */}
       <Route path="/dashboard/restaurant" element={<RoleRoute allow={['restaurant']}><RestaurantDashboard /></RoleRoute>} />

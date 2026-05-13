@@ -1,6 +1,7 @@
 const Order      = require('../models/Order');
 const Restaurant = require('../models/Restaurant');
 const referralCtrl = require('./referralController');
+const couponCtrl   = require('./couponController');
 
 const emit = (req, target, event, payload) => {
   const io = req.app.get('io');
@@ -45,7 +46,7 @@ exports.getOrder = async (req, res, next) => {
 
 exports.createOrder = async (req, res, next) => {
   try {
-    const { restaurantId, items, deliveryAddress, payment } = req.body;
+    const { restaurantId, items, deliveryAddress, payment, couponCode } = req.body;
 
     const restaurant = await Restaurant.findById(restaurantId);
     if (!restaurant) return res.status(404).json({ success: false, message: 'Restaurant not found' });
@@ -69,16 +70,35 @@ exports.createOrder = async (req, res, next) => {
 
     const deliveryFee = restaurant.delivery?.fee || 50;
     const platformFee = Math.round(subtotal * ((restaurant.pricing?.commissionRate || 15) / 100));
-    const total       = subtotal + deliveryFee;
+
+    let discount = 0;
+    let appliedCoupon = null;
+    if (couponCode) {
+      try {
+        const result = await couponCtrl.applyCouponToOrder({
+          userId: req.user.id, code: couponCode, subtotal, deliveryFee,
+        });
+        discount = result.discount;
+        appliedCoupon = { code: result.coupon.code, label: result.coupon.label, discount };
+      } catch (e) {
+        return res.status(400).json({ success: false, message: e.message });
+      }
+    }
+    const total = Math.max(0, subtotal + deliveryFee - discount);
 
     const order = await Order.create({
       customer_id:     req.user.id,
       restaurant_id:   restaurantId,
       items:           orderItems,
-      pricing:         { subtotal, platformFee, deliveryFee, total },
+      pricing:         { subtotal, platformFee, deliveryFee, discount, total, coupon: appliedCoupon },
       deliveryAddress,
       payment:         payment || { method: 'cash', status: 'pending' },
     });
+
+    if (appliedCoupon) {
+      try { await couponCtrl.redeemCoupon({ userId: req.user.id, code: appliedCoupon.code }); }
+      catch (e) { console.error('Coupon redeem failed:', e.message); }
+    }
 
     // Notify restaurant in real-time
     emit(req, `restaurant_${restaurantId}`, 'new_order', {
@@ -106,6 +126,13 @@ exports.updateOrderStatus = async (req, res, next) => {
     if (status === 'delivered' && order.customer?.id) {
       try { await referralCtrl.creditReferralOnFirstOrder({ refereeId: order.customer.id }); }
       catch (e) { console.error('Referral credit failed:', e.message); }
+
+      // Milestone coupons — count how many of this customer's orders are delivered
+      try {
+        const all = await Order.findByUser({ role: 'customer', userId: order.customer.id });
+        const deliveredCount = all.filter(o => o.status === 'delivered').length;
+        await couponCtrl.grantMilestoneOnDelivery({ userId: order.customer.id, deliveredCount });
+      } catch (e) { console.error('Milestone grant failed:', e.message); }
     }
 
     // Notify the customer watching this order
