@@ -141,6 +141,11 @@ export default function ProfilePage() {
       action: () => soon('Edit Profile'),
     },
     {
+      icon: Icons.Gift,
+      label: 'My Rewards',
+      action: () => navigate('/rewards'),
+    },
+    {
       icon: Icons.Receipt,
       label: 'Order History',
       action: () => navigate('/orders'),

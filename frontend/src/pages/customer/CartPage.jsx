@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import useCart from '../../hooks/useCart';
@@ -21,6 +21,11 @@ export default function CartPage() {
   const [deliveryMode, setDeliveryMode] = useState('delivery');
   const [cutlery, setCutlery]         = useState(false);
   const [suggestions, setSuggestions] = useState([]);
+  const [couponSheetOpen, setCouponSheetOpen] = useState(false);
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [validating, setValidating] = useState(false);
 
   useEffect(() => {
     if (!restaurantId) return;
@@ -33,9 +38,38 @@ export default function CartPage() {
       .catch(() => {});
   }, [restaurantId, items]);
 
+  useEffect(() => {
+    if (!couponSheetOpen) return;
+    api.get('/coupons/me')
+      .then(r => setAvailableCoupons(r.data.data?.available || []))
+      .catch(() => {});
+  }, [couponSheetOpen]);
+
+  const deliveryFee = 0; // free delivery — change if you start charging
   const tax   = Math.round(subtotal * 0.05);
-  const total = subtotal + tax;
-  const discountedTotal = Math.round(total * 0.9);
+  const discount = appliedCoupon?.discount || 0;
+  const total = Math.max(0, subtotal + tax + deliveryFee - discount);
+
+  const validateCoupon = async (code) => {
+    if (!code) return;
+    setValidating(true);
+    try {
+      const { data } = await api.get('/coupons/validate', { params: { code, subtotal, deliveryFee } });
+      setAppliedCoupon(data.data);
+      toast.success(`${data.data.code} applied — you save Rs. ${data.data.discount}`, { autoClose: 1800 });
+      setCouponSheetOpen(false);
+      setCouponInput('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not apply coupon');
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    toast.info('Coupon removed');
+  };
 
   const handlePlace = async () => {
     if (!items.length) return;
@@ -53,6 +87,7 @@ export default function CartPage() {
           zipCode: '54000',
         },
         payment: { method: 'cash', status: 'pending' },
+        couponCode: appliedCoupon?.code,
       });
       clearCart();
       toast.success('Order placed!');
@@ -244,14 +279,51 @@ export default function CartPage() {
           <span style={{ fontSize: 14, fontWeight: 600, color: '#10b981' }}>Rs. 0</span>
         </div>
         <PriceRow label={`Tax (5%)`} value={PKR(tax)}/>
+        {appliedCoupon && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+            <span style={{ fontSize: 14, color: '#10b981', fontWeight: 700 }}>
+              Coupon ({appliedCoupon.code})
+            </span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#10b981' }}>
+              − {PKR(appliedCoupon.discount)}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ── Apply voucher ─────────────────────────────────────── */}
-      <div style={{ margin: '12px 16px', padding: '14px', borderRadius: 12, border: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 20 }}>🎟️</span>
-        <span style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Apply a voucher</span>
-        <Icons.ChevronR size={16} stroke="#9CA3AF" style={{ marginLeft: 'auto' }}/>
-      </div>
+      {appliedCoupon ? (
+        <div style={{
+          margin: '12px 16px', padding: '12px 14px', borderRadius: 12,
+          border: '1.5px dashed #10b981', background: 'rgba(16,185,129,0.06)',
+          display: 'flex', alignItems: 'center', gap: 12,
+        }}>
+          <span style={{ fontSize: 20 }}>✅</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#10b981', letterSpacing: 0.5 }}>
+              {appliedCoupon.code} applied
+            </div>
+            <div style={{ fontSize: 11, color: '#374151', marginTop: 2 }}>
+              {appliedCoupon.label} · −Rs. {appliedCoupon.discount}
+            </div>
+          </div>
+          <Pressable onClick={removeCoupon} style={{
+            padding: '6px 10px', borderRadius: 8,
+            background: '#fff', border: '1px solid #F0F0F0',
+            fontSize: 11, fontWeight: 700, color: '#EF4444',
+          }}>Remove</Pressable>
+        </div>
+      ) : (
+        <Pressable onClick={() => setCouponSheetOpen(true)} style={{
+          margin: '12px 16px', padding: '14px', borderRadius: 12,
+          border: '1px solid #F0F0F0', width: 'calc(100% - 32px)',
+          display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
+        }}>
+          <span style={{ fontSize: 20 }}>🎟️</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Apply a voucher</span>
+          <Icons.ChevronR size={16} stroke="#9CA3AF" style={{ marginLeft: 'auto' }}/>
+        </Pressable>
+      )}
 
       {/* ── Cutlery toggle ────────────────────────────────────── */}
       <div style={{ margin: '0 16px 14px', padding: '14px', borderRadius: 12, border: '1px solid #F0F0F0' }}>
@@ -287,10 +359,90 @@ export default function CartPage() {
           </Pressable>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--qb-primary)' }}>{PKR(discountedTotal)}</div>
-          <div style={{ fontSize: 12, color: '#9CA3AF', textDecoration: 'line-through', marginTop: 2 }}>{PKR(total)}</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--qb-primary)' }}>{PKR(total)}</div>
+          {discount > 0 && (
+            <div style={{ fontSize: 12, color: '#9CA3AF', textDecoration: 'line-through', marginTop: 2 }}>
+              {PKR(subtotal + tax + deliveryFee)}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* ── Coupon picker bottom-sheet ───────────────────────── */}
+      <AnimatePresence>
+        {couponSheetOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setCouponSheetOpen(false)}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 60 }}
+            />
+            <motion.div
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 280, damping: 32 }}
+              style={{
+                position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 70,
+                background: '#fff', borderRadius: '20px 20px 0 0',
+                padding: '12px 16px 24px', maxHeight: '78vh', overflowY: 'auto',
+                boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
+              }}
+            >
+              <div style={{ width: 38, height: 4, borderRadius: 999, background: '#E5E5E5', margin: '0 auto 14px' }}/>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#111' }}>Apply a voucher</div>
+              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Enter a code or pick from your rewards.</div>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                <input
+                  value={couponInput}
+                  onChange={e => setCouponInput((e.target.value || '').toUpperCase())}
+                  placeholder="Enter code (e.g. QUICKBITE50)"
+                  style={{
+                    flex: 1, height: 46, borderRadius: 12,
+                    border: '1px solid #E5E5E5', padding: '0 14px',
+                    fontSize: 14, fontWeight: 600, outline: 0, color: '#111',
+                  }}
+                />
+                <Pressable onClick={() => validateCoupon(couponInput)} disabled={!couponInput || validating} style={{
+                  padding: '0 18px', borderRadius: 12,
+                  background: couponInput ? 'var(--qb-primary)' : '#F0F0F0',
+                  color: couponInput ? '#fff' : '#9CA3AF',
+                  fontSize: 13, fontWeight: 800, height: 46,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>{validating ? '…' : 'Apply'}</Pressable>
+              </div>
+
+              {availableCoupons.length > 0 && (
+                <>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: '#6b7280', letterSpacing: 0.5, textTransform: 'uppercase', marginTop: 18, marginBottom: 8 }}>
+                    Your active rewards ({availableCoupons.length})
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {availableCoupons.map(c => (
+                      <Pressable key={c.id} onClick={() => validateCoupon(c.code)} style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '12px 14px', borderRadius: 12,
+                        border: '1px solid #F0F0F0', textAlign: 'left', width: '100%',
+                      }}>
+                        <span style={{ fontSize: 20 }}>🎟️</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{c.label}</div>
+                          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2, letterSpacing: 0.5 }}>{c.code} · min Rs. {c.minOrder || 0}</div>
+                        </div>
+                        <Icons.ChevronR size={16} stroke="#9CA3AF"/>
+                      </Pressable>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <Pressable onClick={() => navigate('/rewards')} style={{
+                marginTop: 14, width: '100%', padding: '10px',
+                fontSize: 12, fontWeight: 700, color: 'var(--qb-primary)',
+              }}>Browse all rewards →</Pressable>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── Fixed CTA ────────────────────────────────────────── */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px 28px', background: '#fff', borderTop: '1px solid #F0F0F0' }}>
