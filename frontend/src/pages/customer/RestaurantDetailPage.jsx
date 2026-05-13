@@ -113,7 +113,6 @@ export default function RestaurantDetailPage() {
   if (loading) return <LoadingState/>;
   if (!restaurant) return null;
 
-  const img     = restaurant.images?.cover || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=900';
   const menu    = groupByCategory(restaurant.menu || []);
   const thisCartItems = cartItems.filter(i => i.restaurantId === id);
   const totalCartQty  = thisCartItems.reduce((s, i) => s + i.quantity, 0);
@@ -194,7 +193,7 @@ export default function RestaurantDetailPage() {
 
       {/* Hero image */}
       <div style={{ position: 'relative', height: 220, marginTop: -60 }}>
-        <SmartImg src={img} style={{ position: 'absolute', inset: 0 }}/>
+        <SmartImg src={restaurant.images?.cover} fallback={guessEmoji({ name: restaurant.name, category: restaurant.cuisine?.[0] })} style={{ position: 'absolute', inset: 0 }}/>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.4))' }}/>
       </div>
 
