@@ -171,7 +171,7 @@ export default function CartPage() {
         <span style={{ fontSize: 14, color: '#374151' }}>
           Delivery: <strong>25–40 min</strong>
         </span>
-        <Pressable style={{ fontSize: 13, fontWeight: 700, color: '#111', textDecoration: 'underline' }}>
+        <Pressable onClick={() => toast.info('Delivery slot picker coming soon!')} style={{ fontSize: 13, fontWeight: 700, color: '#111', textDecoration: 'underline' }}>
           Change
         </Pressable>
       </div>
@@ -354,7 +354,7 @@ export default function CartPage() {
       <div style={{ margin: '0 16px 16px', padding: '14px', borderRadius: 12, border: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 15, fontWeight: 800, color: '#111' }}>Total <span style={{ fontWeight: 400, fontSize: 12, color: '#6b7280' }}>(incl. fees and tax)</span></div>
-          <Pressable style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginTop: 2, textDecoration: 'underline' }}>
+          <Pressable onClick={() => toast.info(`Subtotal ${PKR(subtotal)} · Tax ${PKR(tax)}${discount > 0 ? ' · Discount −' + PKR(discount) : ''}`, { autoClose: 3500 })} style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginTop: 2, textDecoration: 'underline' }}>
             See summary
           </Pressable>
         </div>

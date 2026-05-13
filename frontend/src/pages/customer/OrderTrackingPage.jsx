@@ -245,11 +245,18 @@ export default function OrderTrackingPage() {
                     Honda CD 70 · On the way
                   </div>
                 </div>
-                <Pressable style={{
-                  width: 40, height: 40, borderRadius: 999, background: '#10b981',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#fff', boxShadow: '0 4px 12px rgba(16,185,129,0.4)',
-                }}>
+                <Pressable
+                  onClick={() => {
+                    if (rider?.phone) window.location.href = `tel:${rider.phone}`;
+                  }}
+                  style={{
+                    width: 40, height: 40, borderRadius: 999, background: '#10b981',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', boxShadow: '0 4px 12px rgba(16,185,129,0.4)',
+                    opacity: rider?.phone ? 1 : 0.4, cursor: rider?.phone ? 'pointer' : 'default',
+                  }}
+                  disabled={!rider?.phone}
+                >
                   <Icons.Phone size={16}/>
                 </Pressable>
               </motion.div>
