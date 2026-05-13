@@ -58,3 +58,51 @@ button { font-family: inherit; }
     padding-top: calc(52px + env(safe-area-inset-top));
   }
 }
+
+/* ─── Leaflet pin styling ───────────────────────────────────────────────── */
+.qb-leaflet-icon { background: transparent; border: none; }
+
+.qb-pin {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  border-radius: 50% 50% 50% 0;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  transform: rotate(-45deg);
+}
+.qb-pin span { transform: rotate(45deg); display: inline-block; }
+.qb-pin-restaurant { background: var(--qb-primary); color: #fff; }
+.qb-pin-customer   { background: #2563EB; color: #fff; }
+
+.qb-pin-rider {
+  width: 54px; height: 54px;
+  position: relative;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+  border-radius: 0;
+}
+.qb-pin-rider-pulse {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: rgba(229,57,53,0.25);
+  animation: qb-rider-pulse 1.6s ease-out infinite;
+}
+.qb-pin-rider-dot {
+  position: absolute; inset: 12px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 4px 14px rgba(229,57,53,0.4);
+  border: 2.5px solid var(--qb-primary);
+}
+@keyframes qb-rider-pulse {
+  0%   { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* Hide leaflet zoom controls + attribution we already hid via props */
+.leaflet-container { font-family: inherit; }
+.leaflet-control-attribution { display: none !important; }

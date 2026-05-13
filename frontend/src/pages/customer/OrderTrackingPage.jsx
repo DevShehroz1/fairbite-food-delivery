@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 import { Icons, Pressable, SmartImg, BrandButton } from '../../components/ui';
+import LeafletMap, { DEFAULT_RESTAURANT, DEFAULT_CUSTOMER } from '../../components/LeafletMap';
 
 // ─── 4-step customer UI mapping ──────────────────────────────────────────────
 const UI_STEPS = [
@@ -25,20 +26,17 @@ function backendToStep(status) {
   }
 }
 
-const ROUTE_PATH = "M50,360 C90,320 130,300 165,280 S220,240 250,200 S290,140 340,120";
-
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function OrderTrackingPage() {
   const { id }   = useParams();
   const navigate = useNavigate();
-  const pathRef  = useRef(null);
 
   const [order, setOrder]     = useState(null);
   const [loading, setLoading] = useState(true);
   const [step, setStep]       = useState(0);
   const [cancelled, setCancelled] = useState(false);
   const [eta, setEta]         = useState(28 * 60);
-  const [riderPos, setRiderPos] = useState({ x: 50, y: 360 });
+  const [animProgress, setAnimProgress] = useState(0);
 
   // Initial fetch
   useEffect(() => {
@@ -76,18 +74,23 @@ export default function OrderTrackingPage() {
     return () => clearInterval(t);
   }, []);
 
-  // Rider dot — only moves when step >= 2
-  const mapProgress = step >= 2 ? Math.min(1, (step - 1) / 2) : 0;
-
+  // Rider progress along the route — eased animation toward the target progress.
+  // step 2 = picked up (just left restaurant) → 0.05
+  // step 3 = delivered → 1
+  const targetProgress = step >= 3 ? 1 : step >= 2 ? 0.55 : 0;
   useEffect(() => {
-    const el = pathRef.current;
-    if (!el) return;
-    try {
-      const total = el.getTotalLength();
-      const pt = el.getPointAtLength(mapProgress * total);
-      setRiderPos({ x: pt.x, y: pt.y });
-    } catch (_) {}
-  }, [mapProgress]);
+    let raf;
+    const tick = () => {
+      setAnimProgress(p => {
+        const next = p + (targetProgress - p) * 0.06;
+        if (Math.abs(targetProgress - next) < 0.002) return targetProgress;
+        raf = requestAnimationFrame(tick);
+        return next;
+      });
+    };
+    raf = requestAnimationFrame(tick);
+    return () => raf && cancelAnimationFrame(raf);
+  }, [targetProgress]);
 
   const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
@@ -120,7 +123,12 @@ export default function OrderTrackingPage() {
 
       {/* ── Map – top 60% ── */}
       <div style={{ position: 'relative', flex: '0 0 60%', overflow: 'hidden' }}>
-        <CityMap progress={mapProgress} pathRef={pathRef} riderPos={riderPos} riderMoving={step >= 2}/>
+        <LeafletMap
+          restaurant={DEFAULT_RESTAURANT}
+          customer={DEFAULT_CUSTOMER}
+          progress={animProgress}
+          showRider={step >= 2}
+        />
 
         {/* Back button */}
         <Pressable onClick={() => navigate(-1)} style={{
@@ -337,105 +345,3 @@ function HorizontalStepper({ step }) {
   );
 }
 
-// ─── City map SVG ─────────────────────────────────────────────────────────────
-function CityMap({ progress, pathRef, riderPos, riderMoving }) {
-  return (
-    <div style={{ position: 'absolute', inset: 0,
-      background: 'linear-gradient(180deg, #E8F4F1 0%, #F0F4ED 100%)' }}>
-      <svg viewBox="0 0 400 440" preserveAspectRatio="xMidYMid slice"
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-        <defs>
-          <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
-            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="rgba(0,0,0,0.04)" strokeWidth="1"/>
-          </pattern>
-          <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#A6D5E8"/>
-            <stop offset="1" stopColor="#7EBED4"/>
-          </linearGradient>
-          <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3"/></filter>
-        </defs>
-
-        {/* parks */}
-        <ellipse cx="80" cy="100" rx="65" ry="38" fill="#C8E5BF" opacity="0.8"/>
-        <ellipse cx="320" cy="320" rx="80" ry="50" fill="#C8E5BF" opacity="0.7"/>
-
-        {/* water */}
-        <path d="M340 0 L400 0 L400 440 L355 440 C360 380 370 280 360 200 C350 100 345 40 340 0 Z"
-          fill="url(#water)" opacity="0.7"/>
-
-        <rect width="400" height="440" fill="url(#grid)"/>
-
-        {/* roads */}
-        <g stroke="#fff" strokeLinecap="round" fill="none">
-          <path d="M0 200 L400 240" strokeWidth="14"/>
-          <path d="M0 200 L400 240" strokeWidth="11" stroke="#F4ECDC"/>
-          <path d="M120 0 L160 440" strokeWidth="10"/>
-          <path d="M120 0 L160 440" strokeWidth="7" stroke="#F4ECDC"/>
-          <path d="M260 0 L290 440" strokeWidth="8"/>
-          <path d="M260 0 L290 440" strokeWidth="5" stroke="#F4ECDC"/>
-          <path d="M0 360 Q200 340 400 380" strokeWidth="9"/>
-          <path d="M0 360 Q200 340 400 380" strokeWidth="6" stroke="#F4ECDC"/>
-        </g>
-
-        {/* buildings */}
-        <g fill="#E5E5E5">
-          <rect x="40" y="160" width="22" height="22" rx="2"/>
-          <rect x="68" y="155" width="18" height="28" rx="2"/>
-          <rect x="195" y="170" width="24" height="22" rx="2"/>
-          <rect x="225" y="160" width="20" height="32" rx="2"/>
-          <rect x="60" y="260" width="22" height="22" rx="2"/>
-        </g>
-
-        {/* dotted route */}
-        <path d={ROUTE_PATH} stroke="rgba(229,57,53,0.3)" strokeWidth="4"
-          strokeDasharray="2 8" strokeLinecap="round" fill="none"/>
-
-        {/* traveled route — only animates when rider is moving */}
-        <motion.path d={ROUTE_PATH}
-          stroke="var(--qb-primary)" strokeWidth="4" strokeLinecap="round" fill="none"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: riderMoving ? progress : 0 }}
-          transition={{ duration: 1.2, ease: 'easeInOut' }}/>
-
-        {/* hidden path for getTotalLength() */}
-        <path ref={pathRef} d={ROUTE_PATH} fill="none" stroke="none"/>
-
-        {/* restaurant pin */}
-        <g transform="translate(50 360)">
-          <circle r="14" fill="var(--qb-primary)" filter="url(#shadow)"/>
-          <circle r="20" fill="var(--qb-primary)" opacity="0.18"/>
-          <g transform="translate(-6 -7)" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" fill="none">
-            <path d="M3 1v6a3 3 0 0 0 6 0V1M6 7v6M10 1c-1 0-2 1.5-2 3.5s.5 3.5 2 3.5v5"/>
-          </g>
-        </g>
-
-        {/* destination pin */}
-        <g transform="translate(340 120)">
-          <circle r="14" fill="var(--qb-accent)" filter="url(#shadow)"/>
-          <motion.circle r="14" fill="none" stroke="var(--qb-accent)" strokeWidth="2"
-            animate={{ r: [14, 26], opacity: [0.6, 0] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}/>
-          <g transform="translate(-6 -7)" stroke="#fff" strokeWidth="1.6"
-            strokeLinecap="round" strokeLinejoin="round" fill="none">
-            <path d="M2 8 L6 3 L11 8 V12 H2 Z"/>
-          </g>
-        </g>
-
-        {/* rider dot */}
-        <motion.g
-          animate={{ x: riderPos.x, y: riderPos.y }}
-          transition={{ duration: 1.2, ease: 'easeInOut' }}
-          style={{ x: 50, y: 360 }}>
-          <circle r="20" fill="var(--qb-primary)" opacity="0.18"/>
-          <circle r="12" fill="#fff" filter="url(#shadow)"/>
-          <g transform="translate(-6 -6)" stroke="var(--qb-primary)" strokeWidth="1.8"
-            fill="none" strokeLinecap="round">
-            <circle cx="4" cy="11" r="2"/>
-            <circle cx="11" cy="11" r="2"/>
-            <path d="M4 11 L7 6 H10 L11.5 9"/>
-          </g>
-        </motion.g>
-      </svg>
-    </div>
-  );
-}

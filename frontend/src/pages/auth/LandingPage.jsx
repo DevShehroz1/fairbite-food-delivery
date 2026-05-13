@@ -128,14 +128,15 @@ export default function LandingPage() {
         }}>
 
         {/* logo */}
-        <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <QBLogoMark size={28}/>
-          </div>
+        <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+          <QBLogoMark size={48}/>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.3 }}>QuickBite</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Fair prices. No hidden fees.</div>
+            <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.4, lineHeight: 1 }}>
+              Quick<span style={{ color: 'var(--qb-accent)' }}>Bite</span>
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 4, letterSpacing: 0.4, textTransform: 'uppercase', fontWeight: 600 }}>
+              Fast · Fair · Tasty
+            </div>
           </div>
         </motion.div>
 
