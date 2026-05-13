@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import useCart from '../../hooks/useCart';
+import useLocation from '../../hooks/useLocation';
 import api from '../../services/api';
 import { Icons, PKR, Pressable } from '../../components/ui';
 
@@ -16,6 +17,7 @@ const STEPS = [
 export default function CartPage() {
   const navigate  = useNavigate();
   const { user }  = useAuth();
+  const { location } = useLocation();
   const { items, restaurantId, restaurantName, subtotal, updateQuantity, removeItem, clearCart, addItem } = useCart();
   const [placing, setPlacing]         = useState(false);
   const [deliveryMode, setDeliveryMode] = useState('delivery');
@@ -81,10 +83,11 @@ export default function CartPage() {
         restaurantId,
         items: orderItems,
         deliveryAddress: {
-          street: '1-KM Raiwind Road, Thokar Niaz Baig',
-          city:   'Lahore',
+          street: location.name,
+          city:   location.area,
           state:  'Punjab',
           zipCode: '54000',
+          coordinates: { lat: location.coords[0], lng: location.coords[1] },
         },
         payment: { method: 'cash', status: 'pending' },
         couponCode: appliedCoupon?.code,
