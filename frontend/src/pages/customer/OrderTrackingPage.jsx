@@ -124,8 +124,16 @@ export default function OrderTrackingPage() {
       {/* ── Map – top 60% ── */}
       <div style={{ position: 'relative', flex: '0 0 60%', overflow: 'hidden' }}>
         <LeafletMap
-          restaurant={DEFAULT_RESTAURANT}
-          customer={DEFAULT_CUSTOMER}
+          restaurant={
+            order?.restaurant?.address?.coordinates
+              ? [order.restaurant.address.coordinates.lat, order.restaurant.address.coordinates.lng]
+              : DEFAULT_RESTAURANT
+          }
+          customer={
+            order?.deliveryAddress?.coordinates
+              ? [order.deliveryAddress.coordinates.lat, order.deliveryAddress.coordinates.lng]
+              : DEFAULT_CUSTOMER
+          }
           progress={animProgress}
           showRider={step >= 2}
         />

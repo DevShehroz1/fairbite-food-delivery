@@ -6,6 +6,7 @@ import useCart from '../../hooks/useCart';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { fallbackBrandLogo } from '../../utils/categoryMap';
+import LocationPicker from '../../components/LocationPicker';
 import {
   Icons, Pressable, SmartImg,
   BigRestaurantCard, BottomNav, WelcomeBanner,
@@ -124,14 +125,7 @@ export default function HomePage() {
       }}>
         {/* Row: deliver to + cart */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 600,
-              textTransform: 'uppercase', letterSpacing: 0.5 }}>Deliver to</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-              <Icons.MapPin size={16} stroke="#fff" sw={2.5}/>
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>Lahore, UOL</span>
-            </div>
-          </div>
+          <LocationPicker/>
           <Pressable onClick={() => navigate('/cart')} style={{
             width: 40, height: 40, borderRadius: 14,
             background: 'rgba(255,255,255,0.2)',
