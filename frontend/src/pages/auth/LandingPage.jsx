@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { Icons, Pressable, BrandButton, FBLogoMark } from '../../components/ui';
+import { Icons, Pressable, BrandButton, QBLogoMark } from '../../components/ui';
 
 const ROLE_ROUTES = {
   customer:   '/home',
@@ -123,16 +123,16 @@ export default function LandingPage() {
         <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <FBLogoMark size={28}/>
+            <QBLogoMark size={28}/>
           </div>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.3 }}>FairBite</div>
+            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.3 }}>QuickBite</div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Fair prices. No hidden fees.</div>
           </div>
         </motion.div>
 
         <motion.h1 variants={item} style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, margin: '0 0 4px', lineHeight: 1.15 }}>
-          Welcome to a <span style={{ color: 'var(--fb-accent)' }}>fair</span> deal.
+          Welcome to a <span style={{ color: 'var(--qb-accent)' }}>fair</span> deal.
         </motion.h1>
         <motion.p variants={item} style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, margin: '0 0 20px' }}>
           Sign in or create an account in seconds.
@@ -150,7 +150,7 @@ export default function LandingPage() {
                 <Pressable key={r.key} onClick={() => setSelectedRole(r.key)} style={{
                   padding: '12px 8px', borderRadius: 14, textAlign: 'center',
                   background: active ? 'rgba(229,57,53,0.18)' : 'rgba(255,255,255,0.07)',
-                  border: `1.5px solid ${active ? 'var(--fb-primary)' : 'rgba(255,255,255,0.12)'}`,
+                  border: `1.5px solid ${active ? 'var(--qb-primary)' : 'rgba(255,255,255,0.12)'}`,
                   transition: 'all .2s',
                 }}>
                   <div style={{ fontSize: 22, marginBottom: 4 }}>{r.emoji}</div>
@@ -247,7 +247,7 @@ function FloatField({ label, value, onChange, type = 'text', trailing }) {
       <label style={{
         position: 'absolute', left: 16, pointerEvents: 'none',
         top: float ? 7 : 17, fontSize: float ? 10 : 14,
-        color: float ? 'var(--fb-accent)' : 'rgba(255,255,255,0.5)',
+        color: float ? 'var(--qb-accent)' : 'rgba(255,255,255,0.5)',
         fontWeight: float ? 600 : 500, transition: 'all .2s',
       }}>{label}</label>
       <input

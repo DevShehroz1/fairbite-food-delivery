@@ -24,7 +24,7 @@ gh repo create fairbite-food-delivery --public --push --source=.
 ## Future sessions — how to continue
 
 Just tell Claude:
-"Continue FairBite — check PROGRESS.md"
+"Continue QuickBite — check PROGRESS.md"
 
 Claude will read `/Users/shehrozasif/fairbite-food-delivery/PROGRESS.md`
 and pick up from where we left off.

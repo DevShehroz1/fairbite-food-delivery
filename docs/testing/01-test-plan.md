@@ -1,5 +1,5 @@
 # Test Plan
-## FairBite Food Delivery Platform
+## QuickBite Food Delivery Platform
 
 **Version:** 1.0 | **Date:** April 2026
 
@@ -51,7 +51,7 @@
 |-----------|-------------|
 | Backend | localhost:5000 |
 | Frontend | localhost:3000 |
-| Database | MongoDB (test DB: fairbite-test) |
+| Database | MongoDB (test DB: quickbite-test) |
 | API Testing | Postman + Jest/Supertest |
 | Browser | Chrome 120+, Firefox 120+ |
 
@@ -95,4 +95,4 @@
 4. Coverage Report
 
 ---
-*FairBite Software Engineering Documentation — Version 1.0*
+*QuickBite Software Engineering Documentation — Version 1.0*

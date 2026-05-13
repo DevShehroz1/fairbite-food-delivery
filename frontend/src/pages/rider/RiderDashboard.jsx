@@ -114,7 +114,7 @@ export default function RiderDashboard() {
             />
             <div>
               <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                FairBite Rider
+                QuickBite Rider
               </div>
               <div style={{ fontSize: 18, fontWeight: 800, color: '#111', marginTop: 1 }}>
                 Hey, {user?.name?.split(' ')[0] || 'Rider'}!
@@ -226,7 +226,7 @@ export default function RiderDashboard() {
             <motion.div
               key="active"
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
-              style={{ background: '#fff', borderRadius: 20, padding: 16, border: '1.5px solid var(--fb-primary)' }}
+              style={{ background: '#fff', borderRadius: 20, padding: 16, border: '1.5px solid var(--qb-primary)' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <motion.div
@@ -242,7 +242,7 @@ export default function RiderDashboard() {
               {/* Route rows */}
               <RouteRow
                 icon="🍴"
-                color="var(--fb-primary)"
+                color="var(--qb-primary)"
                 title={activeOrder.restaurant?.name || 'Restaurant'}
                 sub={activeOrder.restaurant?.address?.street || 'Pickup point'}
                 tag="Pickup"
@@ -250,7 +250,7 @@ export default function RiderDashboard() {
               <div style={{ marginLeft: 18, height: 14, borderLeft: '2px dashed #E5E5E5' }} />
               <RouteRow
                 icon="🏠"
-                color="var(--fb-accent)"
+                color="var(--qb-accent)"
                 title={activeOrder.customer?.name || 'Customer'}
                 sub={activeOrder.deliveryAddress?.street || 'Drop point'}
                 tag="Drop"
@@ -262,7 +262,7 @@ export default function RiderDashboard() {
                   <div key={i} style={{ flex: 1 }}>
                     <div style={{
                       height: 4, borderRadius: 999,
-                      background: i <= activeStepIndex ? 'var(--fb-primary)' : '#F0F0F0',
+                      background: i <= activeStepIndex ? 'var(--qb-primary)' : '#F0F0F0',
                     }} />
                     <div style={{ fontSize: 9, color: '#9CA3AF', marginTop: 3, fontWeight: 600 }}>{step}</div>
                   </div>
@@ -305,7 +305,7 @@ export default function RiderDashboard() {
 
         {/* Stats row */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <StatTile icon={<Icons.Tag size={16} stroke="var(--fb-primary)" />} label="Weekly" value={PKR(earnings.week)} color="var(--fb-primary)" />
+          <StatTile icon={<Icons.Tag size={16} stroke="var(--qb-primary)" />} label="Weekly" value={PKR(earnings.week)} color="var(--qb-primary)" />
           <StatTile icon={<Icons.Bike size={16} stroke="#3b82f6" />} label="Total Trips" value={earnings.trips} color="#3b82f6" />
         </div>
 
@@ -334,7 +334,7 @@ export default function RiderDashboard() {
               <div style={{
                 padding: '4px 10px', borderRadius: 8,
                 background: availableOrders.length > 0 ? 'rgba(229,57,53,0.1)' : '#F5F5F5',
-                color: availableOrders.length > 0 ? 'var(--fb-primary)' : '#9CA3AF',
+                color: availableOrders.length > 0 ? 'var(--qb-primary)' : '#9CA3AF',
                 fontSize: 12, fontWeight: 700,
               }}>
                 {availableOrders.length} new
@@ -414,7 +414,7 @@ function RouteRow({ icon, color, title, sub, tag }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0' }}>
       <div style={{
         width: 36, height: 36, borderRadius: 12, flexShrink: 0,
-        background: `${color === 'var(--fb-primary)' ? '#E5393515' : '#FF704315'}`,
+        background: `${color === 'var(--qb-primary)' ? '#E5393515' : '#FF704315'}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
       }}>
         {icon}
@@ -425,7 +425,7 @@ function RouteRow({ icon, color, title, sub, tag }) {
       </div>
       <div style={{
         fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
-        background: color === 'var(--fb-primary)' ? 'rgba(229,57,53,0.1)' : 'rgba(255,112,67,0.1)',
+        background: color === 'var(--qb-primary)' ? 'rgba(229,57,53,0.1)' : 'rgba(255,112,67,0.1)',
         color,
       }}>
         {tag}
@@ -457,12 +457,12 @@ function OrderCard({ order }) {
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6,
             padding: '4px 10px', borderRadius: 8,
-            background: 'rgba(229,57,53,0.08)', color: 'var(--fb-primary)',
+            background: 'rgba(229,57,53,0.08)', color: 'var(--qb-primary)',
             fontSize: 11, fontWeight: 800, letterSpacing: 0.4 }}>
             <motion.span
               animate={{ scale: [1, 1.4, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
-              style={{ width: 5, height: 5, borderRadius: 999, background: 'var(--fb-primary)' }}
+              style={{ width: 5, height: 5, borderRadius: 999, background: 'var(--qb-primary)' }}
             />
             NEW ORDER
           </div>
@@ -479,7 +479,7 @@ function OrderCard({ order }) {
             <circle cx="18" cy="18" r="14" fill="none" stroke="#F0F0F0" strokeWidth="3" />
             <motion.circle
               cx="18" cy="18" r="14" fill="none"
-              stroke={countdown > 10 ? 'var(--fb-primary)' : '#f59e0b'}
+              stroke={countdown > 10 ? 'var(--qb-primary)' : '#f59e0b'}
               strokeWidth="3" strokeLinecap="round"
               animate={{ pathLength: countdown / 30 }}
               style={{ rotate: -90, transformOrigin: '50% 50%' }}
@@ -493,7 +493,7 @@ function OrderCard({ order }) {
       <div style={{ background: '#F8F8F8', borderRadius: 14, padding: '12px 14px', marginBottom: 12 }}>
         <RouteRow
           icon="🍴"
-          color="var(--fb-primary)"
+          color="var(--qb-primary)"
           title={order.restaurant?.name || 'Restaurant'}
           sub={order.restaurant?.address?.street || ''}
           tag="Pickup"
@@ -501,7 +501,7 @@ function OrderCard({ order }) {
         <div style={{ marginLeft: 18, height: 12, borderLeft: '2px dashed #E0E0E0', margin: '6px 0 6px 18px' }} />
         <RouteRow
           icon="🏠"
-          color="var(--fb-accent)"
+          color="var(--qb-accent)"
           title={order.deliveryAddress?.city || 'Customer'}
           sub={order.deliveryAddress?.street || ''}
           tag="Drop"

@@ -74,6 +74,6 @@ export const runDemoOrder = ({ onStatusChange, onRiderLocationChange, restaurant
 };
 
 export const DEMO_RIDER_INFO = DEMO_RIDER;
-export const isDemoMode    = () => localStorage.getItem('fairbite_demo') === 'true';
-export const enableDemoMode  = () => localStorage.setItem('fairbite_demo', 'true');
-export const disableDemoMode = () => localStorage.removeItem('fairbite_demo');
+export const isDemoMode    = () => localStorage.getItem('quickbite_demo') === 'true';
+export const enableDemoMode  = () => localStorage.setItem('quickbite_demo', 'true');
+export const disableDemoMode = () => localStorage.removeItem('quickbite_demo');

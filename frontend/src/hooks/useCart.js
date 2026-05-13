@@ -67,7 +67,7 @@ const useCartStore = create(
 
       clearCart: () => set({ items: [], restaurantId: null, restaurantName: '' }),
     }),
-    { name: 'fairbite-cart' }
+    { name: 'quickbite-cart' }
   )
 );
 

@@ -36,9 +36,9 @@ Current food delivery platforms (Foodpanda, Careem NOW, UberEats) operate with u
 | Foodpanda | 30% | No | Basic | Low |
 | Careem NOW | 25% | No | Basic | Medium |
 | UberEats | 30% | No | Basic | Medium |
-| **FairBite** | **15%** | **Yes** | **Advanced** | **Full** |
+| **QuickBite** | **15%** | **Yes** | **Advanced** | **Full** |
 
-## Proposed Solution: FairBite
+## Proposed Solution: QuickBite
 - **15% commission rate** — nearly half the industry standard
 - **Fair rider compensation** — transparent wage calculator built in
 - **Full price transparency** — itemized breakdown before checkout
@@ -52,7 +52,7 @@ Current food delivery platforms (Foodpanda, Careem NOW, UberEats) operate with u
 4. Year 1 targets: 500+ restaurants, 10,000+ active users
 
 ## Stakeholder Benefits
-| Stakeholder | Pain Point | FairBite Solution | Benefit |
+| Stakeholder | Pain Point | QuickBite Solution | Benefit |
 |-------------|-----------|-------------------|---------|
 | Restaurants | 30% commission | 15% commission | +15% profit margin |
 | Riders | Low earnings | Fair wage calculator | +30% income |
@@ -60,4 +60,4 @@ Current food delivery platforms (Foodpanda, Careem NOW, UberEats) operate with u
 | Community | Economic leakage | Local restaurant priority | Local economy boost |
 
 ---
-*FairBite Software Engineering Documentation — Version 1.0*
+*QuickBite Software Engineering Documentation — Version 1.0*

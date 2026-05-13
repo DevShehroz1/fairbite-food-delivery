@@ -7,7 +7,7 @@
 ## Main System Use Case Diagram
 
 ```plantuml
-@startuml FairBite-UseCases
+@startuml QuickBite-UseCases
 
 left to right direction
 skinparam packageStyle rectangle
@@ -17,7 +17,7 @@ actor "Restaurant Owner" as Restaurant
 actor Rider
 actor Admin
 
-rectangle "FairBite Platform" {
+rectangle "QuickBite Platform" {
 
   package "Authentication" {
     usecase "Register Account" as UC1

@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --fb-primary: #E53935;
-  --fb-accent:  #FF7043;
+  --qb-primary: #E53935;
+  --qb-accent:  #FF7043;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -44,10 +44,10 @@ button { font-family: inherit; }
 }
 *::-webkit-scrollbar { display: none; }
 
-.fb-no-scrollbar::-webkit-scrollbar { display: none; }
-.fb-no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.qb-no-scrollbar::-webkit-scrollbar { display: none; }
+.qb-no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-@keyframes fb-shimmer {
+@keyframes qb-shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }

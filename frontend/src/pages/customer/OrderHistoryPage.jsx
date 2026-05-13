@@ -125,14 +125,14 @@ function OrderCard({ order, navigate }) {
 
       {/* Total + actions */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--fb-primary)' }}>
+        <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--qb-primary)' }}>
           PKR {order.pricing?.total ?? '—'}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {isActive && (
             <Pressable onClick={() => navigate(`/orders/${orderId}/track`)} style={{
               padding: '7px 16px', borderRadius: 12,
-              background: 'var(--fb-primary)', color: '#fff',
+              background: 'var(--qb-primary)', color: '#fff',
               fontSize: 13, fontWeight: 700,
             }}>
               Track Order
@@ -157,7 +157,7 @@ function SkeletonCard() {
     background: '#EEE',
     backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
     backgroundSize: '200% 100%',
-    animation: 'fb-shimmer 1.2s linear infinite',
+    animation: 'qb-shimmer 1.2s linear infinite',
     borderRadius: 8,
   };
   return (
@@ -189,7 +189,7 @@ function EmptyState({ navigate }) {
       </div>
       <Pressable onClick={() => navigate('/restaurants')} style={{
         marginTop: 20, padding: '12px 28px', borderRadius: 14,
-        background: 'var(--fb-primary)', color: '#fff',
+        background: 'var(--qb-primary)', color: '#fff',
         fontSize: 15, fontWeight: 700, display: 'inline-flex',
       }}>
         Browse Restaurants

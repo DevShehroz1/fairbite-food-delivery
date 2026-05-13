@@ -93,7 +93,7 @@
 
 ### Completed
 - [x] React 18 + MUI + Zustand setup
-- [x] Material UI theme (FairBite orange brand)
+- [x] Material UI theme (QuickBite orange brand)
 - [x] Auth Context (JWT persistence)
 - [x] Axios API service with interceptors
 - [x] Navbar with Demo Mode toggle
@@ -163,4 +163,4 @@
 | **Total** | **52 SP** | **44 SP** | **85%** |
 
 ---
-*FairBite Software Engineering Documentation — Version 1.0*
+*QuickBite Software Engineering Documentation — Version 1.0*

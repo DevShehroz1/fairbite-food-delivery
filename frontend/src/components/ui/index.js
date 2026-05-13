@@ -91,10 +91,10 @@ export function Chip({ children, active, onClick, style }) {
   return (
     <Pressable onClick={onClick} style={{
       padding: '8px 14px', borderRadius: 12, fontSize: 13, fontWeight: 600,
-      background: active ? 'var(--fb-primary)' : '#F5F5F5',
+      background: active ? 'var(--qb-primary)' : '#F5F5F5',
       color: active ? '#fff' : '#1f1f1f',
       whiteSpace: 'nowrap', flexShrink: 0,
-      border: active ? '1px solid var(--fb-primary)' : '1px solid #ECECEC',
+      border: active ? '1px solid var(--qb-primary)' : '1px solid #ECECEC',
       ...style,
     }}>{children}</Pressable>
   );
@@ -103,7 +103,7 @@ export function Chip({ children, active, onClick, style }) {
 // ─── Ribbon ──────────────────────────────────────────────────────────────────
 export function Ribbon({ kind }) {
   const palette = {
-    Trending:    { bg: 'var(--fb-primary)', fg: '#fff', icon: <Icons.Flame size={11}/> },
+    Trending:    { bg: 'var(--qb-primary)', fg: '#fff', icon: <Icons.Flame size={11}/> },
     'Top Rated': { bg: '#111', fg: '#fff', icon: <Icons.Star size={11}/> },
     New:         { bg: '#10b981', fg: '#fff', icon: <Icons.Sparkle size={11} sw={2.5}/> },
   };
@@ -125,7 +125,7 @@ export function BrandButton({ children, onClick, full = true, disabled, style })
     <Pressable onClick={onClick} scale={disabled ? 1 : 0.97} style={{
       width: full ? '100%' : undefined,
       height: 54, borderRadius: 24,
-      background: disabled ? '#ccc' : 'var(--fb-primary)',
+      background: disabled ? '#ccc' : 'var(--qb-primary)',
       color: '#fff',
       fontSize: 16, fontWeight: 700, letterSpacing: 0.1,
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -145,12 +145,12 @@ export function Stepper({ value, onChange, min = 0, max = 99 }) {
       borderRadius: 999, padding: 2,
     }}>
       <Pressable onClick={() => onChange(Math.max(min, value - 1))} style={{
-        width: 28, height: 28, borderRadius: 999, color: 'var(--fb-primary)',
+        width: 28, height: 28, borderRadius: 999, color: 'var(--qb-primary)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}><Icons.Minus size={14} sw={2.5}/></Pressable>
       <span style={{ minWidth: 22, textAlign: 'center', fontWeight: 700, fontSize: 14 }}>{value}</span>
       <Pressable onClick={() => onChange(Math.min(max, value + 1))} style={{
-        width: 28, height: 28, borderRadius: 999, color: 'var(--fb-primary)',
+        width: 28, height: 28, borderRadius: 999, color: 'var(--qb-primary)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}><Icons.Plus size={14} sw={2.5}/></Pressable>
     </div>
@@ -167,7 +167,7 @@ export function SmartImg({ src, alt = '', style, radius = 0 }) {
           position: 'absolute', inset: 0, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
           backgroundSize: '200% 100%',
-          animation: 'fb-shimmer 1.2s linear infinite',
+          animation: 'qb-shimmer 1.2s linear infinite',
         }}/>
       )}
       <img src={src} alt={alt} loading="lazy" onLoad={() => setLoaded(true)}
@@ -180,10 +180,10 @@ export function SmartImg({ src, alt = '', style, radius = 0 }) {
 }
 
 // ─── FBLogo ───────────────────────────────────────────────────────────────────
-export function FBLogoMark({ size = 28 }) {
+export function QBLogoMark({ size = 28 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="16" fill="var(--fb-primary)"/>
+      <circle cx="16" cy="16" r="16" fill="var(--qb-primary)"/>
       <path d="M9 10h10a4 4 0 0 1 0 8H9" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
       <path d="M9 14h8" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
       <circle cx="12" cy="22" r="2" fill="#fff"/>
@@ -221,7 +221,7 @@ export function BottomNav({ tab, onTab }) {
             <Pressable key={it.id} onClick={() => onTab(it.id)} style={{
               flex: 1, height: '100%',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 3, color: active ? 'var(--fb-primary)' : '#9CA3AF',
+              gap: 3, color: active ? 'var(--qb-primary)' : '#9CA3AF',
             }}>
               <Ic size={22} sw={active ? 2.5 : 2}/>
               <span style={{ fontSize: 10.5, fontWeight: active ? 700 : 600 }}>{it.label}</span>
@@ -291,7 +291,7 @@ export function WelcomeBanner({ name, avatar, autoDismissMs = 3500, onClose }) {
           }}>
             <div style={{
               position: 'absolute', left: 0, top: 0, bottom: 0, width: 4,
-              background: 'linear-gradient(180deg, var(--fb-primary), var(--fb-accent))',
+              background: 'linear-gradient(180deg, var(--qb-primary), var(--qb-accent))',
             }}/>
             {avatar ? (
               <img src={avatar} alt={first}
@@ -373,7 +373,7 @@ export function BigRestaurantCard({ r, onClick }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           marginTop: 10, paddingTop: 10, borderTop: '1px dashed #ECECEC' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6b7280' }}>
-            <Icons.Bike size={14} stroke="var(--fb-primary)" sw={2.5}/>
+            <Icons.Bike size={14} stroke="var(--qb-primary)" sw={2.5}/>
             <span style={{ color: '#111', fontWeight: 600 }}>{PKR(r.delivery?.fee || 50)}</span>
             <span>delivery</span>
           </div>

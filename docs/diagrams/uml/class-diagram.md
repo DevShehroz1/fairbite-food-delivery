@@ -1,8 +1,8 @@
 # Class Diagram (PlantUML Format)
 
 ```plantuml
-@startuml FairBite-ClassDiagram
-title FairBite System Class Diagram
+@startuml QuickBite-ClassDiagram
+title QuickBite System Class Diagram
 
 skinparam classAttributeIconSize 0
 

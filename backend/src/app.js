@@ -29,14 +29,14 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'success',
-    message: 'FairBite API is healthy!',
+    message: 'QuickBite API is healthy!',
     timestamp: new Date().toISOString(),
   });
 });
 
 app.get('/api', (req, res) => {
   res.json({
-    message: 'Welcome to FairBite API',
+    message: 'Welcome to QuickBite API',
     version: '1.0.0',
     endpoints: {
       auth: '/api/auth',

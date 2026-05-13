@@ -149,4 +149,4 @@ GitHub Repository
 ```
 
 ---
-*FairBite Software Engineering Documentation — Version 1.0*
+*QuickBite Software Engineering Documentation — Version 1.0*

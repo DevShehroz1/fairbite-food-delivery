@@ -1,5 +1,5 @@
 -- ============================================================
--- FairBite Seed Data — run AFTER schema.sql
+-- QuickBite Seed Data — run AFTER schema.sql
 -- Password for all demo accounts: demo123
 -- Hash = bcrypt of "demo123" with cost 10
 -- ============================================================

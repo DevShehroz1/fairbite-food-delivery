@@ -131,14 +131,14 @@ export default function AdminDashboard() {
           transition={{ duration: 0.3, delay: 0.1 }}
           style={{
             borderRadius: 20,
-            background: 'linear-gradient(135deg, var(--fb-primary) 0%, #b91c1c 100%)',
+            background: 'linear-gradient(135deg, var(--qb-primary) 0%, #b91c1c 100%)',
             padding: '20px 18px',
             marginBottom: 20,
             boxShadow: '0 8px 24px rgba(229,57,53,0.28)',
           }}
         >
           <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 14 }}>
-            FairBite Impact This Month
+            QuickBite Impact This Month
           </div>
           <div style={{
             display: 'grid', gridTemplateColumns: '1fr 1fr',

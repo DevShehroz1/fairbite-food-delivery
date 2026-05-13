@@ -1,5 +1,5 @@
 # Test Cases
-## FairBite Food Delivery Platform
+## QuickBite Food Delivery Platform
 
 ---
 
@@ -121,4 +121,4 @@
 - P3 Medium: 3
 
 ---
-*FairBite Software Engineering Documentation — Version 1.0*
+*QuickBite Software Engineering Documentation — Version 1.0*
