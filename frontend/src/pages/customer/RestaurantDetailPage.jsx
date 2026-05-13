@@ -307,7 +307,7 @@ export default function RestaurantDetailPage() {
           <div style={{ marginTop: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', marginBottom: 12 }}>
               <span style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>Fellow foodies say</span>
-              <Pressable style={{ fontSize: 12, fontWeight: 700, color: 'var(--qb-primary)' }}>See all</Pressable>
+              <Pressable onClick={() => toast.info('Full reviews coming soon!')} style={{ fontSize: 12, fontWeight: 700, color: 'var(--qb-primary)' }}>See all</Pressable>
             </div>
             <div className="qb-no-scrollbar" style={{ display: 'flex', gap: 10, padding: '0 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
               {DEMO_REVIEWS.map(rev => (
