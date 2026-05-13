@@ -158,11 +158,16 @@ export function Stepper({ value, onChange, min = 0, max = 99 }) {
 }
 
 // ─── SmartImg ────────────────────────────────────────────────────────────────
-export function SmartImg({ src, alt = '', style, radius = 0 }) {
+export function SmartImg({ src, alt = '', style, radius = 0, fallback = '🍽️' }) {
   const [loaded, setLoaded] = useState(false);
+  const [errored, setErrored] = useState(false);
+  useEffect(() => { setLoaded(false); setErrored(false); }, [src]);
+
+  const showFallback = errored || !src;
+
   return (
     <div style={{ position: 'relative', overflow: 'hidden', borderRadius: radius, ...style }}>
-      {!loaded && (
+      {!loaded && !showFallback && (
         <div style={{
           position: 'absolute', inset: 0, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
@@ -170,11 +175,22 @@ export function SmartImg({ src, alt = '', style, radius = 0 }) {
           animation: 'qb-shimmer 1.2s linear infinite',
         }}/>
       )}
-      <img src={src} alt={alt} loading="lazy" onLoad={() => setLoaded(true)}
-        style={{
-          width: '100%', height: '100%', objectFit: 'cover', display: 'block',
-          opacity: loaded ? 1 : 0, transition: 'opacity .3s',
-        }}/>
+      {showFallback ? (
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'linear-gradient(135deg, #FFF1E6 0%, #FFE5E5 100%)',
+          fontSize: 'clamp(28px, 6vw, 56px)',
+        }}>{fallback}</div>
+      ) : (
+        <img src={src} alt={alt} loading="lazy"
+          onLoad={() => setLoaded(true)}
+          onError={() => setErrored(true)}
+          style={{
+            width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+            opacity: loaded ? 1 : 0, transition: 'opacity .3s',
+          }}/>
+      )}
     </div>
   );
 }
@@ -333,9 +349,26 @@ export function WelcomeBanner({ name, avatar, autoDismissMs = 3500, onClose }) {
 }
 
 // ─── BigRestaurantCard ───────────────────────────────────────────────────────
+const CUISINE_EMOJI = {
+  pizza:'🍕', italian:'🍝', pasta:'🍝',
+  burgers:'🍔', american:'🍔',
+  biryani:'🍚', rice:'🍚', pakistani:'🍛', indian:'🍛', bbq:'🍢', desi:'🍛',
+  chinese:'🥡', shawarma:'🌯', arabic:'🌯', 'middle eastern':'🌯',
+  vegan:'🥗', healthy:'🥗',
+  dessert:'🍰', desserts:'🍰', 'ice cream':'🍦',
+};
+
+const cuisineFallback = (cuisines = []) => {
+  for (const c of cuisines) {
+    const e = CUISINE_EMOJI[(c || '').toLowerCase()];
+    if (e) return e;
+  }
+  return '🍽️';
+};
+
 export function BigRestaurantCard({ r, onClick }) {
   const ribbon = r.status?.isFeatured ? 'Trending' : null;
-  const img = r.images?.cover || `https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=900&auto=format&fit=crop`;
+  const img = r.images?.cover;
   return (
     <motion.div whileHover={{ y: -2, boxShadow: '0 12px 30px rgba(0,0,0,0.10)' }}
       whileTap={{ scale: 0.98 }} onClick={onClick}
@@ -346,7 +379,7 @@ export function BigRestaurantCard({ r, onClick }) {
         boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
       }}>
       <div style={{ position: 'relative', height: 152 }}>
-        <SmartImg src={img} style={{ position: 'absolute', inset: 0 }}/>
+        <SmartImg src={img} fallback={cuisineFallback(r.cuisine)} style={{ position: 'absolute', inset: 0 }}/>
         {ribbon && (
           <div style={{ position: 'absolute', top: 10, left: 10 }}>
             <Ribbon kind={ribbon}/>
