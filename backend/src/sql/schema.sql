@@ -10,19 +10,25 @@ DROP TABLE IF EXISTS users    CASCADE;
 
 -- ── users ────────────────────────────────────────────────────
 CREATE TABLE users (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name        VARCHAR(100) NOT NULL,
-  email       VARCHAR(100) UNIQUE NOT NULL,
-  password    VARCHAR(255) NOT NULL,
-  role        VARCHAR(20)  NOT NULL DEFAULT 'customer'
-                CHECK (role IN ('customer','rider','restaurant','admin')),
-  phone       VARCHAR(20),
-  avatar      TEXT,
-  google_id   VARCHAR(100),
-  is_active   BOOLEAN DEFAULT true,
-  created_at  TIMESTAMPTZ DEFAULT NOW(),
-  updated_at  TIMESTAMPTZ DEFAULT NOW()
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name          VARCHAR(100) NOT NULL,
+  email         VARCHAR(100) UNIQUE NOT NULL,
+  password      VARCHAR(255) NOT NULL,
+  role          VARCHAR(20)  NOT NULL DEFAULT 'customer'
+                  CHECK (role IN ('customer','rider','restaurant','admin')),
+  phone         VARCHAR(20),
+  avatar        TEXT,
+  google_id     VARCHAR(100),
+  referral_code TEXT UNIQUE,
+  referred_by   UUID REFERENCES users(id) ON DELETE SET NULL,
+  rewards       JSONB DEFAULT '[]',
+  is_active     BOOLEAN DEFAULT true,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_users_referral_code ON users (referral_code);
+CREATE INDEX IF NOT EXISTS idx_users_referred_by   ON users (referred_by);
 
 -- ── restaurants ──────────────────────────────────────────────
 CREATE TABLE restaurants (
