@@ -72,4 +72,4 @@ LOW POWER ───────────────────────�
 | Platform | Response time | <500ms |
 
 ---
-*FairBite Software Engineering Documentation — Version 1.0*
+*QuickBite Software Engineering Documentation — Version 1.0*

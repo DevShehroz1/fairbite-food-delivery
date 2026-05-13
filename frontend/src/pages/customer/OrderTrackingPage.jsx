@@ -94,7 +94,7 @@ export default function OrderTrackingPage() {
   if (loading) return (
     <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-        <Icons.Bike size={36} stroke="var(--fb-primary)"/>
+        <Icons.Bike size={36} stroke="var(--qb-primary)"/>
       </motion.div>
     </div>
   );
@@ -146,7 +146,7 @@ export default function OrderTrackingPage() {
             transition={{ duration: 1.4, repeat: Infinity }}
             style={{ width: 8, height: 8, borderRadius: 999, background: '#10b981' }}/>
           <span style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>
-            Arriving in <span style={{ color: 'var(--fb-primary)' }}>{fmt(eta)}</span>
+            Arriving in <span style={{ color: 'var(--qb-primary)' }}>{fmt(eta)}</span>
           </span>
         </div>
 
@@ -162,7 +162,7 @@ export default function OrderTrackingPage() {
                 color: '#fff', fontSize: 11, fontWeight: 700,
                 display: 'flex', alignItems: 'center', gap: 5,
               }}>
-              <Icons.Bike size={12} stroke="var(--fb-accent)" sw={2.5}/>
+              <Icons.Bike size={12} stroke="var(--qb-accent)" sw={2.5}/>
               1.2 km away
             </motion.div>
           )}
@@ -301,7 +301,7 @@ function HorizontalStepper({ step }) {
                   transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
                   style={{
                     width: 28, height: 28, borderRadius: 999,
-                    background: 'var(--fb-primary)',
+                    background: 'var(--qb-primary)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                   <div style={{ width: 10, height: 10, borderRadius: 999, background: '#fff' }}/>
@@ -324,7 +324,7 @@ function HorizontalStepper({ step }) {
               {/* Label */}
               <div style={{
                 fontSize: 10, fontWeight: isCurrent ? 700 : isFuture ? 400 : 600,
-                color: isCurrent ? 'var(--fb-primary)' : isFuture ? '#9CA3AF' : '#374151',
+                color: isCurrent ? 'var(--qb-primary)' : isFuture ? '#9CA3AF' : '#374151',
                 textAlign: 'center', maxWidth: 60, lineHeight: 1.2,
               }}>
                 {s.label}
@@ -392,7 +392,7 @@ function CityMap({ progress, pathRef, riderPos, riderMoving }) {
 
         {/* traveled route — only animates when rider is moving */}
         <motion.path d={ROUTE_PATH}
-          stroke="var(--fb-primary)" strokeWidth="4" strokeLinecap="round" fill="none"
+          stroke="var(--qb-primary)" strokeWidth="4" strokeLinecap="round" fill="none"
           initial={{ pathLength: 0 }}
           animate={{ pathLength: riderMoving ? progress : 0 }}
           transition={{ duration: 1.2, ease: 'easeInOut' }}/>
@@ -402,8 +402,8 @@ function CityMap({ progress, pathRef, riderPos, riderMoving }) {
 
         {/* restaurant pin */}
         <g transform="translate(50 360)">
-          <circle r="14" fill="var(--fb-primary)" filter="url(#shadow)"/>
-          <circle r="20" fill="var(--fb-primary)" opacity="0.18"/>
+          <circle r="14" fill="var(--qb-primary)" filter="url(#shadow)"/>
+          <circle r="20" fill="var(--qb-primary)" opacity="0.18"/>
           <g transform="translate(-6 -7)" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" fill="none">
             <path d="M3 1v6a3 3 0 0 0 6 0V1M6 7v6M10 1c-1 0-2 1.5-2 3.5s.5 3.5 2 3.5v5"/>
           </g>
@@ -411,8 +411,8 @@ function CityMap({ progress, pathRef, riderPos, riderMoving }) {
 
         {/* destination pin */}
         <g transform="translate(340 120)">
-          <circle r="14" fill="var(--fb-accent)" filter="url(#shadow)"/>
-          <motion.circle r="14" fill="none" stroke="var(--fb-accent)" strokeWidth="2"
+          <circle r="14" fill="var(--qb-accent)" filter="url(#shadow)"/>
+          <motion.circle r="14" fill="none" stroke="var(--qb-accent)" strokeWidth="2"
             animate={{ r: [14, 26], opacity: [0.6, 0] }}
             transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}/>
           <g transform="translate(-6 -7)" stroke="#fff" strokeWidth="1.6"
@@ -426,9 +426,9 @@ function CityMap({ progress, pathRef, riderPos, riderMoving }) {
           animate={{ x: riderPos.x, y: riderPos.y }}
           transition={{ duration: 1.2, ease: 'easeInOut' }}
           style={{ x: 50, y: 360 }}>
-          <circle r="20" fill="var(--fb-primary)" opacity="0.18"/>
+          <circle r="20" fill="var(--qb-primary)" opacity="0.18"/>
           <circle r="12" fill="#fff" filter="url(#shadow)"/>
-          <g transform="translate(-6 -6)" stroke="var(--fb-primary)" strokeWidth="1.8"
+          <g transform="translate(-6 -6)" stroke="var(--qb-primary)" strokeWidth="1.8"
             fill="none" strokeLinecap="round">
             <circle cx="4" cy="11" r="2"/>
             <circle cx="11" cy="11" r="2"/>

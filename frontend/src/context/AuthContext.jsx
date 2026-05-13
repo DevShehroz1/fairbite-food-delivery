@@ -8,12 +8,12 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('fairbite_token');
+    const token = localStorage.getItem('quickbite_token');
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       api.get('/auth/me')
         .then(res => setUser(res.data.data))
-        .catch(() => { localStorage.removeItem('fairbite_token'); })
+        .catch(() => { localStorage.removeItem('quickbite_token'); })
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
@@ -21,14 +21,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (token, userData) => {
-    localStorage.setItem('fairbite_token', token);
+    localStorage.setItem('quickbite_token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    try { sessionStorage.setItem('fb_just_logged_in', '1'); } catch (_) {}
+    try { sessionStorage.setItem('qb_just_logged_in', '1'); } catch (_) {}
     setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem('fairbite_token');
+    localStorage.removeItem('quickbite_token');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
   };

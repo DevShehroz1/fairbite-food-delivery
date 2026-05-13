@@ -57,7 +57,7 @@ io.on('connection', (socket) => {
 
 server.listen(PORT, () => {
   console.log('='.repeat(50));
-  console.log('FairBite Backend + Socket.io + Supabase Started!');
+  console.log('QuickBite Backend + Socket.io + Supabase Started!');
   console.log(`URL: http://localhost:${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log('='.repeat(50));

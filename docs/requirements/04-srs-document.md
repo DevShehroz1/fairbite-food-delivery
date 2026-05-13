@@ -1,5 +1,5 @@
 # Software Requirements Specification (SRS)
-## FairBite Food Delivery Platform
+## QuickBite Food Delivery Platform
 **Version:** 1.0 | **Date:** April 2026 | **Status:** Approved
 
 ---
@@ -7,10 +7,10 @@
 ## 1. Introduction
 
 ### 1.1 Purpose
-This document specifies the functional and non-functional requirements for FairBite, an ethical food delivery platform developed as a Software Engineering academic project.
+This document specifies the functional and non-functional requirements for QuickBite, an ethical food delivery platform developed as a Software Engineering academic project.
 
 ### 1.2 Scope
-FairBite enables customers to discover and order food from local restaurants with full price transparency, supports restaurant owners with a fair 15% commission model, and provides delivery riders with transparent wage calculations.
+QuickBite enables customers to discover and order food from local restaurants with full price transparency, supports restaurant owners with a fair 15% commission model, and provides delivery riders with transparent wage calculations.
 
 ### 1.3 Definitions
 | Term | Definition |
@@ -32,7 +32,7 @@ FairBite enables customers to discover and order food from local restaurants wit
 ## 2. Overall Description
 
 ### 2.1 Product Perspective
-FairBite is a web-based food delivery platform consisting of:
+QuickBite is a web-based food delivery platform consisting of:
 - React.js frontend (single-page application)
 - Node.js/Express REST API backend
 - MongoDB database
@@ -240,4 +240,4 @@ FairBite is a web-based food delivery platform consisting of:
 - Node.js ecosystem (npm packages)
 
 ---
-*FairBite Software Engineering Documentation — Version 1.0*
+*QuickBite Software Engineering Documentation — Version 1.0*

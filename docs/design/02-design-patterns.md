@@ -151,4 +151,4 @@ const connectDB = async () => { await mongoose.connect(URI); };
 **Benefits:** Shared configuration; no duplicate connections.
 
 ---
-*FairBite Software Engineering Documentation — Version 1.0*
+*QuickBite Software Engineering Documentation — Version 1.0*

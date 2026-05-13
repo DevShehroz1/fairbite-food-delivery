@@ -101,7 +101,7 @@
 | Operational | FEASIBLE | 85% |
 | **Overall** | **FEASIBLE** | **92%** |
 
-**Recommendation:** Proceed with FairBite development. The project is technically achievable with the team's current skills, requires zero budget for the academic scope, and can be completed within the semester timeline.
+**Recommendation:** Proceed with QuickBite development. The project is technically achievable with the team's current skills, requires zero budget for the academic scope, and can be completed within the semester timeline.
 
 ---
-*FairBite Software Engineering Documentation — Version 1.0*
+*QuickBite Software Engineering Documentation — Version 1.0*

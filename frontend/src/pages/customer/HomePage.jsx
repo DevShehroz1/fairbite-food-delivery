@@ -62,7 +62,7 @@ const TOP_BRANDS = [
 ];
 
 const DEAL_BANNERS = [
-  { id: 'd1', title: '50% off + free delivery', sub: 'On your first order! Code:', code: 'FAIRBITE50', bg: 'linear-gradient(135deg, var(--fb-primary) 0%, #b91c1c 100%)', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&auto=format&fit=crop' },
+  { id: 'd1', title: '50% off + free delivery', sub: 'On your first order! Code:', code: 'QUICKBITE50', bg: 'linear-gradient(135deg, var(--qb-primary) 0%, #b91c1c 100%)', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&auto=format&fit=crop' },
   { id: 'd2', title: 'Up to 30% off',           sub: 'On weekend orders. Code:',   code: 'WEEKEND30',  bg: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',              img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&auto=format&fit=crop' },
   { id: 'd3', title: 'Save Rs. 100',            sub: 'On orders above Rs. 800. Code:', code: 'SAVE100', bg: 'linear-gradient(135deg, #047857 0%, #10b981 100%)',            img: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop' },
 ];
@@ -85,8 +85,8 @@ export default function HomePage() {
 
   useEffect(() => {
     try {
-      if (sessionStorage.getItem('fb_just_logged_in') === '1') {
-        sessionStorage.removeItem('fb_just_logged_in');
+      if (sessionStorage.getItem('qb_just_logged_in') === '1') {
+        sessionStorage.removeItem('qb_just_logged_in');
         setShowWelcome(true);
       }
     } catch (_) {}
@@ -116,7 +116,7 @@ export default function HomePage() {
 
       {/* ── Pink hero section (not sticky, scrolls away) ── */}
       <div style={{
-        background: 'var(--fb-primary)',
+        background: 'var(--qb-primary)',
         paddingTop: 52,
         paddingBottom: 36,
         paddingLeft: 16,
@@ -146,9 +146,9 @@ export default function HomePage() {
                   position: 'absolute', top: -4, right: -4,
                   minWidth: 18, height: 18, padding: '0 4px',
                   borderRadius: 999, background: '#fff',
-                  color: 'var(--fb-primary)', fontSize: 10, fontWeight: 800,
+                  color: 'var(--qb-primary)', fontSize: 10, fontWeight: 800,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: '2px solid var(--fb-primary)',
+                  border: '2px solid var(--qb-primary)',
                 }}>{itemCount}</motion.div>
             )}
           </Pressable>
@@ -180,7 +180,7 @@ export default function HomePage() {
               display: 'inline-flex', alignItems: 'center',
               background: '#fff', borderRadius: 999,
               padding: '8px 18px',
-              fontSize: 13, fontWeight: 700, color: 'var(--fb-primary)',
+              fontSize: 13, fontWeight: 700, color: 'var(--qb-primary)',
             }}>
               Start ordering &rsaquo;
             </Pressable>
@@ -236,7 +236,7 @@ export default function HomePage() {
         <section style={{ marginTop: 20 }}>
           <SectionHeader title="What are you craving?" onSeeAll={() => navigate('/restaurants')}/>
           <div
-            className="fb-no-scrollbar"
+            className="qb-no-scrollbar"
             style={{
               display: 'flex', gap: 10, padding: '0 16px',
               overflowX: 'auto', scrollbarWidth: 'none',
@@ -264,7 +264,7 @@ export default function HomePage() {
         <section style={{ marginTop: 24 }}>
           <SectionHeader title="Today's Deals" onSeeAll={() => navigate('/restaurants')}/>
           <div
-            className="fb-no-scrollbar"
+            className="qb-no-scrollbar"
             style={{
               display: 'flex', gap: 12, padding: '0 16px',
               overflowX: 'auto', scrollbarWidth: 'none',
@@ -327,7 +327,7 @@ export default function HomePage() {
         <section style={{ marginTop: 24 }}>
           <SectionHeader title="Top Brands" onSeeAll={() => navigate('/restaurants')}/>
           <div
-            className="fb-no-scrollbar"
+            className="qb-no-scrollbar"
             style={{
               display: 'flex', gap: 12, padding: '0 16px',
               overflowX: 'auto', scrollbarWidth: 'none',
@@ -385,7 +385,7 @@ function SectionHeader({ title, subtitle, onSeeAll }) {
         {subtitle && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{subtitle}</div>}
       </div>
       {onSeeAll && (
-        <Pressable onClick={onSeeAll} style={{ fontSize: 12, fontWeight: 700, color: 'var(--fb-primary)' }}>
+        <Pressable onClick={onSeeAll} style={{ fontSize: 12, fontWeight: 700, color: 'var(--qb-primary)' }}>
           See all
         </Pressable>
       )}
@@ -399,18 +399,18 @@ function SkeletonCard() {
       <div style={{
         height: 152, background: '#EEE',
         backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-        backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite',
+        backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite',
       }}/>
       <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{
           width: '60%', height: 14, borderRadius: 6, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-          backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite',
+          backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite',
         }}/>
         <div style={{
           width: '40%', height: 10, borderRadius: 6, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-          backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite',
+          backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite',
         }}/>
       </div>
     </div>

@@ -1,5 +1,5 @@
 # Project Timeline (Gantt Chart)
-## FairBite Food Delivery — 9 Week Schedule
+## QuickBite Food Delivery — 9 Week Schedule
 
 ---
 
@@ -171,4 +171,4 @@ DOCUMENTATION & DEPLOYMENT
 **Definition of Done:** App live on Vercel; all docs in `/docs`; presentation deck ready
 
 ---
-*FairBite Software Engineering Documentation — Version 1.0*
+*QuickBite Software Engineering Documentation — Version 1.0*

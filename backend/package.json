@@ -1,7 +1,7 @@
 {
-  "name": "fairbite-backend",
+  "name": "quickbite-backend",
   "version": "1.0.0",
-  "description": "FairBite Food Delivery Platform - Backend API with fair commission model",
+  "description": "QuickBite Food Delivery Platform - Backend API with fair commission model",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -11,12 +11,12 @@
   },
   "keywords": [
     "food-delivery",
-    "fairbite",
+    "quickbite",
     "express",
     "mongodb",
     "nodejs"
   ],
-  "author": "FairBite Team",
+  "author": "QuickBite Team",
   "license": "MIT",
   "type": "commonjs",
   "dependencies": {

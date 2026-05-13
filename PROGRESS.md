@@ -1,4 +1,4 @@
-# FairBite — Progress Tracker
+# QuickBite — Progress Tracker
 > Resume from here when continuing in a new session. Updated: April 2026
 
 ---
@@ -89,7 +89,7 @@
 ### Documentation (remaining)
 - [ ] `docs/design/03-ui-design-reference.md` — reference Grub APK screens
 - [ ] `docs/diagrams/uml/activity-diagram.md`
-- [ ] `docs/diagrams/er-diagrams/fairbite-er.md`
+- [ ] `docs/diagrams/er-diagrams/quickbite-er.md`
 - [ ] `docs/management/03-activity-chart.md`
 
 ### Deployment (Sprint 6)

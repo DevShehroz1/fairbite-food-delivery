@@ -42,7 +42,7 @@ const LoginPage = () => {
       <Card sx={{ maxWidth: 400, width: '100%' }}>
         <CardContent sx={{ p: 4 }}>
           <Typography variant="h5" fontWeight={700} textAlign="center" gutterBottom>
-            Welcome to FairBite
+            Welcome to QuickBite
           </Typography>
           <Typography variant="body2" color="text.secondary" textAlign="center" mb={3}>
             Sign in to continue

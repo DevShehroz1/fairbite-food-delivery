@@ -222,9 +222,9 @@ export default function RestaurantDetailPage() {
             <span>🏍️</span>
             <span>Delivery {restaurant.delivery?.estimatedTime || 25}–{(restaurant.delivery?.estimatedTime || 25) + 10} min</span>
           </div>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--fb-primary)' }}>Change</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--qb-primary)' }}>Change</span>
         </div>
-        <div style={{ fontSize: 12, color: 'var(--fb-primary)', marginTop: 5, fontWeight: 600 }}>
+        <div style={{ fontSize: 12, color: 'var(--qb-primary)', marginTop: 5, fontWeight: 600 }}>
           Free delivery · Min. order {PKR(restaurant.pricing?.minimumOrder || 200)}
         </div>
       </div>
@@ -233,7 +233,7 @@ export default function RestaurantDetailPage() {
       <div style={{ display: 'flex', gap: 10, padding: '12px 16px 0' }}>
         <div style={{ flex: 1, padding: '12px', borderRadius: 12, background: 'rgba(229,57,53,0.06)', border: '1px solid rgba(229,57,53,0.15)', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', right: -12, top: -12, width: 56, height: 56, borderRadius: '50%', background: 'rgba(229,57,53,0.08)' }}/>
-          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--fb-primary)' }}>10% off</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--qb-primary)' }}>10% off</div>
           <div style={{ fontSize: 10, color: '#374151', marginTop: 3, lineHeight: 1.5 }}>minimum Rs. 0. Valid for all items. Auto-applied.</div>
         </div>
         <Pressable onClick={(e) => copyCode(e, 'PEHLAORDER')} style={{ flex: 1, padding: '12px', borderRadius: 12, background: '#F9F9F9', border: '1px dashed #D1D5DB', position: 'relative', overflow: 'hidden', textAlign: 'left' }}>
@@ -241,7 +241,7 @@ export default function RestaurantDetailPage() {
           <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>50% off:</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 12, fontWeight: 800, color: '#111', letterSpacing: 0.3 }}>PEHLAORDER</span>
-            <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--fb-primary)', padding: '2px 6px', borderRadius: 6, background: 'rgba(229,57,53,0.1)', letterSpacing: 0.4 }}>COPY</span>
+            <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--qb-primary)', padding: '2px 6px', borderRadius: 6, background: 'rgba(229,57,53,0.1)', letterSpacing: 0.4 }}>COPY</span>
           </div>
           <div style={{ fontSize: 10, color: '#374151', marginTop: 3, lineHeight: 1.5 }}>Tap to copy · min Rs. 499 · first order only.</div>
         </Pressable>
@@ -256,9 +256,9 @@ export default function RestaurantDetailPage() {
       </div>
 
       {/* Category tabs — horizontal scroll, sticky below header */}
-      <div className="fb-no-scrollbar" style={{ display: 'flex', overflowX: 'auto', scrollbarWidth: 'none', borderBottom: '1px solid #F0F0F0', marginTop: 12, position: 'sticky', top: 60, background: '#fff', zIndex: 20 }}>
+      <div className="qb-no-scrollbar" style={{ display: 'flex', overflowX: 'auto', scrollbarWidth: 'none', borderBottom: '1px solid #F0F0F0', marginTop: 12, position: 'sticky', top: 60, background: '#fff', zIndex: 20 }}>
         {allTabs.map(t => (
-          <Pressable key={t.key} onClick={() => { setActiveTab(t.key); setMenuSearch(''); }} style={{ padding: '12px 18px', fontSize: 14, fontWeight: activeTab === t.key ? 800 : 600, flexShrink: 0, color: activeTab === t.key ? 'var(--fb-primary)' : '#6b7280', borderBottom: activeTab === t.key ? '2.5px solid var(--fb-primary)' : '2.5px solid transparent', whiteSpace: 'nowrap' }}>
+          <Pressable key={t.key} onClick={() => { setActiveTab(t.key); setMenuSearch(''); }} style={{ padding: '12px 18px', fontSize: 14, fontWeight: activeTab === t.key ? 800 : 600, flexShrink: 0, color: activeTab === t.key ? 'var(--qb-primary)' : '#6b7280', borderBottom: activeTab === t.key ? '2.5px solid var(--qb-primary)' : '2.5px solid transparent', whiteSpace: 'nowrap' }}>
             {t.label}
           </Pressable>
         ))}
@@ -294,7 +294,7 @@ export default function RestaurantDetailPage() {
                     </div>
                     <div style={{ padding: '8px 10px' }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--fb-primary)', marginTop: 3 }}>{PKR(item.price)}</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--qb-primary)', marginTop: 3 }}>{PKR(item.price)}</div>
                     </div>
                   </div>
                 );
@@ -308,9 +308,9 @@ export default function RestaurantDetailPage() {
           <div style={{ marginTop: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', marginBottom: 12 }}>
               <span style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>Fellow foodies say</span>
-              <Pressable style={{ fontSize: 12, fontWeight: 700, color: 'var(--fb-primary)' }}>See all</Pressable>
+              <Pressable style={{ fontSize: 12, fontWeight: 700, color: 'var(--qb-primary)' }}>See all</Pressable>
             </div>
-            <div className="fb-no-scrollbar" style={{ display: 'flex', gap: 10, padding: '0 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+            <div className="qb-no-scrollbar" style={{ display: 'flex', gap: 10, padding: '0 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
               {DEMO_REVIEWS.map(rev => (
                 <div key={rev.id} style={{ width: 240, flexShrink: 0, padding: '14px', borderRadius: 14, border: '1px solid #F0F0F0', background: '#fff' }}>
                   <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.55, marginBottom: 12 }}>{rev.text}</div>
@@ -340,7 +340,7 @@ export default function RestaurantDetailPage() {
                     {item.description && (
                       <div style={{ fontSize: 12, color: '#6b7280', marginTop: 3, lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{item.description}</div>
                     )}
-                    <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--fb-primary)', marginTop: 6 }}>{PKR(item.price)}</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--qb-primary)', marginTop: 6 }}>{PKR(item.price)}</div>
                     {qty > 0 && (
                       <div style={{ marginTop: 8 }}>
                         <Stepper value={qty} onChange={v => updateQuantity(item.id || item._id, v)} min={0}/>
@@ -400,14 +400,14 @@ export default function RestaurantDetailPage() {
                     <Pressable key={a.id} onClick={() => toggleAddOn(a)} style={{
                       display: 'flex', alignItems: 'center', gap: 12,
                       padding: '12px 14px', borderRadius: 12,
-                      border: `1.5px solid ${picked ? 'var(--fb-primary)' : '#F0F0F0'}`,
+                      border: `1.5px solid ${picked ? 'var(--qb-primary)' : '#F0F0F0'}`,
                       background: picked ? 'rgba(229,57,53,0.05)' : '#fff',
                       textAlign: 'left',
                     }}>
                       <div style={{
                         width: 20, height: 20, borderRadius: 6,
-                        border: `2px solid ${picked ? 'var(--fb-primary)' : '#D1D5DB'}`,
-                        background: picked ? 'var(--fb-primary)' : '#fff',
+                        border: `2px solid ${picked ? 'var(--qb-primary)' : '#D1D5DB'}`,
+                        background: picked ? 'var(--qb-primary)' : '#fff',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
                         {picked && <Icons.Check size={12} stroke="#fff" sw={3}/>}
@@ -415,7 +415,7 @@ export default function RestaurantDetailPage() {
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{a.name}</div>
                       </div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: a.price > 0 ? 'var(--fb-primary)' : '#10b981' }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: a.price > 0 ? 'var(--qb-primary)' : '#10b981' }}>
                         {a.price > 0 ? `+ ${PKR(a.price)}` : 'FREE'}
                       </div>
                     </Pressable>
@@ -425,7 +425,7 @@ export default function RestaurantDetailPage() {
 
               <Pressable onClick={confirmAddOns} style={{
                 marginTop: 16, width: '100%', height: 52, borderRadius: 14,
-                background: 'var(--fb-primary)', color: '#fff',
+                background: 'var(--qb-primary)', color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 fontSize: 15, fontWeight: 800,
                 boxShadow: '0 6px 18px rgba(229,57,53,0.3)',
@@ -440,7 +440,7 @@ export default function RestaurantDetailPage() {
       {/* FoodPanda-style cart CTA */}
       {totalCartQty > 0 && (
         <motion.div initial={{ y: 100 }} animate={{ y: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, padding: '12px 16px 28px', background: 'linear-gradient(180deg, transparent, #fff 25%)' }}>
-          <Pressable onClick={() => navigate('/cart')} style={{ width: '100%', height: 58, borderRadius: 14, background: 'var(--fb-primary)', color: '#fff', display: 'flex', alignItems: 'center', padding: '0 18px', gap: 14, boxShadow: '0 8px 24px rgba(229,57,53,0.35)' }}>
+          <Pressable onClick={() => navigate('/cart')} style={{ width: '100%', height: 58, borderRadius: 14, background: 'var(--qb-primary)', color: '#fff', display: 'flex', alignItems: 'center', padding: '0 18px', gap: 14, boxShadow: '0 8px 24px rgba(229,57,53,0.35)' }}>
             <div style={{ width: 34, height: 34, borderRadius: 999, border: '2px solid rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, flexShrink: 0 }}>{totalCartQty}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 15, fontWeight: 800 }}>View your cart</div>
@@ -472,12 +472,12 @@ function LoadingState() {
     <div style={{ padding: '80px 16px 0' }}>
       <div style={{ height: 220, borderRadius: 0, background: '#EEE',
         backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-        backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite' }}/>
+        backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite' }}/>
       <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} style={{ height: 16, borderRadius: 8, background: '#EEE',
             backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-            backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite',
+            backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite',
             width: i % 2 === 0 ? '80%' : '50%' }}/>
         ))}
       </div>

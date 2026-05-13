@@ -48,7 +48,7 @@ const Navbar = () => {
             }}
           >
             <RestaurantMenu sx={{ color:'#E53935', fontSize:22 }}/>
-            FairBite
+            QuickBite
           </Typography>
 
           {/* Centre nav */}

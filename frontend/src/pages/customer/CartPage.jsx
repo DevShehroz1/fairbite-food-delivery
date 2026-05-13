@@ -76,7 +76,7 @@ export default function CartPage() {
           <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6, maxWidth: 240 }}>
             Browse restaurants and add items — checkout is fast and fair.
           </div>
-          <Pressable onClick={() => navigate('/restaurants')} style={{ marginTop: 20, padding: '12px 28px', borderRadius: 16, background: 'var(--fb-primary)', color: '#fff', fontSize: 14, fontWeight: 700 }}>
+          <Pressable onClick={() => navigate('/restaurants')} style={{ marginTop: 20, padding: '12px 28px', borderRadius: 16, background: 'var(--qb-primary)', color: '#fff', fontSize: 14, fontWeight: 700 }}>
             Browse Restaurants
           </Pressable>
         </div>
@@ -174,7 +174,7 @@ export default function CartPage() {
               </div>
               {/* Price */}
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--fb-primary)' }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--qb-primary)' }}>
                   {PKR(lineDiscounted)}
                 </div>
                 <div style={{ fontSize: 12, color: '#9CA3AF', textDecoration: 'line-through', marginTop: 2 }}>
@@ -199,7 +199,7 @@ export default function CartPage() {
             <div style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>Popular with your order</div>
             <div style={{ fontSize: 12, color: '#6b7280', marginTop: 3 }}>Other customers also bought these</div>
           </div>
-          <div className="fb-no-scrollbar" style={{ display: 'flex', gap: 10, padding: '12px 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+          <div className="qb-no-scrollbar" style={{ display: 'flex', gap: 10, padding: '12px 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
             {suggestions.map(item => (
               <div key={item.id} style={{ width: 170, flexShrink: 0 }}>
                 <div style={{ height: 140, borderRadius: 12, background: '#F5F5F5', overflow: 'hidden', position: 'relative', marginBottom: 8 }}>
@@ -211,7 +211,7 @@ export default function CartPage() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {item.name}
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--fb-primary)', marginTop: 2 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--qb-primary)', marginTop: 2 }}>
                   {PKR(Math.round(item.price * 0.9))}
                   <span style={{ fontSize: 11, fontWeight: 500, color: '#9CA3AF', textDecoration: 'line-through', marginLeft: 5 }}>
                     {PKR(item.price)}
@@ -230,7 +230,7 @@ export default function CartPage() {
           <span style={{ fontSize: 14, color: '#374151' }}>Standard delivery</span>
           <span style={{ fontSize: 14, color: '#374151' }}>
             <span style={{ textDecoration: 'line-through', color: '#9CA3AF', marginRight: 6 }}>Rs. 79</span>
-            <span style={{ fontWeight: 700, color: 'var(--fb-primary)' }}>Free</span>
+            <span style={{ fontWeight: 700, color: 'var(--qb-primary)' }}>Free</span>
           </span>
         </div>
         <div style={{ fontSize: 11, color: '#6b7280', marginTop: -4, marginBottom: 8 }}>
@@ -238,7 +238,7 @@ export default function CartPage() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 14, color: '#374151' }}>
-            FairBite Fee
+            QuickBite Fee
             <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 4, background: '#10b981', color: '#fff' }}>FREE</span>
           </span>
           <span style={{ fontSize: 14, fontWeight: 600, color: '#10b981' }}>Rs. 0</span>
@@ -263,7 +263,7 @@ export default function CartPage() {
           {/* Toggle */}
           <Pressable onClick={() => setCutlery(v => !v)} style={{
             width: 48, height: 26, borderRadius: 13,
-            background: cutlery ? 'var(--fb-primary)' : '#D1D5DB',
+            background: cutlery ? 'var(--qb-primary)' : '#D1D5DB',
             position: 'relative', transition: 'background 0.2s',
           }}>
             <motion.div
@@ -287,7 +287,7 @@ export default function CartPage() {
           </Pressable>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--fb-primary)' }}>{PKR(discountedTotal)}</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--qb-primary)' }}>{PKR(discountedTotal)}</div>
           <div style={{ fontSize: 12, color: '#9CA3AF', textDecoration: 'line-through', marginTop: 2 }}>{PKR(total)}</div>
         </div>
       </div>
@@ -297,7 +297,7 @@ export default function CartPage() {
         <motion.div whileTap={{ scale: 0.98 }}>
           <Pressable onClick={handlePlace} style={{
             width: '100%', height: 52, borderRadius: 26,
-            background: placing ? '#ccc' : 'var(--fb-primary)',
+            background: placing ? '#ccc' : 'var(--qb-primary)',
             color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 16, fontWeight: 700,
             boxShadow: '0 6px 20px rgba(229,57,53,0.3)',

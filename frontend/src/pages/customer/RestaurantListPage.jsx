@@ -108,7 +108,7 @@ export default function RestaurantListPage() {
             <Pressable onClick={brandParam ? clearBrand : clearCategory} style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               padding: '4px 10px', borderRadius: 999,
-              background: 'var(--fb-primary)', color: '#fff',
+              background: 'var(--qb-primary)', color: '#fff',
               fontSize: 12, fontWeight: 700,
             }}>
               {headerTitle}
@@ -119,7 +119,7 @@ export default function RestaurantListPage() {
 
         {/* Sort chips */}
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginTop: 12, paddingBottom: 2 }}
-          className="fb-no-scrollbar">
+          className="qb-no-scrollbar">
           {SORT_FILTERS.map(f => (
             <Chip key={f} active={sortBy === f} onClick={() => setSortBy(f)}>{f}</Chip>
           ))}
@@ -128,7 +128,7 @@ export default function RestaurantListPage() {
         {/* Cuisine filter row — only visible when there are cuisines + no category lock */}
         {allCuisines.length > 0 && !categoryParam && !brandParam && (
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginTop: 8, paddingBottom: 2 }}
-            className="fb-no-scrollbar">
+            className="qb-no-scrollbar">
             <Chip active={!cuisinePicked} onClick={() => setCuisine('')}>All</Chip>
             {allCuisines.map(c => (
               <Chip key={c} active={cuisinePicked === c} onClick={() => setCuisine(c === cuisinePicked ? '' : c)}>{c}</Chip>
@@ -187,14 +187,14 @@ function SkeletonCard() {
     <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
       <div style={{ height: 152, background: '#EEE',
         backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-        backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite' }}/>
+        backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite' }}/>
       <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ width: '60%', height: 14, borderRadius: 6, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-          backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite' }}/>
+          backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite' }}/>
         <div style={{ width: '40%', height: 10, borderRadius: 6, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-          backgroundSize: '200% 100%', animation: 'fb-shimmer 1.2s linear infinite' }}/>
+          backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite' }}/>
       </div>
     </div>
   );
@@ -212,7 +212,7 @@ function EmptySearch({ query, onClear }) {
       </div>
       <Pressable onClick={onClear} style={{
         marginTop: 16, padding: '10px 20px', borderRadius: 12,
-        background: 'var(--fb-primary)', color: '#fff',
+        background: 'var(--qb-primary)', color: '#fff',
         fontSize: 14, fontWeight: 700,
       }}>Clear search</Pressable>
     </div>
@@ -231,7 +231,7 @@ function EmptyFiltered({ title, onClear }) {
       </div>
       <Pressable onClick={onClear} style={{
         marginTop: 16, padding: '10px 20px', borderRadius: 12,
-        background: 'var(--fb-primary)', color: '#fff',
+        background: 'var(--qb-primary)', color: '#fff',
         fontSize: 14, fontWeight: 700,
       }}>Show all restaurants</Pressable>
     </div>

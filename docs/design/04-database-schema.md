@@ -244,4 +244,4 @@ users (1) ──────────────────── (1) resta
 ```
 
 ---
-*FairBite Software Engineering Documentation — Version 1.0*
+*QuickBite Software Engineering Documentation — Version 1.0*

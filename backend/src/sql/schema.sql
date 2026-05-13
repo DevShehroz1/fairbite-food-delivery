@@ -1,5 +1,5 @@
 -- ============================================================
--- FairBite Database Schema — run this in Supabase SQL Editor
+-- QuickBite Database Schema — run this in Supabase SQL Editor
 -- ============================================================
 
 -- Drop tables if re-running

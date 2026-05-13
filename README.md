@@ -1,4 +1,4 @@
-# FairBite Food Delivery
+# QuickBite Food Delivery
 
 A full-stack food delivery PWA built for a class demo. Real-time order tracking with animated maps, multi-role dashboards (customer, rider, restaurant, admin).
 
@@ -172,7 +172,7 @@ create table if not exists reviews (
 ```
 SUPABASE_URL=https://mzvcjapddqaegcxjenpj.supabase.co
 SUPABASE_SERVICE_KEY=<your-service-role-key>
-JWT_SECRET=fairbite_super_secret_jwt_2024_xK9mP3nQ7rL
+JWT_SECRET=quickbite_super_secret_jwt_2024_xK9mP3nQ7rL
 JWT_EXPIRE=7d
 NODE_ENV=production
 ```

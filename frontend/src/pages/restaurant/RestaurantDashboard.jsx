@@ -16,7 +16,7 @@ const CAT_LABELS = {
 const STATUS_META = {
   pending:            { label: 'New',       color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',   next: 'confirmed',  nextLabel: 'Confirm Order' },
   confirmed:          { label: 'Confirmed', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)',   next: 'preparing',  nextLabel: 'Start Preparing' },
-  preparing:          { label: 'Preparing', color: 'var(--fb-primary)', bg: 'rgba(229,57,53,0.08)', next: 'ready', nextLabel: 'Mark Ready — Assign Rider' },
+  preparing:          { label: 'Preparing', color: 'var(--qb-primary)', bg: 'rgba(229,57,53,0.08)', next: 'ready', nextLabel: 'Mark Ready — Assign Rider' },
   ready:              { label: 'Ready',     color: '#10b981', bg: 'rgba(16,185,129,0.1)',   next: null,         nextLabel: null },
   'ready-for-pickup': { label: 'Ready',     color: '#10b981', bg: 'rgba(16,185,129,0.1)',   next: null,         nextLabel: null },
   'picked-up':        { label: 'Picked Up', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)',   next: null,         nextLabel: null },
@@ -99,7 +99,7 @@ export default function RestaurantDashboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
               width: 44, height: 44, borderRadius: 14,
-              background: 'linear-gradient(135deg, var(--fb-primary), var(--fb-accent))',
+              background: 'linear-gradient(135deg, var(--qb-primary), var(--qb-accent))',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
             }}>🍽️</div>
             <div>
@@ -121,7 +121,7 @@ export default function RestaurantDashboard() {
 
         {/* Stats row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, paddingBottom: 16 }}>
-          <MiniStatCard icon={<Icons.Receipt size={14} stroke="var(--fb-primary)" />} label="Active" value={activeOrders.length} color="var(--fb-primary)" />
+          <MiniStatCard icon={<Icons.Receipt size={14} stroke="var(--qb-primary)" />} label="Active" value={activeOrders.length} color="var(--qb-primary)" />
           <MiniStatCard icon={<Icons.Tag size={14} stroke="#10b981" />} label="Revenue" value={`${Math.round(historyOrders.reduce((s,o) => s+(o.pricing?.subtotal||0),0)/1000)}K`} color="#10b981" />
           <MiniStatCard icon={<Icons.Star size={14} stroke="#f59e0b" />} label="Rating" value={restaurant?.rating?.average || '—'} color="#f59e0b" />
           <MiniStatCard icon={<Icons.Truck size={14} stroke="#8b5cf6" />} label="Total" value={orders.length} color="#8b5cf6" />
@@ -150,15 +150,15 @@ export default function RestaurantDashboard() {
             <Pressable key={t} onClick={() => setTab(i)} scale={1} style={{
               flex: 1, padding: '12px 0', textAlign: 'center',
               fontSize: 13, fontWeight: 700,
-              color: tab === i ? 'var(--fb-primary)' : '#9CA3AF',
-              borderBottom: `2px solid ${tab === i ? 'var(--fb-primary)' : 'transparent'}`,
+              color: tab === i ? 'var(--qb-primary)' : '#9CA3AF',
+              borderBottom: `2px solid ${tab === i ? 'var(--qb-primary)' : 'transparent'}`,
               marginBottom: -2, background: 'transparent',
             }}>
               {t}
               {t === 'Active' && activeOrders.length > 0 && (
                 <span style={{
                   marginLeft: 5, padding: '1px 6px', borderRadius: 6,
-                  background: 'var(--fb-primary)', color: '#fff', fontSize: 10, fontWeight: 800,
+                  background: 'var(--qb-primary)', color: '#fff', fontSize: 10, fontWeight: 800,
                 }}>{activeOrders.length}</span>
               )}
             </Pressable>
@@ -176,7 +176,7 @@ export default function RestaurantDashboard() {
               initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
               style={{
                 background: '#fff', borderRadius: 16, padding: '14px 16px',
-                border: '2px solid var(--fb-primary)', marginBottom: 12,
+                border: '2px solid var(--qb-primary)', marginBottom: 12,
                 display: 'flex', alignItems: 'center', gap: 12,
               }}
             >
@@ -186,7 +186,7 @@ export default function RestaurantDashboard() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}
               >🔔</motion.div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--fb-primary)' }}>New order arrived!</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--qb-primary)' }}>New order arrived!</div>
                 <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
                   {(newOrderAlert.items||[]).length} item(s) · {PKR(newOrderAlert.pricing?.total || 0)}
                 </div>
@@ -226,8 +226,8 @@ export default function RestaurantDashboard() {
 }
 
 function MiniStatCard({ icon, label, value, color }) {
-  const bgMap = { 'var(--fb-primary)': 'rgba(229,57,53,0.06)', '#10b981': 'rgba(16,185,129,0.06)', '#f59e0b': 'rgba(245,158,11,0.06)', '#8b5cf6': 'rgba(139,92,246,0.06)' };
-  const brMap = { 'var(--fb-primary)': 'rgba(229,57,53,0.15)', '#10b981': 'rgba(16,185,129,0.15)', '#f59e0b': 'rgba(245,158,11,0.15)', '#8b5cf6': 'rgba(139,92,246,0.15)' };
+  const bgMap = { 'var(--qb-primary)': 'rgba(229,57,53,0.06)', '#10b981': 'rgba(16,185,129,0.06)', '#f59e0b': 'rgba(245,158,11,0.06)', '#8b5cf6': 'rgba(139,92,246,0.06)' };
+  const brMap = { 'var(--qb-primary)': 'rgba(229,57,53,0.15)', '#10b981': 'rgba(16,185,129,0.15)', '#f59e0b': 'rgba(245,158,11,0.15)', '#8b5cf6': 'rgba(139,92,246,0.15)' };
   return (
     <div style={{ padding: '10px', borderRadius: 14, background: bgMap[color] || '#F8F8F8', border: `1px solid ${brMap[color] || '#F0F0F0'}` }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>{icon}<span style={{ fontSize: 10, color: '#6b7280', fontWeight: 600 }}>{label}</span></div>
@@ -245,7 +245,7 @@ function OrderCard({ order, onUpdateStatus }) {
       initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
       style={{
         background: '#fff', borderRadius: 18, overflow: 'hidden',
-        border: order.status === 'pending' ? '1.5px solid var(--fb-primary)' : '1px solid #F0F0F0',
+        border: order.status === 'pending' ? '1.5px solid var(--qb-primary)' : '1px solid #F0F0F0',
         boxShadow: '0 4px 14px rgba(0,0,0,0.05)',
       }}
     >
@@ -327,7 +327,7 @@ function OrderCard({ order, onUpdateStatus }) {
               {/* Address */}
               {order.deliveryAddress && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
-                  <Icons.MapPin size={14} stroke="var(--fb-primary)" />
+                  <Icons.MapPin size={14} stroke="var(--qb-primary)" />
                   <span style={{ fontSize: 12, color: '#6b7280' }}>
                     {order.deliveryAddress.street}, {order.deliveryAddress.city}
                   </span>
@@ -350,7 +350,7 @@ function OrderCard({ order, onUpdateStatus }) {
                   onClick={() => onUpdateStatus(meta.next)}
                   style={{
                     width: '100%', height: 46, marginTop: 14, borderRadius: 12,
-                    background: meta.next === 'ready' ? '#10b981' : 'var(--fb-primary)', color: '#fff',
+                    background: meta.next === 'ready' ? '#10b981' : 'var(--qb-primary)', color: '#fff',
                     fontSize: 14, fontWeight: 700,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                     boxShadow: meta.next === 'ready' ? '0 4px 14px rgba(16,185,129,0.28)' : '0 4px 14px rgba(229,57,53,0.28)',
@@ -430,7 +430,7 @@ function SkeletonOrders() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {[1, 2, 3].map(i => (
-        <div key={i} style={{ background: '#fff', borderRadius: 18, height: 72, border: '1px solid #F0F0F0', animation: 'fb-shimmer 1.5s infinite', backgroundSize: '200% 100%' }} />
+        <div key={i} style={{ background: '#fff', borderRadius: 18, height: 72, border: '1px solid #F0F0F0', animation: 'qb-shimmer 1.5s infinite', backgroundSize: '200% 100%' }} />
       ))}
     </div>
   );

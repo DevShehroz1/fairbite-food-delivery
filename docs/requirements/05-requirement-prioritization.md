@@ -13,12 +13,12 @@ Using the MoSCoW method to prioritize features for the 9-week development sprint
 | M2 | JWT-based authentication & route protection | Security baseline |
 | M3 | Restaurant listing with basic filters | Core customer flow |
 | M4 | Restaurant detail page with full menu | Core browsing experience |
-| M5 | Menu item dietary tags (Halal, Vegan, etc.) | FairBite differentiator |
+| M5 | Menu item dietary tags (Halal, Vegan, etc.) | QuickBite differentiator |
 | M6 | Shopping cart (single restaurant) | Required for ordering |
 | M7 | Order placement with pricing breakdown | Core revenue function |
 | M8 | Order status tracking (8 stages) | Core trust feature |
 | M9 | Restaurant order management dashboard | Core for restaurant owners |
-| M10 | 15% commission rate enforcement | Core USP of FairBite |
+| M10 | 15% commission rate enforcement | Core USP of QuickBite |
 | M11 | Transparent pricing display (subtotal + fees) | Core differentiator |
 | M12 | Menu CRUD for restaurant owners | Operational necessity |
 | M13 | Basic admin panel (user/restaurant management) | Platform governance |
@@ -97,4 +97,4 @@ LOW VALUE ───────────────────────�
 | Sprint 5 | Week 9 | Testing & Docs | All documentation, QA |
 
 ---
-*FairBite Software Engineering Documentation — Version 1.0*
+*QuickBite Software Engineering Documentation — Version 1.0*
