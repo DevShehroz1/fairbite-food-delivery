@@ -14,10 +14,18 @@ const sendToken = (user, statusCode, res) => {
 
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role, phone } = req.body;
+    const { name, email, password, role, phone, referralCode } = req.body;
     const existing = await User.findByEmail(email);
     if (existing) return res.status(400).json({ success: false, message: 'Email already registered' });
-    const user = await User.create({ name, email, password, role, phone });
+
+    let referredBy = null;
+    if (referralCode) {
+      const referrer = await User.findByReferralCode(referralCode);
+      if (!referrer) return res.status(400).json({ success: false, message: 'Invalid referral code' });
+      referredBy = referrer.id;
+    }
+
+    const user = await User.create({ name, email, password, role, phone, referredBy });
     sendToken(user, 201, res);
   } catch (err) { next(err); }
 };
@@ -73,14 +81,19 @@ exports.googleAuth = async (req, res, next) => {
 // Google OAuth — access token flow (used with useGoogleLogin hook)
 exports.googleTokenAuth = async (req, res, next) => {
   try {
-    const { email, name, avatar, googleId, role } = req.body;
+    const { email, name, avatar, googleId, role, referralCode } = req.body;
     if (!email) return res.status(400).json({ success: false, message: 'No email provided' });
 
     let user = await User.findByEmail(email);
     const allowed = ['customer', 'restaurant', 'rider'];
     if (!user) {
       const assignedRole = allowed.includes(role) ? role : 'customer';
-      user = await User.createGoogleUser({ name, email, avatar, googleId, role: assignedRole });
+      let referredBy = null;
+      if (referralCode) {
+        const referrer = await User.findByReferralCode(referralCode);
+        if (referrer) referredBy = referrer.id;
+      }
+      user = await User.createGoogleUser({ name, email, avatar, googleId, role: assignedRole, referredBy });
     } else {
       const updates = {};
       if (avatar) updates.avatar = avatar;

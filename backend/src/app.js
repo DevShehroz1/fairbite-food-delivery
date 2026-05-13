@@ -54,6 +54,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/restaurants', require('./routes/restaurantRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
+app.use('/api/referrals', require('./routes/referralRoutes'));
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });

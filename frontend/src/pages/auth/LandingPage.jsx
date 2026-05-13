@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { useGoogleLogin } from '@react-oauth/google';
@@ -34,15 +34,22 @@ const FOOD_IMGS = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const { login } = useAuth();
   const [selectedRole, setSelectedRole] = useState('customer');
-  const [tab, setTab]         = useState('login');
+  const [tab, setTab]         = useState(params.get('ref') ? 'register' : 'login');
   const [email, setEmail]     = useState('');
   const [password, setPass]   = useState('');
   const [name, setName]       = useState('');
+  const [referralCode, setReferralCode] = useState(params.get('ref') || '');
   const [showPw, setShowPw]   = useState(false);
   const [loading, setLoading] = useState(false);
   const [gLoading, setGLoading] = useState(false);
+
+  useEffect(() => {
+    const ref = params.get('ref');
+    if (ref) setReferralCode(ref.toUpperCase());
+  }, [params]);
 
   const handleSubmit = async () => {
     if (!email || !password) return toast.error('Enter email and password');
@@ -52,7 +59,7 @@ export default function LandingPage() {
       const endpoint = tab === 'login' ? '/auth/login' : '/auth/register';
       const payload  = tab === 'login'
         ? { email, password }
-        : { name, email, password, role: selectedRole };
+        : { name, email, password, role: selectedRole, referralCode: referralCode || undefined };
       const { data } = await api.post(endpoint, payload);
       login(data.token, data.user);
       if (tab === 'login' && data.user.role !== selectedRole) {
@@ -80,6 +87,7 @@ export default function LandingPage() {
           avatar: profile.picture,
           googleId: profile.sub,
           role: selectedRole,
+          referralCode: referralCode || undefined,
         });
         login(data.token, data.user);
         navigate(ROLE_ROUTES[data.user.role] || '/home', { replace: true });
@@ -214,7 +222,7 @@ export default function LandingPage() {
         <motion.div variants={item} style={{ marginBottom: 10 }}>
           <FloatField label="Email" value={email} onChange={setEmail} type="email"/>
         </motion.div>
-        <motion.div variants={item} style={{ marginBottom: 18 }}>
+        <motion.div variants={item} style={{ marginBottom: tab === 'register' ? 10 : 18 }}>
           <FloatField label="Password" value={password} onChange={setPass}
             type={showPw ? 'text' : 'password'}
             trailing={
@@ -223,6 +231,24 @@ export default function LandingPage() {
               </Pressable>
             }/>
         </motion.div>
+
+        <AnimatePresence>
+          {tab === 'register' && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden', marginBottom: 18 }}>
+              <FloatField
+                label="Referral code (optional)"
+                value={referralCode}
+                onChange={(v) => setReferralCode((v || '').toUpperCase())}
+              />
+              {referralCode && params.get('ref') && (
+                <div style={{ fontSize: 11, color: 'var(--qb-accent)', marginTop: 6, paddingLeft: 4 }}>
+                  ✓ Friend's code applied — you'll get 50% off your first order
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <motion.div variants={item}>
           <BrandButton onClick={handleSubmit} disabled={loading}>

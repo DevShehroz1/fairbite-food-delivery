@@ -1,5 +1,6 @@
 const Order      = require('../models/Order');
 const Restaurant = require('../models/Restaurant');
+const referralCtrl = require('./referralController');
 
 const emit = (req, target, event, payload) => {
   const io = req.app.get('io');
@@ -100,6 +101,12 @@ exports.updateOrderStatus = async (req, res, next) => {
   try {
     const { status, note } = req.body;
     let order = await Order.updateStatus(req.params.id, status, note);
+
+    // Credit referral rewards on the referee's first delivered order (best-effort)
+    if (status === 'delivered' && order.customer?.id) {
+      try { await referralCtrl.creditReferralOnFirstOrder({ refereeId: order.customer.id }); }
+      catch (e) { console.error('Referral credit failed:', e.message); }
+    }
 
     // Notify the customer watching this order
     emit(req, `order_${order.id}`, `order_${order.id}_status`, { status: order.status });

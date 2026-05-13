@@ -1,9 +1,90 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 import { Icons, Pressable, BrandButton, BottomNav } from '../../components/ui';
+
+function ReferralCard() {
+  const [info, setInfo] = useState(null);
+  useEffect(() => {
+    api.get('/referrals/me')
+      .then(r => setInfo(r.data.data))
+      .catch(() => {});
+  }, []);
+
+  if (!info) return null;
+
+  const copy = () => {
+    navigator.clipboard?.writeText(info.code).then(
+      () => toast.success(`Code "${info.code}" copied!`, { autoClose: 1500 }),
+      () => toast.info(`Copy code: ${info.code}`)
+    );
+  };
+  const share = async () => {
+    const msg = `Join me on QuickBite! Use my code ${info.code} for 50% off your first order: ${info.shareUrl}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'QuickBite', text: msg, url: info.shareUrl }); } catch {}
+    } else {
+      navigator.clipboard?.writeText(msg);
+      toast.success('Invite copied — paste it anywhere!', { autoClose: 1800 });
+    }
+  };
+
+  return (
+    <div style={{
+      margin: '16px 16px 0', borderRadius: 18, overflow: 'hidden',
+      background: 'linear-gradient(135deg, var(--qb-primary) 0%, #b91c1c 100%)',
+      color: '#fff', position: 'relative',
+    }}>
+      <div style={{ position: 'absolute', top: -20, right: -20, width: 110, height: 110, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }}/>
+      <div style={{ position: 'absolute', bottom: -30, left: -30, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }}/>
+
+      <div style={{ position: 'relative', padding: '18px 18px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Icons.Gift size={18} stroke="#fff" sw={2.2}/>
+          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: 0.6, textTransform: 'uppercase' }}>Refer &amp; Earn</span>
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 800, marginTop: 8, letterSpacing: -0.3, lineHeight: 1.25 }}>
+          Invite a friend, both get rewards
+        </div>
+        <div style={{ fontSize: 12, opacity: 0.9, marginTop: 4, lineHeight: 1.4 }}>
+          {info.rewardSummary?.friendGets} · You get {info.rewardSummary?.youGet}
+        </div>
+
+        <Pressable onClick={copy} style={{
+          marginTop: 14, padding: '12px 14px', borderRadius: 12,
+          background: 'rgba(255,255,255,0.18)', border: '1.5px dashed rgba(255,255,255,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          width: '100%', textAlign: 'left',
+        }}>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, opacity: 0.8, letterSpacing: 0.5, textTransform: 'uppercase' }}>Your code</div>
+            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: 1.2, marginTop: 2 }}>{info.code}</div>
+          </div>
+          <span style={{ fontSize: 10, fontWeight: 800, padding: '5px 10px', borderRadius: 999, background: '#fff', color: 'var(--qb-primary)', letterSpacing: 0.5 }}>TAP TO COPY</span>
+        </Pressable>
+
+        <Pressable onClick={share} style={{
+          marginTop: 10, padding: '12px 14px', borderRadius: 12,
+          background: '#fff', color: 'var(--qb-primary)',
+          width: '100%', fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        }}>
+          <Icons.Send size={16} stroke="var(--qb-primary)" sw={2.5}/>
+          Share invite
+        </Pressable>
+
+        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, opacity: 0.9 }}>
+          <Icons.User size={13} stroke="#fff" sw={2}/>
+          {info.count > 0
+            ? <span><strong style={{ fontSize: 13 }}>{info.count}</strong> friend{info.count === 1 ? '' : 's'} joined with your code</span>
+            : <span>No friends joined yet — share your code to earn</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const ROLE_BADGE = {
   customer:   { label: 'Customer',   bg: '#EFF6FF', color: '#2563EB' },
@@ -30,7 +111,7 @@ function joinYear(dateStr) {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [tab, setTab] = React.useState('profile');
+  const [tab, setTab] = useState('profile');
 
   const handleTab = (t) => {
     setTab(t);
@@ -140,6 +221,8 @@ export default function ProfilePage() {
           </span>
         </div>
       </div>
+
+      {role === 'customer' && <ReferralCard/>}
 
       {/* Menu list */}
       <div style={{ margin: '16px 16px 0', background: '#fff', borderRadius: 18, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
