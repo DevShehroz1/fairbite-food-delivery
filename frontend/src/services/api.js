@@ -21,13 +21,15 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 globally
+// Handle 401 globally — only force a redirect when we already had a token
+// (i.e. it was rejected as stale). Anonymous 401s from public pages
+// shouldn't blow the user off to /.
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    if (err.response?.status === 401 && localStorage.getItem('quickbite_token')) {
       localStorage.removeItem('quickbite_token');
-      window.location.href = '/login';
+      window.location.href = '/';
     }
     return Promise.reject(err);
   }

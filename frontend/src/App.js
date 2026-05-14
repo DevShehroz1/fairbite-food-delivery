@@ -4,10 +4,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from './context/AuthContext';
 import { QBLogoMark } from './components/ui';
 
-// Auth pages stay eager — first paint goes through Landing or Login.
+// LandingPage handles both sign-in and registration tabs.
 import LandingPage from './pages/auth/LandingPage';
-import LoginPage from './pages/auth/LoginPage';
-import RegisterPage from './pages/auth/RegisterPage';
 
 class AppErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { err: null, info: null }; }
@@ -123,12 +121,9 @@ const App = () => {
               : <PageWrap><LandingPage /></PageWrap>}
           />
 
-          <Route path="/login"
-            element={isAuthenticated
-              ? <Navigate to={DASHBOARD_ROUTES[user?.role] || '/home'} replace />
-              : <PageWrap><LoginPage /></PageWrap>}
-          />
-          <Route path="/register" element={<PageWrap><RegisterPage /></PageWrap>} />
+          {/* Legacy /login + /register routes funnel into Landing. */}
+          <Route path="/login"    element={<Navigate to="/" replace />} />
+          <Route path="/register" element={<Navigate to="/" replace />} />
 
           {/* Customer-only */}
           <Route path="/home"             element={<RoleRoute allow={['customer']}><PageWrap><HomePage /></PageWrap></RoleRoute>} />
