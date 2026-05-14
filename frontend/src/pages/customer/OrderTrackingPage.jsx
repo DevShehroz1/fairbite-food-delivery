@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
 import api from '../../services/api';
 import { Icons, Pressable, SmartImg, BrandButton } from '../../components/ui';
 import LeafletMap, { DEFAULT_RESTAURANT, DEFAULT_CUSTOMER } from '../../components/LeafletMap';
 
-// ─── 4-step customer UI mapping ──────────────────────────────────────────────
+// 5-step customer UI mapping. We split "On the Way" into a moving phase
+// and the "Arrived" phase so the map can show the rider gliding to the door.
 const UI_STEPS = [
   { label: 'Order Placed',  sub: 'We received your order' },
   { label: 'Preparing',     sub: 'Restaurant is cooking your order' },
   { label: 'On the Way',    sub: 'Rider is heading to you' },
+  { label: 'Arriving',      sub: 'Rider is almost at your door' },
   { label: 'Delivered',     sub: 'Enjoy your meal! 🎉' },
 ];
 
@@ -20,13 +23,15 @@ function backendToStep(status) {
     case 'preparing':
     case 'ready':      return 1;
     case 'picked-up':
-    case 'on-the-way': return 2;
-    case 'delivered':  return 3;
+    case 'on-the-way': return 2;     // rider is moving — animation drives 2 → 3
+    case 'delivered':  return 4;
     default:           return 0;
   }
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+const RIDE_DURATION_MS = 5500;       // rider takes ~5.5s to glide to the door
+const POLL_INTERVAL_MS = 1500;       // tighter than before for snappier sync
+
 export default function OrderTrackingPage() {
   const { id }   = useParams();
   const navigate = useNavigate();
@@ -37,6 +42,7 @@ export default function OrderTrackingPage() {
   const [cancelled, setCancelled] = useState(false);
   const [eta, setEta]         = useState(28 * 60);
   const [animProgress, setAnimProgress] = useState(0);
+  const rideStartRef = useRef(null);
 
   // Initial fetch
   useEffect(() => {
@@ -53,7 +59,7 @@ export default function OrderTrackingPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // Poll every 3 seconds
+  // Poll the order — quicker so the rider's status update reaches the customer fast
   useEffect(() => {
     const poll = setInterval(() => {
       api.get(`/orders/${id}`)
@@ -64,7 +70,7 @@ export default function OrderTrackingPage() {
           setStep(backendToStep(o.status));
         })
         .catch(() => {});
-    }, 3000);
+    }, POLL_INTERVAL_MS);
     return () => clearInterval(poll);
   }, [id]);
 
@@ -74,23 +80,36 @@ export default function OrderTrackingPage() {
     return () => clearInterval(t);
   }, []);
 
-  // Rider progress along the route — eased animation toward the target progress.
-  // step 2 = picked up (just left restaurant) → 0.05
-  // step 3 = delivered → 1
-  const targetProgress = step >= 3 ? 1 : step >= 2 ? 0.55 : 0;
+  // Smooth rider animation:
+  //   - step <  2  → rider sits at the restaurant (progress 0)
+  //   - step == 2  → ride starts, progress eases 0 → 1 over RIDE_DURATION_MS
+  //   - step == 3  → already arrived (progress stays 1)
+  //   - step >= 4  → delivered, progress at 1
   useEffect(() => {
+    if (step < 2) {
+      setAnimProgress(0);
+      rideStartRef.current = null;
+      return;
+    }
+    if (step >= 3) {
+      setAnimProgress(1);
+      rideStartRef.current = null;
+      return;
+    }
+    // step === 2 → run the glide animation
+    if (rideStartRef.current == null) rideStartRef.current = performance.now();
     let raf;
-    const tick = () => {
-      setAnimProgress(p => {
-        const next = p + (targetProgress - p) * 0.06;
-        if (Math.abs(targetProgress - next) < 0.002) return targetProgress;
-        raf = requestAnimationFrame(tick);
-        return next;
-      });
+    const tick = (now) => {
+      const t = (now - rideStartRef.current) / RIDE_DURATION_MS;
+      // cubic ease-out for a smooth deceleration as the rider arrives
+      const eased = 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
+      setAnimProgress(eased);
+      if (t < 1) raf = requestAnimationFrame(tick);
+      else setStep(s => Math.max(s, 3)); // bump UI to "Arriving" once we hit the door
     };
     raf = requestAnimationFrame(tick);
     return () => raf && cancelAnimationFrame(raf);
-  }, [targetProgress]);
+  }, [step]);
 
   const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
@@ -116,6 +135,12 @@ export default function OrderTrackingPage() {
 
   const currentUIStep = UI_STEPS[step];
   const rider = order?.rider;
+  const showRider   = step >= 2;
+  const arrived     = step >= 3 && step < 4;
+  const delivered   = step >= 4;
+
+  // Approximate distance for the pill (purely cosmetic)
+  const kmAway = (1.6 * (1 - animProgress)).toFixed(1);
 
   return (
     <div style={{ height: '100vh', background: '#fff', display: 'flex',
@@ -135,7 +160,7 @@ export default function OrderTrackingPage() {
               : DEFAULT_CUSTOMER
           }
           progress={animProgress}
-          showRider={step >= 2}
+          showRider={showRider}
         />
 
         {/* Back button */}
@@ -162,13 +187,15 @@ export default function OrderTrackingPage() {
             transition={{ duration: 1.4, repeat: Infinity }}
             style={{ width: 8, height: 8, borderRadius: 999, background: '#10b981' }}/>
           <span style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>
-            Arriving in <span style={{ color: 'var(--qb-primary)' }}>{fmt(eta)}</span>
+            {arrived || delivered
+              ? <span style={{ color: '#10b981' }}>Arrived!</span>
+              : <>Arriving in <span style={{ color: 'var(--qb-primary)' }}>{fmt(eta)}</span></>}
           </span>
         </div>
 
-        {/* Distance pill — only show when rider is on the way */}
+        {/* Distance pill — only show when rider is moving (not after arrival) */}
         <AnimatePresence>
-          {step >= 2 && (
+          {showRider && !arrived && !delivered && (
             <motion.div
               initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
               style={{
@@ -179,21 +206,45 @@ export default function OrderTrackingPage() {
                 display: 'flex', alignItems: 'center', gap: 5,
               }}>
               <Icons.Bike size={12} stroke="var(--qb-accent)" sw={2.5}/>
-              1.2 km away
+              {kmAway} km away
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Social proof */}
-        <div style={{
-          position: 'absolute', bottom: 14, left: 16, zIndex: 5,
-          padding: '6px 10px', borderRadius: 12,
-          background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(8px)',
-          fontSize: 11, fontWeight: 600, color: '#374151',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        }}>
-          12 people ordering from here now
-        </div>
+        {/* Arrived banner — pulses up from the map */}
+        <AnimatePresence>
+          {arrived && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }}
+              style={{
+                position: 'absolute', bottom: 14, left: 16, right: 16, zIndex: 5,
+                padding: '12px 14px', borderRadius: 14,
+                background: 'rgba(16,185,129,0.96)', backdropFilter: 'blur(8px)',
+                boxShadow: '0 8px 24px rgba(16,185,129,0.35)',
+                display: 'flex', alignItems: 'center', gap: 10,
+                color: '#fff',
+              }}>
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1.2, repeat: Infinity }}
+                style={{
+                  width: 28, height: 28, borderRadius: 999,
+                  background: 'rgba(255,255,255,0.25)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                <span style={{ fontSize: 16 }}>📍</span>
+              </motion.div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: -0.2 }}>
+                  Rider is at your door
+                </div>
+                <div style={{ fontSize: 11, opacity: 0.9, marginTop: 1 }}>
+                  Please head out and pick up your order.
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* ── Bottom panel – bottom 40% ── */}
@@ -223,12 +274,12 @@ export default function OrderTrackingPage() {
             </div>
           </div>
 
-          {/* ── Horizontal 4-step stepper ── */}
+          {/* Stepper */}
           <HorizontalStepper step={step}/>
 
-          {/* Rider card — shows when rider is moving (step >= 2) */}
+          {/* Rider card */}
           <AnimatePresence>
-            {step >= 2 && (
+            {showRider && (
               <motion.div
                 initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 14 }}
                 style={{
@@ -250,29 +301,26 @@ export default function OrderTrackingPage() {
                     {rider?.name || 'Your Rider'}
                   </div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 1 }}>
-                    Honda CD 70 · On the way
+                    Honda CD 70 · {arrived ? 'Waiting at your door' : 'On the way'}
                   </div>
                 </div>
                 <Pressable
-                  onClick={() => {
-                    if (rider?.phone) window.location.href = `tel:${rider.phone}`;
-                  }}
+                  onClick={() => toast.info('In-app messaging coming soon!', { autoClose: 2000 })}
                   style={{
-                    width: 40, height: 40, borderRadius: 999, background: '#10b981',
+                    width: 40, height: 40, borderRadius: 999, background: '#3b82f6',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', boxShadow: '0 4px 12px rgba(16,185,129,0.4)',
-                    opacity: rider?.phone ? 1 : 0.4, cursor: rider?.phone ? 'pointer' : 'default',
+                    color: '#fff', boxShadow: '0 4px 12px rgba(59,130,246,0.4)',
                   }}
-                  disabled={!rider?.phone}
+                  aria-label="Message rider"
                 >
-                  <Icons.Phone size={16}/>
+                  <Icons.Message size={18} stroke="#fff" sw={2.2}/>
                 </Pressable>
               </motion.div>
             )}
           </AnimatePresence>
 
           {/* CTA when delivered */}
-          {step >= 3 && (
+          {delivered && (
             <div style={{ marginTop: 16 }}>
               <BrandButton onClick={() => navigate('/orders')}>View Order History</BrandButton>
             </div>
@@ -283,7 +331,7 @@ export default function OrderTrackingPage() {
   );
 }
 
-// ─── Horizontal 4-step stepper ───────────────────────────────────────────────
+// ─── Horizontal stepper ──────────────────────────────────────────────────────
 function HorizontalStepper({ step }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
@@ -295,7 +343,6 @@ function HorizontalStepper({ step }) {
 
         return (
           <React.Fragment key={i}>
-            {/* connector line (before each step except the first) */}
             {i > 0 && (
               <div style={{
                 flex: 1,
@@ -310,8 +357,6 @@ function HorizontalStepper({ step }) {
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center',
               gap: 5, flexShrink: 0 }}>
-
-              {/* Circle */}
               {isCurrent ? (
                 <motion.div
                   animate={{
@@ -337,16 +382,14 @@ function HorizontalStepper({ step }) {
                   <Icons.Check size={11} sw={3} stroke="#fff"/>
                 </div>
               ) : (
-                /* future */
                 <div style={{
                   width: 22, height: 22, borderRadius: 999,
                   border: '2px solid #D1D5DB', background: '#fff',
                 }}/>
               )}
 
-              {/* Label */}
               <div style={{
-                fontSize: 10, fontWeight: isCurrent ? 700 : isFuture ? 400 : 600,
+                fontSize: 9, fontWeight: isCurrent ? 700 : isFuture ? 400 : 600,
                 color: isCurrent ? 'var(--qb-primary)' : isFuture ? '#9CA3AF' : '#374151',
                 textAlign: 'center', maxWidth: 60, lineHeight: 1.2,
               }}>
@@ -359,4 +402,3 @@ function HorizontalStepper({ step }) {
     </div>
   );
 }
-
