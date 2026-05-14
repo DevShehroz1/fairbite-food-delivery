@@ -2,9 +2,20 @@ const supabase = require('../config/supabase');
 const bcrypt   = require('bcryptjs');
 const jwt      = require('jsonwebtoken');
 
-const PUBLIC_COLS = 'id,name,email,role,phone,avatar,is_active,referral_code,referred_by,rewards,created_at';
+// Select * so we still work if the referral migration hasn't run yet —
+// Supabase just omits the missing columns.
+const PUBLIC_COLS = '*';
 
-const fmt = (row) => row ? { ...row, _id: row.id, referralCode: row.referral_code, referredBy: row.referred_by } : null;
+const fmt = (row) => {
+  if (!row) return null;
+  const { password, ...safe } = row;
+  return {
+    ...safe,
+    _id: row.id,
+    referralCode: row.referral_code,
+    referredBy:   row.referred_by,
+  };
+};
 
 const randomCode = (len = 8) => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
