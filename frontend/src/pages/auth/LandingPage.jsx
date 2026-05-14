@@ -21,7 +21,13 @@ function GoogleSignInBlock({ selectedRole, referralCode, onSuccess, selectedRole
         const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
+        if (!profileRes.ok) {
+          throw new Error(`Google profile lookup failed (${profileRes.status})`);
+        }
         const profile = await profileRes.json();
+        if (!profile?.email) {
+          throw new Error('Google did not return an email — re-check OAuth scopes');
+        }
         const { data } = await api.post('/auth/google-token', {
           email: profile.email,
           name:  profile.name,
@@ -31,13 +37,21 @@ function GoogleSignInBlock({ selectedRole, referralCode, onSuccess, selectedRole
           referralCode: referralCode || undefined,
         });
         onSuccess(data);
-      } catch {
-        toast.error('Google sign-in failed. Try email login.');
+      } catch (err) {
+        const apiMsg = err.response?.data?.message;
+        const detail = apiMsg || err.message || 'unknown error';
+        toast.error(`Google sign-in failed: ${detail}`, { autoClose: 5000 });
+        // eslint-disable-next-line no-console
+        console.error('Google sign-in error:', err, err.response?.data);
       } finally {
         setLoading(false);
       }
     },
-    onError: () => toast.error('Google sign-in was cancelled'),
+    onError: (err) => {
+      // eslint-disable-next-line no-console
+      console.error('Google popup error:', err);
+      toast.error(err?.error_description || 'Google sign-in was cancelled');
+    },
   });
   return (
     <Pressable onClick={() => googleLogin()} disabled={loading} style={{
