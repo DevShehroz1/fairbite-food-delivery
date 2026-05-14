@@ -11,10 +11,17 @@ import App from './App';
 import theme from './utils/theme';
 import { AuthProvider } from './context/AuthContext';
 
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+
+const WithGoogle = ({ children }) =>
+  GOOGLE_CLIENT_ID
+    ? <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>{children}</GoogleOAuthProvider>
+    : <>{children}</>;
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ''}>
+    <WithGoogle>
       <BrowserRouter>
         <ThemeProvider theme={theme}>
           <CssBaseline />
@@ -32,6 +39,6 @@ root.render(
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>
-    </GoogleOAuthProvider>
+    </WithGoogle>
   </React.StrictMode>
 );
