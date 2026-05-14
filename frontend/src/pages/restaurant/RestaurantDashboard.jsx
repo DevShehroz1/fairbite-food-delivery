@@ -204,7 +204,7 @@ export default function RestaurantDashboard() {
         <AnimatePresence mode="wait">
           {tab === 2 ? (
             <motion.div key="menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <MenuTab restaurant={restaurant} />
+              <MenuTab restaurant={restaurant} onChange={() => api.get('/restaurants/my').then(r => setRestaurant(r.data.data)).catch(() => {})} />
             </motion.div>
           ) : (
             <motion.div key={`orders-${tab}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -368,47 +368,112 @@ function OrderCard({ order, onUpdateStatus }) {
   );
 }
 
-function MenuTab({ restaurant }) {
-  if (!restaurant?.menu?.length) {
+function MenuTab({ restaurant, onChange }) {
+  const [editing, setEditing] = useState(null); // null | 'new' | item object
+  const [saving, setSaving]   = useState(false);
+
+  if (!restaurant) {
     return (
       <div style={{ background: '#fff', borderRadius: 20, padding: 32, textAlign: 'center', border: '1px dashed #E5E5E5' }}>
         <div style={{ fontSize: 32, marginBottom: 8 }}>🍽️</div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Menu not loaded</div>
-        <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4 }}>Refresh to load your menu items</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Loading your restaurant…</div>
       </div>
     );
   }
 
-  const byCategory = restaurant.menu.reduce((acc, item) => {
-    const cat = item.category || 'Other';
+  const items = restaurant.menu || [];
+  const byCategory = items.reduce((acc, item) => {
+    const cat = item.category || 'other';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(item);
     return acc;
   }, {});
 
+  const handleSave = async (form) => {
+    setSaving(true);
+    try {
+      const payload = {
+        name: form.name.trim(),
+        price: Number(form.price) || 0,
+        category: form.category,
+        description: form.description.trim(),
+        image: form.image.trim() || undefined,
+        isAvailable: form.isAvailable,
+        dietaryTags: form.dietaryTags ? [form.dietaryTags] : [],
+        spiceLevel: form.spiceLevel || 'mild',
+      };
+      if (editing === 'new') {
+        await api.post(`/restaurants/${restaurant.id}/menu`, payload);
+        toast.success(`${payload.name} added`);
+      } else {
+        await api.put(`/restaurants/${restaurant.id}/menu/${editing.id}`, payload);
+        toast.success(`${payload.name} updated`);
+      }
+      setEditing(null);
+      onChange && onChange();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not save item');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (item) => {
+    if (!window.confirm(`Delete ${item.name}? This can't be undone.`)) return;
+    try {
+      await api.delete(`/restaurants/${restaurant.id}/menu/${item.id}`);
+      toast.success(`${item.name} removed`);
+      onChange && onChange();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not delete');
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {Object.entries(byCategory).map(([category, items]) => (
+      {/* Header bar with Add Item */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>Menu</div>
+          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{items.length} item{items.length === 1 ? '' : 's'} · tap to edit</div>
+        </div>
+        <Pressable onClick={() => setEditing('new')} style={{
+          padding: '10px 16px', borderRadius: 12,
+          background: 'var(--qb-primary)', color: '#fff',
+          fontSize: 13, fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 6,
+          boxShadow: '0 4px 12px rgba(229,57,53,0.25)',
+        }}>
+          <Icons.Plus size={14} sw={3}/> Add Item
+        </Pressable>
+      </div>
+
+      {items.length === 0 ? (
+        <div style={{ background: '#fff', borderRadius: 20, padding: 32, textAlign: 'center', border: '1px dashed #E5E5E5' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🍽️</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>No items yet</div>
+          <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4 }}>Tap "Add Item" to start your menu</div>
+        </div>
+      ) : Object.entries(byCategory).map(([category, list]) => (
         <div key={category}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>{CAT_LABELS[category] || category}</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>{CAT_LABELS[category] || category}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {items.map(item => (
+            {list.map(item => (
               <div key={item.id} style={{
                 background: '#fff', borderRadius: 14, padding: '12px 14px',
                 display: 'flex', alignItems: 'center', gap: 12, border: '1px solid #F0F0F0',
               }}>
                 <div style={{ width: 48, height: 48, borderRadius: 12, flexShrink: 0, background: '#F8F8F8', overflow: 'hidden' }}>
                   {item.image
-                    ? <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ? <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                     : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍛</div>
                   }
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <Pressable onClick={() => setEditing(item)} style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{item.name}</div>
                   {item.description && (
                     <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description}</div>
                   )}
-                </div>
+                </Pressable>
                 <div style={{ flexShrink: 0, textAlign: 'right' }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{PKR(item.price)}</div>
                   <div style={{
@@ -417,11 +482,169 @@ function MenuTab({ restaurant }) {
                     color: item.isAvailable !== false ? '#10b981' : '#9CA3AF',
                   }}>{item.isAvailable !== false ? 'Live' : 'Off'}</div>
                 </div>
+                <Pressable onClick={() => handleDelete(item)} style={{
+                  marginLeft: 4, padding: 6, color: '#EF4444', flexShrink: 0,
+                }} aria-label="Delete item">
+                  <Icons.Trash size={16} stroke="#EF4444" sw={2}/>
+                </Pressable>
               </div>
             ))}
           </div>
         </div>
       ))}
+
+      <AnimatePresence>
+        {editing && (
+          <MenuItemEditor
+            item={editing === 'new' ? null : editing}
+            saving={saving}
+            onCancel={() => setEditing(null)}
+            onSave={handleSave}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function MenuItemEditor({ item, saving, onCancel, onSave }) {
+  const [form, setForm] = useState({
+    name: item?.name || '',
+    price: item?.price ?? '',
+    category: item?.category || 'main-course',
+    description: item?.description || '',
+    image: item?.image || '',
+    isAvailable: item?.isAvailable !== false,
+    dietaryTags: (item?.dietaryTags && item.dietaryTags[0]) || 'halal',
+    spiceLevel: item?.spiceLevel || 'mild',
+  });
+  const set = (k) => (v) => setForm(f => ({ ...f, [k]: v }));
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (!form.name.trim()) return toast.error('Name is required');
+    if (!form.price || Number(form.price) <= 0) return toast.error('Price must be greater than 0');
+    onSave(form);
+  };
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onCancel}
+        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 60 }}
+      />
+      <motion.form
+        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+        onSubmit={submit}
+        style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 70,
+          background: '#fff', borderRadius: '22px 22px 0 0',
+          padding: '12px 16px 24px', maxHeight: '90vh', overflowY: 'auto',
+          boxShadow: '0 -10px 36px rgba(0,0,0,0.18)',
+          maxWidth: 430, margin: '0 auto',
+        }}
+      >
+        <div style={{ width: 40, height: 4, borderRadius: 999, background: '#E5E5E5', margin: '0 auto 14px' }}/>
+        <div style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>
+          {item ? 'Edit item' : 'New menu item'}
+        </div>
+
+        <Field label="Name" value={form.name} onChange={set('name')} placeholder="e.g. Chicken Karahi"/>
+        <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+          <Field label="Price (Rs.)" value={form.price} onChange={set('price')} type="number" style={{ flex: 1 }}/>
+          <SelectField label="Category" value={form.category} onChange={set('category')} options={[
+            { value: 'main-course', label: 'Main Course' },
+            { value: 'appetizer',   label: 'Starter' },
+            { value: 'dessert',     label: 'Dessert' },
+            { value: 'beverage',    label: 'Drink' },
+          ]} style={{ flex: 1 }}/>
+        </div>
+        <Field label="Description" value={form.description} onChange={set('description')} placeholder="Short tagline customers see" textarea/>
+        <Field label="Image URL (optional)" value={form.image} onChange={set('image')} placeholder="https://..."/>
+        <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+          <SelectField label="Diet" value={form.dietaryTags} onChange={set('dietaryTags')} options={[
+            { value: 'halal',       label: 'Halal' },
+            { value: 'vegetarian',  label: 'Vegetarian' },
+            { value: 'vegan',       label: 'Vegan' },
+            { value: 'gluten-free', label: 'Gluten-free' },
+          ]} style={{ flex: 1 }}/>
+          <SelectField label="Spice" value={form.spiceLevel} onChange={set('spiceLevel')} options={[
+            { value: 'mild',   label: 'Mild' },
+            { value: 'medium', label: 'Medium' },
+            { value: 'hot',    label: 'Hot' },
+          ]} style={{ flex: 1 }}/>
+        </div>
+        <Pressable onClick={() => set('isAvailable')(!form.isAvailable)} style={{
+          marginTop: 14, padding: '12px 14px', borderRadius: 12,
+          background: form.isAvailable ? 'rgba(16,185,129,0.06)' : '#F8F8F8',
+          border: `1.5px solid ${form.isAvailable ? '#10b981' : '#E5E5E5'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          width: '100%', textAlign: 'left',
+        }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>
+              {form.isAvailable ? 'Available now' : 'Sold out'}
+            </div>
+            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>
+              Customers {form.isAvailable ? 'can' : 'cannot'} order this item.
+            </div>
+          </div>
+          <div style={{
+            width: 44, height: 24, borderRadius: 999,
+            background: form.isAvailable ? '#10b981' : '#D1D5DB',
+            position: 'relative', transition: 'background .2s',
+          }}>
+            <div style={{
+              position: 'absolute', top: 2, left: form.isAvailable ? 22 : 2,
+              width: 20, height: 20, borderRadius: 999, background: '#fff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.18)', transition: 'left .2s',
+            }}/>
+          </div>
+        </Pressable>
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
+          <Pressable onClick={onCancel} style={{
+            flex: 1, height: 50, borderRadius: 14, background: '#F5F5F5',
+            color: '#111', fontSize: 14, fontWeight: 700,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>Cancel</Pressable>
+          <button type="submit" disabled={saving} style={{
+            flex: 2, height: 50, borderRadius: 14, border: 0, cursor: 'pointer',
+            background: saving ? '#ccc' : 'var(--qb-primary)', color: '#fff',
+            fontSize: 14, fontWeight: 800,
+            boxShadow: '0 6px 18px rgba(229,57,53,0.3)',
+          }}>{saving ? 'Saving…' : (item ? 'Save changes' : 'Add to menu')}</button>
+        </div>
+      </motion.form>
+    </>
+  );
+}
+
+function Field({ label, value, onChange, type='text', placeholder, textarea, style }) {
+  return (
+    <div style={{ marginTop: 12, ...style }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+      {textarea ? (
+        <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={2}
+          style={{ width: '100%', border: '1px solid #E5E5E5', borderRadius: 12, padding: '10px 12px', fontSize: 14, fontFamily: 'inherit', outline: 0, resize: 'vertical' }}/>
+      ) : (
+        <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+          style={{ width: '100%', border: '1px solid #E5E5E5', borderRadius: 12, padding: '12px', fontSize: 14, outline: 0, fontFamily: 'inherit' }}/>
+      )}
+    </div>
+  );
+}
+
+function SelectField({ label, value, onChange, options, style }) {
+  return (
+    <div style={{ marginTop: 12, ...style }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+      <select value={value} onChange={e => onChange(e.target.value)}
+        style={{ width: '100%', border: '1px solid #E5E5E5', borderRadius: 12, padding: '12px', fontSize: 14, background: '#fff', outline: 0, fontFamily: 'inherit' }}>
+        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
     </div>
   );
 }
