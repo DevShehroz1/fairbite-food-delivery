@@ -4,6 +4,44 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from './context/AuthContext';
 import { QBLogoMark } from './components/ui';
 
+class AppErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { err: null, info: null }; }
+  static getDerivedStateFromError(err) { return { err }; }
+  componentDidCatch(err, info) {
+    this.setState({ err, info });
+    // eslint-disable-next-line no-console
+    console.error('QuickBite render error:', err, info);
+  }
+  render() {
+    if (!this.state.err) return this.props.children;
+    return (
+      <div style={{
+        minHeight: '100vh', padding: 24, background: '#fff',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        display: 'flex', flexDirection: 'column', gap: 16,
+        maxWidth: 640, margin: '0 auto',
+      }}>
+        <div style={{ fontSize: 28, fontWeight: 800, color: '#E53935' }}>Something broke</div>
+        <div style={{ fontSize: 14, color: '#374151' }}>
+          The page hit a runtime error. Share this with whoever's debugging:
+        </div>
+        <pre style={{
+          fontSize: 12, color: '#111', background: '#FFF1F0', padding: 14,
+          borderRadius: 12, border: '1px solid #FECACA', overflow: 'auto',
+          whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+        }}>
+          {String(this.state.err?.stack || this.state.err)}
+          {this.state.info?.componentStack || ''}
+        </pre>
+        <button onClick={() => window.location.reload()} style={{
+          alignSelf: 'flex-start', padding: '10px 18px', borderRadius: 12,
+          border: 0, background: '#E53935', color: '#fff', fontWeight: 700, cursor: 'pointer',
+        }}>Reload</button>
+      </div>
+    );
+  }
+}
+
 // Auth pages stay eager — first paint goes through Landing or Login.
 import LandingPage from './pages/auth/LandingPage';
 import LoginPage from './pages/auth/LoginPage';
@@ -76,6 +114,7 @@ const App = () => {
   if (loading) return <SuspenseFallback/>;
 
   return (
+    <AppErrorBoundary>
     <Suspense fallback={<SuspenseFallback/>}>
       <AnimatePresence mode="wait" initial={false}>
         <Routes location={location} key={location.pathname}>
@@ -111,6 +150,7 @@ const App = () => {
         </Routes>
       </AnimatePresence>
     </Suspense>
+    </AppErrorBoundary>
   );
 };
 
