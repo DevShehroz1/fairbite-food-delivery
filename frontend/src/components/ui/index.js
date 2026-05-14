@@ -425,9 +425,35 @@ const cuisineFallback = (cuisines = []) => {
   return '🍽️';
 };
 
+const priceTier = (tier) => {
+  if (tier === 4) return '$$$$';
+  if (tier === 3) return '$$$';
+  if (tier === 2) return '$$';
+  return '$';
+};
+
+const formatReviewCount = (n) => {
+  if (!n) return '0';
+  if (n >= 1000) return `${Math.floor(n / 1000)}k+`;
+  if (n >= 500) return `${Math.floor(n / 100) * 100}+`;
+  return String(n);
+};
+
+const cuisineLabel = (cuisines = []) => {
+  const c = cuisines[0] || '';
+  if (/burger|pizza|fried|american|fast/i.test(c)) return 'Fast Food';
+  return c || 'Restaurant';
+};
+
 export function BigRestaurantCard({ r, onClick }) {
   const ribbon = r.status?.isFeatured ? 'Trending' : null;
   const img = r.images?.cover;
+  const time = r.delivery?.estimatedTime || 30;
+  const fee  = r.delivery?.fee || 50;
+  const tier = r.pricing?.tier || 2;
+  const discount = r.discount?.upTo || 0;
+  const saverFee = r.delivery?.saverFee || Math.max(0, fee - 30);
+
   return (
     <motion.div whileHover={{ y: -2, boxShadow: '0 12px 30px rgba(0,0,0,0.10)' }}
       whileTap={{ scale: 0.98 }} onClick={onClick}
@@ -437,39 +463,72 @@ export function BigRestaurantCard({ r, onClick }) {
         border: '1px solid #F0F0F0', cursor: 'pointer',
         boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
       }}>
-      <div style={{ position: 'relative', height: 152 }}>
+      {/* Cover image */}
+      <div style={{ position: 'relative', height: 168 }}>
         <SmartImg src={img} fallback={cuisineFallback(r.cuisine)} style={{ position: 'absolute', inset: 0 }}/>
         {ribbon && (
           <div style={{ position: 'absolute', top: 10, left: 10 }}>
             <Ribbon kind={ribbon}/>
           </div>
         )}
+        {/* Ad-style chip */}
         <div style={{
-          position: 'absolute', bottom: 10, right: 10,
-          padding: '4px 9px', borderRadius: 8,
-          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
-          color: '#fff', fontSize: 11, fontWeight: 700,
-          display: 'flex', alignItems: 'center', gap: 4,
-        }}><Icons.Clock size={11} sw={2.5}/>{r.delivery?.estimatedTime || 30} min</div>
+          position: 'absolute', top: 10, right: 10,
+          padding: '3px 8px', borderRadius: 6,
+          background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)',
+          color: '#fff', fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+        }}>Ad</div>
       </div>
+
+      {/* Info — name + ⭐ row */}
       <div style={{ padding: '12px 14px 14px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>{r.name}</div>
-          <Stars rating={r.rating?.average || 0} size={12}/>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, fontSize: 12, color: '#6b7280' }}>
-          <span>{(r.cuisine || []).join(' · ')}</span>
-          <span>•</span>
-          <span>{r.rating?.count || 0} reviews</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginTop: 10, paddingTop: 10, borderTop: '1px dashed #ECECEC' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6b7280' }}>
-            <Icons.Bike size={14} stroke="var(--qb-primary)" sw={2.5}/>
-            <span style={{ color: '#111', fontWeight: 600 }}>{PKR(r.delivery?.fee || 50)}</span>
-            <span>delivery</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: '#111', letterSpacing: -0.3,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+            {r.name}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+            <Icons.Star size={13} fill="#F5A524" stroke="#F5A524"/>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>
+              {(r.rating?.average || 0).toFixed(1)}
+            </span>
+            <span style={{ fontSize: 12, color: '#6b7280' }}>
+              ({formatReviewCount(r.rating?.count)})
+            </span>
           </div>
         </div>
+
+        {/* Meta — time · $$ · cuisine */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6,
+          fontSize: 13, color: '#6b7280', fontWeight: 500 }}>
+          <span>From {time} min</span>
+          <span style={{ color: '#D1D5DB' }}>·</span>
+          <span style={{ fontWeight: 700, color: '#374151' }}>{priceTier(tier)}</span>
+          <span style={{ color: '#D1D5DB' }}>·</span>
+          <span>{cuisineLabel(r.cuisine)}</span>
+        </div>
+
+        {/* Saver delivery row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6,
+          fontSize: 13, color: '#374151' }}>
+          <Icons.Bike size={14} stroke="#6b7280" sw={2}/>
+          <span>From <strong style={{ color: '#111', fontWeight: 700 }}>Rs.{saverFee}</strong> with Saver</span>
+        </div>
+
+        {/* Discount badge */}
+        {discount > 0 && (
+          <div style={{ marginTop: 8 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '4px 10px', borderRadius: 999,
+              background: 'rgba(229,57,53,0.1)', color: 'var(--qb-primary)',
+              fontSize: 11, fontWeight: 700,
+            }}>
+              <Icons.Tag size={11} stroke="var(--qb-primary)" sw={2.2}/>
+              Up to {discount}% off
+            </span>
+          </div>
+        )}
       </div>
     </motion.div>
   );
