@@ -13,13 +13,26 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-const ALLOWED_ORIGINS = [
+// CORS allowlist:
+//   - the explicit CLIENT_URL env var (when set)
+//   - any localhost dev origin
+//   - any QuickBite frontend Vercel alias (so eosin / hok-s / preview / git-master all work)
+const EXPLICIT_ORIGINS = [
   process.env.CLIENT_URL,
   'http://localhost:3000',
+  'http://localhost:3001',
 ].filter(Boolean);
+const ORIGIN_PATTERN = /^https:\/\/quickbite-frontend(-[a-z0-9-]+)?\.vercel\.app$/i;
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (EXPLICIT_ORIGINS.includes(origin)) return true;
+  if (ORIGIN_PATTERN.test(origin)) return true;
+  return false;
+};
 
 app.use(cors({
-  origin: (origin, cb) => cb(null, !origin || ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.some(o => o === '*')),
+  origin: (origin, cb) => cb(null, isAllowedOrigin(origin)),
   credentials: true,
 }));
 
