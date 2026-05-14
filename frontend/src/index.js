@@ -28,13 +28,18 @@ root.render(
           <AuthProvider>
             <App />
             <ToastContainer
-              position="bottom-center"
-              autoClose={3500}
-              hideProgressBar={false}
+              position="top-center"
+              autoClose={2200}
+              hideProgressBar
               newestOnTop
               closeOnClick
               pauseOnHover={false}
-              toastStyle={{ borderRadius: 16, fontWeight: 600 }}
+              limit={2}
+              theme="colored"
+              icon={false}
+              closeButton={false}
+              toastClassName="qb-toast"
+              bodyClassName="qb-toast-body"
             />
           </AuthProvider>
         </ThemeProvider>
