@@ -7,6 +7,56 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { Icons, Pressable, BrandButton, QBLogoMark } from '../../components/ui';
 
+const HAS_GOOGLE = Boolean(process.env.REACT_APP_GOOGLE_CLIENT_ID);
+
+// Google sign-in is extracted into its own component so the
+// `useGoogleLogin` hook (which initialises Google's SDK on mount)
+// never runs when REACT_APP_GOOGLE_CLIENT_ID is missing.
+function GoogleSignInBlock({ selectedRole, referralCode, onSuccess, selectedRoleLabel }) {
+  const [loading, setLoading] = useState(false);
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      try {
+        const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+        const profile = await profileRes.json();
+        const { data } = await api.post('/auth/google-token', {
+          email: profile.email,
+          name:  profile.name,
+          avatar: profile.picture,
+          googleId: profile.sub,
+          role: selectedRole,
+          referralCode: referralCode || undefined,
+        });
+        onSuccess(data);
+      } catch {
+        toast.error('Google sign-in failed. Try email login.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => toast.error('Google sign-in was cancelled'),
+  });
+  return (
+    <Pressable onClick={() => googleLogin()} disabled={loading} style={{
+      width: '100%', height: 52, borderRadius: 16,
+      background: '#fff', color: '#111',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+      fontSize: 15, fontWeight: 700,
+      boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+      opacity: loading ? 0.7 : 1,
+    }}>
+      {loading
+        ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}><Icons.Settings size={18} stroke="#666"/></motion.div>
+        : <Icons.Google size={20}/>
+      }
+      {loading ? 'Signing in…' : `Continue with Google as ${selectedRoleLabel}`}
+    </Pressable>
+  );
+}
+
 const ROLE_ROUTES = {
   customer:   '/home',
   rider:      '/dashboard/rider',
@@ -44,7 +94,6 @@ export default function LandingPage() {
   const [referralCode, setReferralCode] = useState(params.get('ref') || '');
   const [showPw, setShowPw]   = useState(false);
   const [loading, setLoading] = useState(false);
-  const [gLoading, setGLoading] = useState(false);
 
   useEffect(() => {
     const ref = params.get('ref');
@@ -73,32 +122,10 @@ export default function LandingPage() {
     }
   };
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setGLoading(true);
-      try {
-        const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        });
-        const profile = await profileRes.json();
-        const { data } = await api.post('/auth/google-token', {
-          email: profile.email,
-          name:  profile.name,
-          avatar: profile.picture,
-          googleId: profile.sub,
-          role: selectedRole,
-          referralCode: referralCode || undefined,
-        });
-        login(data.token, data.user);
-        navigate(ROLE_ROUTES[data.user.role] || '/home', { replace: true });
-      } catch {
-        toast.error('Google sign-in failed. Try email login.');
-      } finally {
-        setGLoading(false);
-      }
-    },
-    onError: () => toast.error('Google sign-in was cancelled'),
-  });
+  const handleGoogleSuccess = (data) => {
+    login(data.token, data.user);
+    navigate(ROLE_ROUTES[data.user.role] || '/home', { replace: true });
+  };
 
   const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } } };
   const item = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.2, 0, 0, 1] } } };
@@ -171,30 +198,26 @@ export default function LandingPage() {
           </div>
         </motion.div>
 
-        {/* Google button */}
-        <motion.div variants={item} style={{ marginBottom: 14 }}>
-          <Pressable onClick={() => googleLogin()} disabled={gLoading} style={{
-            width: '100%', height: 52, borderRadius: 16,
-            background: '#fff', color: '#111',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-            fontSize: 15, fontWeight: 700,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-            opacity: gLoading ? 0.7 : 1,
-          }}>
-            {gLoading
-              ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}><Icons.Settings size={18} stroke="#666"/></motion.div>
-              : <Icons.Google size={20}/>
-            }
-            {gLoading ? 'Signing in…' : `Continue with Google as ${ROLES.find(r => r.key === selectedRole)?.label}`}
-          </Pressable>
-        </motion.div>
+        {/* Google button — only when REACT_APP_GOOGLE_CLIENT_ID is set */}
+        {HAS_GOOGLE && (
+          <motion.div variants={item} style={{ marginBottom: 14 }}>
+            <GoogleSignInBlock
+              selectedRole={selectedRole}
+              referralCode={referralCode}
+              onSuccess={handleGoogleSuccess}
+              selectedRoleLabel={ROLES.find(r => r.key === selectedRole)?.label}
+            />
+          </motion.div>
+        )}
 
-        {/* divider */}
-        <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }}/>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>or sign in with email</span>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }}/>
-        </motion.div>
+        {/* divider — only when there's something above to divide from */}
+        {HAS_GOOGLE && (
+          <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }}/>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>or sign in with email</span>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }}/>
+          </motion.div>
+        )}
 
         {/* login / register tab */}
         <motion.div variants={item} style={{
