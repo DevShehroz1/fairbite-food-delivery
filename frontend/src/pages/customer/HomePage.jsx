@@ -35,15 +35,17 @@ function BrandLogo({ brand }) {
 }
 
 const FOOD_CATEGORIES = [
+  // Featured first — these have hand-curated illustrations in /public/cuisines.
+  { id: 'pizza',      label: 'Pizza',       img: '/cuisines/pizza.png' },
+  { id: 'chinese',    label: 'Chinese',     img: '/cuisines/chinese.png' },
+  { id: 'halwa-puri', label: 'Halwa Puri',  img: '/cuisines/halwa-puri.png' },
+  { id: 'paratha',    label: 'Paratha',     img: '/cuisines/paratha.png' },
+  { id: 'ice-cream',  label: 'Ice Cream',   img: '/cuisines/ice-cream.png' },
+  // Rest stay on Unsplash for now.
   { id: 'fast-food',  label: 'Fast Food',   img: 'https://images.unsplash.com/photo-1562967916-eb82221dfb92?w=300&auto=format&fit=crop' },
   { id: 'biryani',    label: 'Biryani',     img: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop' },
-  { id: 'pizza',      label: 'Pizza',       img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=300&auto=format&fit=crop' },
   { id: 'pakistani',  label: 'Pakistani',   img: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=300&auto=format&fit=crop' },
   { id: 'burgers',    label: 'Burgers',     img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&auto=format&fit=crop' },
-  { id: 'ice-cream',  label: 'Ice Cream',   img: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=300&auto=format&fit=crop' },
-  { id: 'paratha',    label: 'Paratha',     img: 'https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=300&auto=format&fit=crop' },
-  { id: 'halwa-puri', label: 'Halwa Puri',  img: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=300&auto=format&fit=crop' },
-  { id: 'chinese',    label: 'Chinese',     img: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300&auto=format&fit=crop' },
   { id: 'desserts',   label: 'Desserts',    img: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300&auto=format&fit=crop' },
   { id: 'pasta',      label: 'Pasta',       img: 'https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=300&auto=format&fit=crop' },
   { id: 'pulao',      label: 'Pulao',       img: 'https://images.unsplash.com/photo-1604908554007-1ec5d4f1f8b3?w=300&auto=format&fit=crop' },
@@ -52,14 +54,14 @@ const FOOD_CATEGORIES = [
 ];
 
 const TOP_BRANDS = [
-  { id: 'kfc',        name: 'KFC',            sub: 'From 25 min', logo: 'https://logo.clearbit.com/kfc.com',         isLogo: true  },
-  { id: 'burgerking', name: 'Burger King',    sub: 'From 30 min', logo: 'https://logo.clearbit.com/burgerking.com',  isLogo: true  },
-  { id: 'mcdonalds',  name: "McDonald's",     sub: 'From 20 min', logo: 'https://logo.clearbit.com/mcdonalds.com',   isLogo: true  },
-  { id: 'dominos',    name: "Domino's",       sub: 'From 40 min', logo: 'https://logo.clearbit.com/dominos.com',     isLogo: true  },
-  { id: 'pizzahut',   name: 'Pizza Hut',      sub: 'From 35 min', logo: 'https://logo.clearbit.com/pizzahut.com',    isLogo: true  },
-  { id: 'subway',     name: 'Subway',         sub: 'From 20 min', logo: 'https://logo.clearbit.com/subway.com',      isLogo: true  },
-  { id: 'cheezious',  name: 'Cheezious',      sub: 'From 20 min', logo: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=300&auto=format&fit=crop', isLogo: false },
-  { id: 'burgerlab',  name: 'Burger Lab',     sub: 'From 15 min', logo: 'https://images.unsplash.com/photo-1550317138-10000687a72b?w=300&auto=format&fit=crop',    isLogo: false },
+  { id: 'pizzahut',    name: 'Pizza Hut',          sub: 'From 35 min', logo: '/brands/pizzahut.jpg',     isLogo: true },
+  { id: 'layers',      name: 'Layers',             sub: 'From 30 min', logo: '/brands/layers.jpg',       isLogo: true },
+  { id: 'dominos',     name: "Domino's",           sub: 'From 40 min', logo: '/brands/dominos.jpg',      isLogo: true },
+  { id: 'burgerlab',   name: 'Burger Lab',         sub: 'From 25 min', logo: '/brands/burgerlab.jpg',    isLogo: true },
+  { id: 'simplysufi',  name: 'Simply Sufi',        sub: 'From 20 min', logo: '/brands/simplysufi.webp',  isLogo: true },
+  { id: '14thstreet',  name: '14th Street Pizza',  sub: 'From 35 min', logo: '/brands/14thstreet.webp',  isLogo: true },
+  { id: 'kfc',         name: 'KFC',                sub: 'From 25 min', logo: 'https://logo.clearbit.com/kfc.com',       isLogo: true },
+  { id: 'mcdonalds',   name: "McDonald's",         sub: 'From 20 min', logo: 'https://logo.clearbit.com/mcdonalds.com', isLogo: true },
 ];
 
 const DEAL_BANNERS = [
