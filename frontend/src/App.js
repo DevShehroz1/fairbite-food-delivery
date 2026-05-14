@@ -4,12 +4,16 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from './context/AuthContext';
 import { QBLogoMark } from './components/ui';
 
+// Auth pages stay eager — first paint goes through Landing or Login.
+import LandingPage from './pages/auth/LandingPage';
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+
 class AppErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { err: null, info: null }; }
   static getDerivedStateFromError(err) { return { err }; }
   componentDidCatch(err, info) {
     this.setState({ err, info });
-    // eslint-disable-next-line no-console
     console.error('QuickBite render error:', err, info);
   }
   render() {
@@ -41,11 +45,6 @@ class AppErrorBoundary extends React.Component {
     );
   }
 }
-
-// Auth pages stay eager — first paint goes through Landing or Login.
-import LandingPage from './pages/auth/LandingPage';
-import LoginPage from './pages/auth/LoginPage';
-import RegisterPage from './pages/auth/RegisterPage';
 
 // Everything else loads on demand → smaller initial bundle.
 const HomePage             = lazy(() => import('./pages/customer/HomePage'));
