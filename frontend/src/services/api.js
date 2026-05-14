@@ -1,9 +1,16 @@
 import axios from 'axios';
 
-// Production (Vercel): use full Render backend URL from env var
-// Local / ngrok: use relative /api (proxied by React dev server → backend)
+// Production: read from env var if set, else fall back to the deployed backend.
+// Local dev: relative /api gets proxied to the local backend by react-scripts.
+const PROD_API = 'https://quickbite-backend-two.vercel.app/api';
+const isLocal = typeof window !== 'undefined'
+  && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+const baseURL = process.env.REACT_APP_API_URL
+  || (isLocal ? '/api' : PROD_API);
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || '/api',
+  baseURL,
   headers: { 'Content-Type': 'application/json' },
 });
 
