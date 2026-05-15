@@ -452,7 +452,7 @@ export function BigRestaurantCard({ r, onClick }) {
   const time = r.delivery?.estimatedTime || 30;
   const fee  = r.delivery?.fee || 50;
   const tier = r.pricing?.tier || 2;
-  const discount = r.discount?.upTo || 0;
+  const discount = r.pricing?.discount?.upTo || r.discount?.upTo || 0;
   const saverFee = r.delivery?.saverFee || Math.max(0, fee - 30);
 
   return (
