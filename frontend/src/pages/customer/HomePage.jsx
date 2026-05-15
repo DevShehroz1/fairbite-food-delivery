@@ -41,6 +41,7 @@ const FOOD_CATEGORIES = [
   { id: 'halwa-puri', label: 'Halwa Puri',  img: '/cuisines/halwa-puri.png' },
   { id: 'paratha',    label: 'Paratha',     img: '/cuisines/paratha.png' },
   { id: 'ice-cream',  label: 'Ice Cream',   img: '/cuisines/ice-cream.png' },
+  { id: 'shawarma',   label: 'Shawarma',    img: '/brands/pita/dish1.jpg' },
   // Rest stay on Unsplash for now.
   { id: 'fast-food',  label: 'Fast Food',   img: 'https://images.unsplash.com/photo-1562967916-eb82221dfb92?w=300&auto=format&fit=crop' },
   { id: 'biryani',    label: 'Biryani',     img: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop' },
