@@ -168,23 +168,24 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
     // ─── 4. Layers — burger chain (no owner) ──────────────────────────────
     {
       owner_id: null,
-      name: 'Layers',
-      description: 'Premium smashed burgers · brioche buns · house-aged beef · loaded fries.',
-      cuisine: ['Burgers','Fast Food'],
-      address: baseAddr('Phase 5 DHA, Sector C'),
+      name: 'Layers Bakeshop',
+      description: 'Pakistan\'s favourite cake & bakery brand · brownies · cheesecakes · custom cakes baked fresh daily.',
+      cuisine: ['Bakery','Desserts','Cakes'],
+      address: baseAddr('F-10 Markaz'),
       contact: { phone:'042111003003', email:'hello@layers.pk' },
-      images:  { cover: PIC.cover_layers, logo: LOCAL('/brands/layers.jpg') },
-      rating:  { average:4.6, count:4180 },
-      delivery:{ fee:89, saverFee:39, estimatedTime:25, isAvailable:true },
+      images:  { cover: PIC.cover_layers, logo: 'https://ui-avatars.com/api/?name=LB&background=8B5CF6&color=fff&size=200&bold=true' },
+      rating:  { average:4.7, count:5180 },
+      delivery:{ fee:89, saverFee:39, estimatedTime:30, isAvailable:true },
       pricing: { commissionRate:15, minimumOrder:500, tier:3, discount:{ upTo:15 } },
       status:  { isActive:true, isVerified:true, isFeatured:true },
       menu: [
-        { id:'ly1', _id:'ly1', name:'Cheese Burger',         price:680,  category:'main-course', description:'Smashed beef patty · American cheese · pickles', dietaryTags:['halal'], spiceLevel:'mild',   calories:740, isAvailable:true, image:LOCAL('/brands/layers/dish1.jpg'), addOns:[ADDON.cheese] },
-        { id:'ly2', _id:'ly2', name:'Smokey Beef Burger',    price:780,  category:'main-course', description:'Smoked beef · cheddar · BBQ sauce',              dietaryTags:['halal'], spiceLevel:'medium', calories:820, isAvailable:true, image:LOCAL('/brands/layers/dish2.jpg') },
-        { id:'ly3', _id:'ly3', name:'Crispy Chicken Burger', price:640,  category:'main-course', description:'Crispy thigh · slaw · spicy mayo',               dietaryTags:['halal'], spiceLevel:'hot',    calories:780, isAvailable:true, image:PIC.crispyChicken },
-        { id:'ly4', _id:'ly4', name:'Cheese Sticks',  price:380,  category:'appetizer',   description:'Crispy outside · stretchy mozzarella inside',    dietaryTags:['vegetarian'], spiceLevel:'mild', calories:520, isAvailable:true, image:PIC.cheeseSticks },
-        { id:'ly5', _id:'ly5', name:'Loaded Fries',          price:380,  category:'appetizer',   description:'Cheese sauce · jalapeños · crispy onions',       dietaryTags:['vegetarian'], spiceLevel:'medium', calories:560, isAvailable:true, image:PIC.loadedFries },
-        { id:'ly6', _id:'ly6', name:'Chocolate Shake',       price:340,  category:'beverage',    description:'Thick chocolate milkshake',                      dietaryTags:['vegetarian'], spiceLevel:'mild', calories:480, isAvailable:true, image:PIC.chocoShake, addOns:[ADDON.largeDrink] },
+        { id:'ly1', _id:'ly1', name:'Triple Chocolate Brownie', price:380, category:'dessert', description:'Fudgy brownie · 3 layers of chocolate · chocolate chips on top.',         dietaryTags:['vegetarian'], spiceLevel:'mild', calories:520, isAvailable:true, image:LOCAL('/brands/layers/dish1.jpg') },
+        { id:'ly2', _id:'ly2', name:'Red Velvet Cake Slice',    price:420, category:'dessert', description:'Classic red velvet · cream cheese frosting · single generous slice.',       dietaryTags:['vegetarian'], spiceLevel:'mild', calories:480, isAvailable:true, image:LOCAL('/brands/layers/dish2.jpg') },
+        { id:'ly3', _id:'ly3', name:'New York Cheesecake',      price:480, category:'dessert', description:'Creamy baked cheesecake · graham cracker base · berry compote.',           dietaryTags:['vegetarian'], spiceLevel:'mild', calories:540, isAvailable:true, image:'' },
+        { id:'ly4', _id:'ly4', name:'Cookies (Half Dozen)',     price:540, category:'dessert', description:'6 chunky cookies · chocolate chip · double choc · oatmeal raisin.',        dietaryTags:['vegetarian'], spiceLevel:'mild', calories:680, isAvailable:true, image:'' },
+        { id:'ly5', _id:'ly5', name:'Mini Donut Box (6)',       price:480, category:'dessert', description:'Six glazed mini donuts · chocolate · vanilla · strawberry assortment.',    dietaryTags:['vegetarian'], spiceLevel:'mild', calories:620, isAvailable:true, image:'' },
+        { id:'ly6', _id:'ly6', name:'Cinnamon Roll',            price:280, category:'dessert', description:'Warm soft cinnamon roll · cream cheese drizzle.',                          dietaryTags:['vegetarian'], spiceLevel:'mild', calories:380, isAvailable:true, image:'' },
+        { id:'ly7', _id:'ly7', name:'Cappuccino',               price:340, category:'beverage', description:'Espresso · steamed milk · velvet foam.',                                   dietaryTags:['vegetarian'], spiceLevel:'mild', calories:120, isAvailable:true, image:'' },
       ],
     },
 
@@ -397,6 +398,18 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
     const { data, error } = await supabase.from('restaurants').insert(ownedDef).select('id,name').single();
     if (error) console.error(`Insert ${ownedDef.name}:`, error.message);
     else console.log(`Created: ${data.name} (${data.id})`);
+  }
+
+  // ── one-off brand renames so upsert-by-name finds the right row ─
+  const renames = [
+    { from: 'Layers', to: 'Layers Bakeshop' },
+  ];
+  for (const r of renames) {
+    const { data: hit } = await supabase.from('restaurants').select('id').eq('name', r.from).maybeSingle();
+    if (hit) {
+      await supabase.from('restaurants').update({ name: r.to }).eq('id', hit.id);
+      console.log(`Renamed: ${r.from} → ${r.to} (${hit.id})`);
+    }
   }
 
   // ── brand chains: upsert by name ──────────────────────────────────
