@@ -4,10 +4,14 @@ import { persist } from 'zustand/middleware';
 // Size variants are universal: small (-50), medium (base), large (+150).
 export const SIZE_DELTAS = { small: -50, medium: 0, large: 150 };
 
-const lineKey = (menuItemId, addOns, size) => {
-  const ids = (addOns || []).map(a => a.id).sort().join(',');
-  const suffix = ids ? `|${ids}` : '';
-  return size && size !== 'medium' ? `${menuItemId}|${size}${suffix}` : `${menuItemId}${suffix}`;
+const lineKey = (menuItemId, addOns, size, flavors) => {
+  const ids   = (addOns || []).map(a => a.id).sort().join(',');
+  const flav  = (flavors || []).slice().sort().join(',');
+  const parts = [String(menuItemId)];
+  if (size && size !== 'medium') parts.push(size);
+  if (flav) parts.push(flav);
+  if (ids)  parts.push(ids);
+  return parts.join('|');
 };
 
 const linePrice = (item) => {
@@ -27,6 +31,7 @@ const useCartStore = create(
         const { items, restaurantId: currentRestaurant } = get();
         const selectedAddOns = opts.selectedAddOns || [];
         const selectedSize = opts.selectedSize || 'medium';
+        const selectedFlavors = opts.selectedFlavors || [];
 
         // Clear cart if switching restaurants
         if (currentRestaurant && currentRestaurant !== restaurantId) {
@@ -35,7 +40,7 @@ const useCartStore = create(
         }
 
         const baseId = menuItem._id || menuItem.id;
-        const lineId = lineKey(baseId, selectedAddOns, selectedSize);
+        const lineId = lineKey(baseId, selectedAddOns, selectedSize, selectedFlavors);
         const existing = items.find(i => i.lineId === lineId);
 
         if (existing) {
@@ -51,6 +56,7 @@ const useCartStore = create(
             lineId,
             selectedAddOns,
             selectedSize,
+            selectedFlavors,
             quantity: 1,
             restaurantId,
           };
@@ -81,7 +87,7 @@ const useCartStore = create(
 const useCart = () => {
   const store = useCartStore();
   // Backfill lineId on legacy persisted carts so existing keys keep working.
-  const items = store.items.map(i => i.lineId ? i : { ...i, lineId: lineKey(i._id, i.selectedAddOns, i.selectedSize) });
+  const items = store.items.map(i => i.lineId ? i : { ...i, lineId: lineKey(i._id, i.selectedAddOns, i.selectedSize, i.selectedFlavors) });
   return {
     items,
     restaurantId: store.restaurantId,

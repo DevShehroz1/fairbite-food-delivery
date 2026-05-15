@@ -209,6 +209,52 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'bl5', _id:'bl5', name:'Chocolate Shake',      price:280, category:'beverage',    description:'Cold thick chocolate shake',                 dietaryTags:['vegetarian'], spiceLevel:'mild', calories:420, isAvailable:true, image:PIC.chocoShake, addOns:[ADDON.largeDrink] },
       ],
     },
+
+    // ─── 6. Baskin Robbins — ice cream chain (no owner) ─────────────────
+    {
+      owner_id: null,
+      name: 'Baskin Robbins',
+      description: '31 flavors of premium ice cream · scoops, cups, and signature shakes since 1945.',
+      cuisine: ['Ice Cream','Desserts'],
+      address: baseAddr('Centaurus Mall, F-8'),
+      contact: { phone:'051111272746', email:'orders@baskinrobbins.pk' },
+      images:  { cover: LOCAL('/brands/baskin/cover.jpg'), logo: 'https://ui-avatars.com/api/?name=BR&background=E91E63&color=fff&size=200&bold=true' },
+      rating:  { average:4.7, count:5240 },
+      delivery:{ fee:99, saverFee:49, estimatedTime:30, isAvailable:true },
+      pricing: { commissionRate:15, minimumOrder:400, tier:3, discount:{ upTo:20 } },
+      status:  { isActive:true, isVerified:true, isFeatured:true },
+      menu: [
+        { id:'br1', _id:'br1', name:'Single Scoop Cup',  price:380,  category:'dessert', description:'One generous scoop in a signature cup. Pick any flavor.',          dietaryTags:['vegetarian'], spiceLevel:'mild', calories:240, isAvailable:true, image:LOCAL('/brands/baskin/three-single.jpg'),
+          flavors:['Vanilla','Chocolate','Strawberry','Mint Chocolate Chip','Cookies n Cream','Pistachio Almond','Rocky Road','Pralines n Cream','Mango Tango','Cotton Candy','Bubble Gum','Cherries Jubilee'] },
+        { id:'br2', _id:'br2', name:'Double Scoop Cup',  price:680,  category:'dessert', description:'Two scoops · same or different flavors · in our cup.',             dietaryTags:['vegetarian'], spiceLevel:'mild', calories:480, isAvailable:true, image:LOCAL('/brands/baskin/double.jpg'),
+          flavors:['Vanilla','Chocolate','Strawberry','Mint Chocolate Chip','Cookies n Cream','Pistachio Almond','Rocky Road','Pralines n Cream','Mango Tango','Cotton Candy','Bubble Gum','Cherries Jubilee'] },
+        { id:'br3', _id:'br3', name:'Triple Scoop Cup',  price:980,  category:'dessert', description:'Three rich scoops in our signature pink-and-blue cup.',            dietaryTags:['vegetarian'], spiceLevel:'mild', calories:720, isAvailable:true, image:LOCAL('/brands/baskin/triple.jpg'),
+          flavors:['Vanilla','Chocolate','Strawberry','Mint Chocolate Chip','Cookies n Cream','Pistachio Almond','Rocky Road','Pralines n Cream','Mango Tango','Cotton Candy','Bubble Gum','Cherries Jubilee'] },
+        { id:'br4', _id:'br4', name:'Family Pack — 2 Cups', price:1280, category:'dessert', description:'Two single-scoop cups for sharing · pick two flavors.',         dietaryTags:['vegetarian'], spiceLevel:'mild', calories:480, isAvailable:true, image:LOCAL('/brands/baskin/two-single.jpg'),
+          flavors:['Vanilla','Chocolate','Strawberry','Mint Chocolate Chip','Cookies n Cream','Pistachio Almond','Rocky Road','Pralines n Cream','Mango Tango','Cotton Candy','Bubble Gum','Cherries Jubilee'] },
+      ],
+    },
+
+    // ─── 7. Churn Station — ice cream chain (no owner) ─────────────────
+    {
+      owner_id: null,
+      name: 'Churn Station',
+      description: 'Hand-churned premium ice cream · Belgian chocolate · Lotus cheesecake · made fresh in Islamabad.',
+      cuisine: ['Ice Cream','Desserts'],
+      address: baseAddr('F-10 Markaz'),
+      contact: { phone:'051111200200', email:'orders@churnstation.pk' },
+      images:  { cover: LOCAL('/brands/churn/cover.jpg'), logo: 'https://ui-avatars.com/api/?name=CS&background=1E40AF&color=fff&size=200&bold=true' },
+      rating:  { average:4.6, count:2120 },
+      delivery:{ fee:89, saverFee:39, estimatedTime:35, isAvailable:true },
+      pricing: { commissionRate:15, minimumOrder:300, tier:2, discount:{ upTo:15 } },
+      status:  { isActive:true, isVerified:true, isFeatured:true },
+      menu: [
+        { id:'cs1', _id:'cs1', name:'Belgian Chocolate Ice Cream',     price:130, category:'dessert', description:'Crafted with the finest cocoa, real Belgian chocolate. Each scoop offers a deep, velvety chocolate experience.',                            dietaryTags:['vegetarian'], spiceLevel:'mild', calories:260, isAvailable:true, image:LOCAL('/brands/churn/belgian.jpg') },
+        { id:'cs2', _id:'cs2', name:'Lotus Cheesecake Ice Cream',      price:130, category:'dessert', description:'A dreamy blend of velvety cheesecake infused with the rich and caramelized notes of Lotus Biscoff.',                                          dietaryTags:['vegetarian'], spiceLevel:'mild', calories:280, isAvailable:true, image:LOCAL('/brands/churn/lotus.jpg') },
+        { id:'cs3', _id:'cs3', name:'Dairy Delight Ice Cream',         price:130, category:'dessert', description:'Rich chocolate ice cream expertly blended with creamy, melt-in-your-mouth chocolate flakes.',                                                  dietaryTags:['vegetarian'], spiceLevel:'mild', calories:270, isAvailable:true, image:LOCAL('/brands/churn/dairy.jpg') },
+        { id:'cs4', _id:'cs4', name:'Cookies & Cream Ice Cream',       price:130, category:'dessert', description:'Delightful blend of rich vanilla ice cream swirled with chunks of crunchy chocolate cookies.',                                                 dietaryTags:['vegetarian'], spiceLevel:'mild', calories:250, isAvailable:true, image:LOCAL('/brands/churn/cookies.jpg') },
+      ],
+    },
   ];
 
   // For the owner's restaurant: prefer to UPDATE the existing one so

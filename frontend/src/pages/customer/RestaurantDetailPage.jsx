@@ -80,6 +80,7 @@ export default function RestaurantDetailPage() {
   const [addOnItem, setAddOnItem]   = useState(null);
   const [pickedAddOns, setPickedAddOns] = useState([]);
   const [pickedSize, setPickedSize] = useState('medium');
+  const [pickedFlavors, setPickedFlavors] = useState([]);
 
   useEffect(() => {
     api.get(`/restaurants/${id}`)
@@ -119,15 +120,31 @@ export default function RestaurantDetailPage() {
     setAddOnItem(menuItem);
     setPickedAddOns([]);
     setPickedSize('medium');
+    setPickedFlavors([]);
+  };
+
+  // Number of flavor scoops the dish expects (Single/Double/Triple/2 Cups).
+  const flavorSlots = (item) => {
+    if (!item) return 0;
+    const n = item.name || '';
+    if (/triple/i.test(n))               return 3;
+    if (/double|2\s*cups?/i.test(n))     return 2;
+    if (/single|one\s*scoop/i.test(n))   return 1;
+    return (item.flavors || []).length > 0 ? 1 : 0;
   };
 
   const confirmAddOns = () => {
     if (!addOnItem) return;
+    const slots = flavorSlots(addOnItem);
+    if (slots > 0 && pickedFlavors.length === 0) {
+      toast.error(`Pick at least 1 flavor`);
+      return;
+    }
     addItem(
       { ...addOnItem, _id: addOnItem.id || addOnItem._id },
       id,
       restaurant.name,
-      { selectedAddOns: pickedAddOns, selectedSize: pickedSize },
+      { selectedAddOns: pickedAddOns, selectedSize: pickedSize, selectedFlavors: pickedFlavors },
     );
     const sizeNote = pickedSize !== 'medium' ? ` (${pickedSize})` : '';
     const extras = pickedAddOns.length ? ` + ${pickedAddOns.length} extra` : '';
@@ -135,6 +152,19 @@ export default function RestaurantDetailPage() {
     setAddOnItem(null);
     setPickedAddOns([]);
     setPickedSize('medium');
+    setPickedFlavors([]);
+  };
+
+  const toggleFlavor = (flav) => {
+    const slots = flavorSlots(addOnItem);
+    setPickedFlavors(prev => {
+      if (prev.includes(flav)) return prev.filter(f => f !== flav);
+      if (prev.length >= slots) {
+        toast.info(`This pack holds ${slots} ${slots === 1 ? 'flavor' : 'flavors'} — swap one out first.`);
+        return prev;
+      }
+      return [...prev, flav];
+    });
   };
 
   const toggleAddOn = (a) => {
@@ -395,6 +425,34 @@ export default function RestaurantDetailPage() {
                   );
                 })}
               </div>
+
+              {(addOnItem.flavors || []).length > 0 && (() => {
+                const slots = flavorSlots(addOnItem);
+                return (
+                  <>
+                    <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: 0.5 }}>Pick {slots} {slots === 1 ? 'flavor' : 'flavors'}</div>
+                      <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>{pickedFlavors.length} / {slots} selected</div>
+                    </div>
+                    <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {(addOnItem.flavors || []).map(flav => {
+                        const active = pickedFlavors.includes(flav);
+                        return (
+                          <Pressable key={flav} onClick={() => toggleFlavor(flav)} style={{
+                            padding: '8px 12px', borderRadius: 999,
+                            border: `1.5px solid ${active ? 'var(--qb-primary)' : '#E5E5E5'}`,
+                            background: active ? 'rgba(229,57,53,0.08)' : '#fff',
+                            fontSize: 12, fontWeight: active ? 800 : 600,
+                            color: active ? 'var(--qb-primary)' : '#374151',
+                          }}>
+                            {flav}
+                          </Pressable>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()}
 
               {(addOnItem.addOns || []).length > 0 && (
                 <div style={{ marginTop: 16, fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: 0.5 }}>Add-ons</div>
