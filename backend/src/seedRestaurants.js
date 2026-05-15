@@ -165,11 +165,11 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
       ],
     },
 
-    // ─── 4. Layers — burger chain (no owner) ──────────────────────────────
+    // ─── 4. Layers Bakeshop — premium cake brand (no owner) ───────────────
     {
       owner_id: null,
       name: 'Layers Bakeshop',
-      description: 'Pakistan\'s favourite cake & bakery brand · brownies · cheesecakes · custom cakes baked fresh daily.',
+      description: 'Pakistan\'s favourite premium cake brand · 2.5 lb celebration cakes baked fresh.',
       cuisine: ['Bakery','Desserts','Cakes'],
       address: baseAddr('F-10 Markaz'),
       contact: { phone:'042111003003', email:'hello@layers.pk' },
@@ -179,13 +179,12 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
       pricing: { commissionRate:15, minimumOrder:500, tier:3, discount:{ upTo:15 } },
       status:  { isActive:true, isVerified:true, isFeatured:true },
       menu: [
-        { id:'ly1', _id:'ly1', name:'Triple Chocolate Brownie', price:380, category:'dessert', description:'Fudgy brownie · 3 layers of chocolate · chocolate chips on top.',         dietaryTags:['vegetarian'], spiceLevel:'mild', calories:520, isAvailable:true, image:LOCAL('/brands/layers/dish1.jpg') },
-        { id:'ly2', _id:'ly2', name:'Red Velvet Cake Slice',    price:420, category:'dessert', description:'Classic red velvet · cream cheese frosting · single generous slice.',       dietaryTags:['vegetarian'], spiceLevel:'mild', calories:480, isAvailable:true, image:LOCAL('/brands/layers/dish2.jpg') },
-        { id:'ly3', _id:'ly3', name:'New York Cheesecake',      price:480, category:'dessert', description:'Creamy baked cheesecake · graham cracker base · berry compote.',           dietaryTags:['vegetarian'], spiceLevel:'mild', calories:540, isAvailable:true, image:'' },
-        { id:'ly4', _id:'ly4', name:'Cookies (Half Dozen)',     price:540, category:'dessert', description:'6 chunky cookies · chocolate chip · double choc · oatmeal raisin.',        dietaryTags:['vegetarian'], spiceLevel:'mild', calories:680, isAvailable:true, image:'' },
-        { id:'ly5', _id:'ly5', name:'Mini Donut Box (6)',       price:480, category:'dessert', description:'Six glazed mini donuts · chocolate · vanilla · strawberry assortment.',    dietaryTags:['vegetarian'], spiceLevel:'mild', calories:620, isAvailable:true, image:'' },
-        { id:'ly6', _id:'ly6', name:'Cinnamon Roll',            price:280, category:'dessert', description:'Warm soft cinnamon roll · cream cheese drizzle.',                          dietaryTags:['vegetarian'], spiceLevel:'mild', calories:380, isAvailable:true, image:'' },
-        { id:'ly7', _id:'ly7', name:'Cappuccino',               price:340, category:'beverage', description:'Espresso · steamed milk · velvet foam.',                                   dietaryTags:['vegetarian'], spiceLevel:'mild', calories:120, isAvailable:true, image:'' },
+        { id:'ly1', _id:'ly1', name:'Chocolate Heaven Cake',    price:2300, category:'dessert', description:'Light chocolate icing & double layer of soft chocolate sponge. 2.5 lbs.',                                                          dietaryTags:['vegetarian'], spiceLevel:'mild', calories:1800, isAvailable:true, image:LOCAL('/brands/layers/dish1.jpg') },
+        { id:'ly2', _id:'ly2', name:'Dairy Milk Cake',          price:2500, category:'dessert', description:'Nothing but light dairy milk chocolate till the last bite. 2.5 lbs.',                                                              dietaryTags:['vegetarian'], spiceLevel:'mild', calories:1900, isAvailable:true, image:LOCAL('/brands/layers/dish2.jpg') },
+        { id:'ly3', _id:'ly3', name:'Honey Cake',               price:2700, category:'dessert', description:'7 layers of soft caramelised honey cake sandwiched between burnt-honey & dulce de leche whipped cream. 2.5 lbs.',                  dietaryTags:['vegetarian'], spiceLevel:'mild', calories:2000, isAvailable:true, image:LOCAL('/brands/layers/dish3.jpg') },
+        { id:'ly4', _id:'ly4', name:'Chocolate Dreamcake',      price:3100, category:'dessert', description:'A luscious chocolate mousse cake made with lots of love and heavenly chocolate.',                                                  dietaryTags:['vegetarian'], spiceLevel:'mild', calories:2100, isAvailable:true, image:LOCAL('/brands/layers/dish4.jpg') },
+        { id:'ly5', _id:'ly5', name:'Hersheys Chocolate Cake',  price:2000, category:'dessert', description:'Chocolate sponge with creamy fudge icing, layered with thin silky imported chocolate.',                                            dietaryTags:['vegetarian'], spiceLevel:'mild', calories:1750, isAvailable:true, image:LOCAL('/brands/layers/dish5.jpg') },
+        { id:'ly6', _id:'ly6', name:'Salted Caramel Cake',      price:2600, category:'dessert', description:'Salted caramel, creamy cheese & moist vanilla sponge. 2.5 lbs.',                                                                   dietaryTags:['vegetarian'], spiceLevel:'mild', calories:1850, isAvailable:true, image:LOCAL('/brands/layers/dish6.jpg') },
       ],
     },
 
