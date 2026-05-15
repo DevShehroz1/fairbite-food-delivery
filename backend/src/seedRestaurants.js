@@ -95,8 +95,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
       images:  { cover: PIC.cover_karahi, logo: 'https://ui-avatars.com/api/?name=FK&background=E53935&color=fff&size=200&bold=true' },
       rating:  { average:4.7, count:3850 },
       delivery:{ fee:79, saverFee:39, estimatedTime:25, isAvailable:true },
-      pricing: { commissionRate:15, minimumOrder:300, tier:2 },
-      discount:{ upTo:15 },
+      pricing: { commissionRate:15, minimumOrder:300, tier:2, discount:{ upTo:15 } },
       status:  { isActive:true, isVerified:true, isFeatured:true },
       menu: [
         { id:'fk1', _id:'fk1', name:'Chicken Karahi (Half)', price:950,  category:'main-course', description:'Slow-cooked with tomatoes, ginger, green chillies', dietaryTags:['halal'], spiceLevel:'hot',    calories:520, isAvailable:true, image:PIC.chickenKarahi },
@@ -125,8 +124,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
       images:  { cover: PIC.cover_kfc, logo: 'https://ui-avatars.com/api/?name=KFC&background=B91C1C&color=fff&size=200&bold=true' },
       rating:  { average:4.5, count:8240 },
       delivery:{ fee:99, saverFee:49, estimatedTime:30, isAvailable:true },
-      pricing: { commissionRate:15, minimumOrder:400, tier:2 },
-      discount:{ upTo:20 },
+      pricing: { commissionRate:15, minimumOrder:400, tier:2, discount:{ upTo:20 } },
       status:  { isActive:true, isVerified:true, isFeatured:true },
       menu: [
         { id:'kfc1', _id:'kfc1', name:'Zinger Burger',           price:520, category:'main-course', description:'Marinated crispy chicken fillet · zinger sauce',  dietaryTags:['halal'], spiceLevel:'hot',    calories:680, isAvailable:true, image:PIC.zingerBurger, addOns:[ADDON.cheese] },
@@ -153,8 +151,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
       images:  { cover: PIC.cover_pizza, logo: 'https://ui-avatars.com/api/?name=Cheezious&background=FFC107&color=000&size=200&bold=true' },
       rating:  { average:4.6, count:6320 },
       delivery:{ fee:99, saverFee:49, estimatedTime:35, isAvailable:true },
-      pricing: { commissionRate:15, minimumOrder:500, tier:3 },
-      discount:{ upTo:30 },
+      pricing: { commissionRate:15, minimumOrder:500, tier:3, discount:{ upTo:30 } },
       status:  { isActive:true, isVerified:true, isFeatured:true },
       menu: [
         { id:'ch1', _id:'ch1', name:'Margherita Pizza (Medium)',   price:990,  category:'main-course', description:'Tomato · mozzarella · basil',                dietaryTags:['vegetarian'], spiceLevel:'mild', calories:760, isAvailable:true, image:PIC.margherita,      addOns:[ADDON.cheese] },
@@ -178,8 +175,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
       images:  { cover: PIC.cover_layers, logo: LOCAL('/brands/layers.jpg') },
       rating:  { average:4.6, count:4180 },
       delivery:{ fee:89, saverFee:39, estimatedTime:25, isAvailable:true },
-      pricing: { commissionRate:15, minimumOrder:500, tier:3 },
-      discount:{ upTo:15 },
+      pricing: { commissionRate:15, minimumOrder:500, tier:3, discount:{ upTo:15 } },
       status:  { isActive:true, isVerified:true, isFeatured:true },
       menu: [
         { id:'ly1', _id:'ly1', name:'Cheese Burger',         price:680,  category:'main-course', description:'Smashed beef patty · American cheese · pickles', dietaryTags:['halal'], spiceLevel:'mild',   calories:740, isAvailable:true, image:PIC.cheeseBurger, addOns:[ADDON.cheese] },
@@ -202,8 +198,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
       images:  { cover: PIC.cover_burger, logo: LOCAL('/brands/burgerlab.jpg') },
       rating:  { average:4.5, count:2950 },
       delivery:{ fee:79, saverFee:39, estimatedTime:22, isAvailable:true },
-      pricing: { commissionRate:15, minimumOrder:400, tier:2 },
-      discount:{ upTo:25 },
+      pricing: { commissionRate:15, minimumOrder:400, tier:2, discount:{ upTo:25 } },
       status:  { isActive:true, isVerified:true, isFeatured:true },
       menu: [
         { id:'bl1', _id:'bl1', name:'Lab Burger',           price:580, category:'main-course', description:'Signature beef patty · lab sauce · cheese',  dietaryTags:['halal'], spiceLevel:'mild',   calories:760, isAvailable:true, image:PIC.labBurger, addOns:[ADDON.cheese] },
