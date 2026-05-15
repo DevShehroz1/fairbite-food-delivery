@@ -182,10 +182,15 @@ export default function CartPage() {
       {/* ── Cart items ───────────────────────────────────────── */}
       <div style={{ borderTop: '1px solid #F5F5F5', padding: '10px 16px' }}>
         {items.map(it => {
-          const lineOriginal    = it.price * it.quantity;
-          const lineDiscounted  = Math.round(lineOriginal * 0.9);
+          const SIZE_DELTAS_LOCAL = { small: -50, medium: 0, large: 150 };
+          const sizeDelta = SIZE_DELTAS_LOCAL[it.selectedSize] || 0;
+          const addOnSum  = (it.selectedAddOns || []).reduce((s, a) => s + (a.price || 0), 0);
+          const unitPrice = Math.max(0, (it.price || 0) + sizeDelta + addOnSum);
+          const lineOriginal   = unitPrice * it.quantity;
+          const lineDiscounted = Math.round(lineOriginal * 0.9);
+          const sizeLabel = it.selectedSize && it.selectedSize !== 'medium' ? it.selectedSize.charAt(0).toUpperCase() + it.selectedSize.slice(1) : null;
           return (
-            <div key={it._id} style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: '1px solid #F5F5F5', alignItems: 'center' }}>
+            <div key={it.lineId || it._id} style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: '1px solid #F5F5F5', alignItems: 'center' }}>
               {/* Thumbnail */}
               <div style={{ width: 64, height: 64, borderRadius: 10, background: '#F5F5F5', flexShrink: 0, overflow: 'hidden' }}>
                 {it.image
@@ -196,16 +201,16 @@ export default function CartPage() {
               {/* Name + controls */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {it.name}
+                  {it.name}{sizeLabel && <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 600, marginLeft: 6 }}>· {sizeLabel}</span>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginTop: 8, border: '1.5px solid #E5E5E5', borderRadius: 20, width: 'fit-content', padding: '2px 4px' }}>
-                  <Pressable onClick={() => removeItem(it._id)} style={{ width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Pressable onClick={() => removeItem(it.lineId || it._id)} style={{ width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Icons.Trash size={14} stroke="#374151"/>
                   </Pressable>
                   <span style={{ fontSize: 15, fontWeight: 700, color: '#111', minWidth: 22, textAlign: 'center' }}>
                     {it.quantity}
                   </span>
-                  <Pressable onClick={() => updateQuantity(it._id, it.quantity + 1)} style={{ width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Pressable onClick={() => updateQuantity(it.lineId || it._id, it.quantity + 1)} style={{ width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Icons.Plus size={16} stroke="#374151" sw={2}/>
                   </Pressable>
                 </div>

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
-import useCart from '../../hooks/useCart';
+import useCart, { SIZE_DELTAS } from '../../hooks/useCart';
 import {
   Icons, PKR, Pressable, SmartImg, Stars, Stepper,
 } from '../../components/ui';
@@ -60,19 +60,6 @@ function MenuImage({ item, size }) {
   );
 }
 
-function copyCode(e, code) {
-  if (e && e.stopPropagation) e.stopPropagation();
-  if (!code) return;
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(code).then(
-      () => toast.success(`Code "${code}" copied!`, { autoClose: 1500 }),
-      () => toast.error('Could not copy — long-press to select')
-    );
-  } else {
-    toast.info(`Copy code: ${code}`);
-  }
-}
-
 const DEMO_REVIEWS = [
   { id: 1, text: 'Amazing food! The karahi was perfectly spiced and naan was fresh out of the tandoor.', rating: 5, author: 'Usman K.', ago: '2 days ago' },
   { id: 2, text: 'Good portions and fast delivery. The biryani was fragrant and well-seasoned. Will order again!', rating: 4, author: 'Ayesha R.', ago: '1 week ago' },
@@ -92,6 +79,7 @@ export default function RestaurantDetailPage() {
   const [menuSearch, setMenuSearch] = useState('');
   const [addOnItem, setAddOnItem]   = useState(null);
   const [pickedAddOns, setPickedAddOns] = useState([]);
+  const [pickedSize, setPickedSize] = useState('medium');
 
   useEffect(() => {
     api.get(`/restaurants/${id}`)
@@ -122,17 +110,15 @@ export default function RestaurantDetailPage() {
     return ci ? ci.quantity : 0;
   };
 
+  // Always open the customize sheet so the user picks a size — and add-ons
+  // when the dish has them.
   const handleAdd = (menuItem) => {
     if (restaurantId && restaurantId !== id) {
       if (!window.confirm('Your cart has items from another restaurant. Clear it?')) return;
     }
-    if (menuItem.addOns && menuItem.addOns.length > 0) {
-      setAddOnItem(menuItem);
-      setPickedAddOns([]);
-      return;
-    }
-    addItem({ ...menuItem, _id: menuItem.id || menuItem._id }, id, restaurant.name);
-    toast.success(`${menuItem.name} added!`, { autoClose: 1200 });
+    setAddOnItem(menuItem);
+    setPickedAddOns([]);
+    setPickedSize('medium');
   };
 
   const confirmAddOns = () => {
@@ -141,12 +127,14 @@ export default function RestaurantDetailPage() {
       { ...addOnItem, _id: addOnItem.id || addOnItem._id },
       id,
       restaurant.name,
-      { selectedAddOns: pickedAddOns },
+      { selectedAddOns: pickedAddOns, selectedSize: pickedSize },
     );
+    const sizeNote = pickedSize !== 'medium' ? ` (${pickedSize})` : '';
     const extras = pickedAddOns.length ? ` + ${pickedAddOns.length} extra` : '';
-    toast.success(`${addOnItem.name}${extras} added!`, { autoClose: 1500 });
+    toast.success(`${addOnItem.name}${sizeNote}${extras} added!`, { autoClose: 1500 });
     setAddOnItem(null);
     setPickedAddOns([]);
+    setPickedSize('medium');
   };
 
   const toggleAddOn = (a) => {
@@ -228,22 +216,13 @@ export default function RestaurantDetailPage() {
         </div>
       </div>
 
-      {/* Discount voucher cards - 2 side by side */}
-      <div style={{ display: 'flex', gap: 10, padding: '12px 16px 0' }}>
-        <div style={{ flex: 1, padding: '12px', borderRadius: 12, background: 'rgba(229,57,53,0.06)', border: '1px solid rgba(229,57,53,0.15)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', right: -12, top: -12, width: 56, height: 56, borderRadius: '50%', background: 'rgba(229,57,53,0.08)' }}/>
-          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--qb-primary)' }}>10% off</div>
-          <div style={{ fontSize: 10, color: '#374151', marginTop: 3, lineHeight: 1.5 }}>minimum Rs. 0. Valid for all items. Auto-applied.</div>
+      {/* Spend-and-save promo card */}
+      <div style={{ padding: '12px 16px 0' }}>
+        <div style={{ padding: '12px 14px', borderRadius: 12, background: 'rgba(229,57,53,0.06)', border: '1px solid rgba(229,57,53,0.15)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', right: -16, top: -16, width: 64, height: 64, borderRadius: '50%', background: 'rgba(229,57,53,0.08)' }}/>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--qb-primary)' }}>15% off on orders over Rs. 1,999</div>
+          <div style={{ fontSize: 11, color: '#374151', marginTop: 3, lineHeight: 1.5 }}>Auto-applied at checkout when your subtotal is Rs. 1,999 or more.</div>
         </div>
-        <Pressable onClick={(e) => copyCode(e, 'PEHLAORDER')} style={{ flex: 1, padding: '12px', borderRadius: 12, background: '#F9F9F9', border: '1px dashed #D1D5DB', position: 'relative', overflow: 'hidden', textAlign: 'left' }}>
-          <div style={{ position: 'absolute', right: -12, top: -12, width: 56, height: 56, borderRadius: '50%', background: 'rgba(0,0,0,0.04)' }}/>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>50% off:</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 800, color: '#111', letterSpacing: 0.3 }}>PEHLAORDER</span>
-            <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--qb-primary)', padding: '2px 6px', borderRadius: 6, background: 'rgba(229,57,53,0.1)', letterSpacing: 0.4 }}>COPY</span>
-          </div>
-          <div style={{ fontSize: 10, color: '#374151', marginTop: 3, lineHeight: 1.5 }}>Tap to copy · min Rs. 499 · first order only.</div>
-        </Pressable>
       </div>
 
       {/* Search menu input */}
@@ -390,9 +369,37 @@ export default function RestaurantDetailPage() {
             >
               <div style={{ width: 38, height: 4, borderRadius: 999, background: '#E5E5E5', margin: '0 auto 14px' }}/>
               <div style={{ fontSize: 17, fontWeight: 800, color: '#111' }}>{addOnItem.name}</div>
-              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Make it your own — pick add-ons.</div>
+              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Pick your size{(addOnItem.addOns || []).length > 0 ? ' and add-ons' : ''}.</div>
 
-              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {/* Size picker */}
+              <div style={{ marginTop: 14, fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: 0.5 }}>Size</div>
+              <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                {[
+                  { key: 'small',  label: 'Small'  },
+                  { key: 'medium', label: 'Medium' },
+                  { key: 'large',  label: 'Large'  },
+                ].map(s => {
+                  const active = pickedSize === s.key;
+                  const delta = SIZE_DELTAS[s.key] || 0;
+                  const deltaLabel = delta === 0 ? 'Regular' : (delta > 0 ? `+ ${PKR(delta)}` : `− ${PKR(-delta)}`);
+                  return (
+                    <Pressable key={s.key} onClick={() => setPickedSize(s.key)} style={{
+                      padding: '12px 8px', borderRadius: 12,
+                      border: `1.5px solid ${active ? 'var(--qb-primary)' : '#F0F0F0'}`,
+                      background: active ? 'rgba(229,57,53,0.05)' : '#fff',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: active ? 'var(--qb-primary)' : '#111' }}>{s.label}</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', marginTop: 2 }}>{deltaLabel}</div>
+                    </Pressable>
+                  );
+                })}
+              </div>
+
+              {(addOnItem.addOns || []).length > 0 && (
+                <div style={{ marginTop: 16, fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: 0.5 }}>Add-ons</div>
+              )}
+              <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {(addOnItem.addOns || []).map(a => {
                   const picked = !!pickedAddOns.find(x => x.id === a.id);
                   return (
@@ -429,7 +436,7 @@ export default function RestaurantDetailPage() {
                 fontSize: 15, fontWeight: 800,
                 boxShadow: '0 6px 18px rgba(229,57,53,0.3)',
               }}>
-                Add to cart · {PKR((addOnItem.price || 0) + pickedAddOns.reduce((s, a) => s + (a.price || 0), 0))}
+                Add to cart · {PKR(Math.max(0, (addOnItem.price || 0) + (SIZE_DELTAS[pickedSize] || 0) + pickedAddOns.reduce((s, a) => s + (a.price || 0), 0)))}
               </Pressable>
             </motion.div>
           </>
