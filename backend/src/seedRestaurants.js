@@ -255,6 +255,70 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'cs4', _id:'cs4', name:'Cookies & Cream Ice Cream',       price:130, category:'dessert', description:'Delightful blend of rich vanilla ice cream swirled with chunks of crunchy chocolate cookies.',                                                 dietaryTags:['vegetarian'], spiceLevel:'mild', calories:250, isAvailable:true, image:LOCAL('/brands/churn/cookies.jpg') },
       ],
     },
+
+    // ─── 8. Asian Wok — Chinese chain (no owner) ──────────────────────
+    {
+      owner_id: null,
+      name: 'Asian Wok',
+      description: 'Wok-fired Chinese classics · hand-pulled chow mein · Singapore rice · sticky sweet & sour.',
+      cuisine: ['Chinese','Asian'],
+      address: baseAddr('Beverly Centre, Blue Area'),
+      contact: { phone:'051111200300', email:'orders@asianwok.pk' },
+      images:  { cover: LOCAL('/brands/asianwok/cover.png'), logo: 'https://ui-avatars.com/api/?name=AW&background=DC2626&color=fff&size=200&bold=true' },
+      rating:  { average:4.5, count:1820 },
+      delivery:{ fee:99, saverFee:49, estimatedTime:35, isAvailable:true },
+      pricing: { commissionRate:15, minimumOrder:400, tier:2, discount:{ upTo:15 } },
+      status:  { isActive:true, isVerified:true, isFeatured:true },
+      menu: [
+        { id:'aw1', _id:'aw1', name:'Chicken Manchurian',       price:680, category:'main-course', description:'Crispy chicken bites tossed in tangy manchurian sauce.', dietaryTags:['halal'], spiceLevel:'medium', calories:580, isAvailable:true, image:'' },
+        { id:'aw2', _id:'aw2', name:'Singapore Rice',           price:620, category:'main-course', description:'Stir-fried rice with chicken, prawns and chilli garlic.', dietaryTags:['halal'], spiceLevel:'medium', calories:720, isAvailable:true, image:'' },
+        { id:'aw3', _id:'aw3', name:'Chicken Chow Mein',        price:580, category:'main-course', description:'Hakka noodles tossed with chicken and crunchy veg.',     dietaryTags:['halal'], spiceLevel:'mild',   calories:660, isAvailable:true, image:'' },
+        { id:'aw4', _id:'aw4', name:'Sweet and Sour Chicken',   price:660, category:'main-course', description:'Battered chicken in sweet & sour pineapple sauce.',     dietaryTags:['halal'], spiceLevel:'mild',   calories:680, isAvailable:true, image:'' },
+        { id:'aw5', _id:'aw5', name:'Spring Rolls (4pcs)',      price:280, category:'appetizer',   description:'Crispy veggie rolls with sweet chilli dip.',             dietaryTags:['vegetarian'], spiceLevel:'mild', calories:320, isAvailable:true, image:'' },
+      ],
+    },
+
+    // ─── 9. Punjab Milk Shop — Halwa Puri / desi nashta (no owner) ────
+    {
+      owner_id: null,
+      name: 'Punjab Milk Shop',
+      description: 'Traditional Lahori nashta · halwa puri · channay · fresh sweet lassi every morning.',
+      cuisine: ['Halwa Puri','Pakistani','Breakfast'],
+      address: baseAddr('Shadman Market'),
+      contact: { phone:'042111400400', email:'hello@punjabmilkshop.pk' },
+      images:  { cover: LOCAL('/brands/punjabmilk/cover.jpg'), logo: 'https://ui-avatars.com/api/?name=PM&background=F59E0B&color=000&size=200&bold=true' },
+      rating:  { average:4.6, count:2640 },
+      delivery:{ fee:69, saverFee:29, estimatedTime:25, isAvailable:true },
+      pricing: { commissionRate:15, minimumOrder:200, tier:1, discount:{ upTo:10 } },
+      status:  { isActive:true, isVerified:true, isFeatured:true },
+      menu: [
+        { id:'pm1', _id:'pm1', name:'Halwa Puri Plate',         price:320, category:'main-course', description:'Two puris · sooji halwa · channay · aloo bhujia.',     dietaryTags:['vegetarian'], spiceLevel:'mild', calories:780, isAvailable:true, image:'' },
+        { id:'pm2', _id:'pm2', name:'Channay (Bowl)',           price:180, category:'main-course', description:'Spicy chickpeas slow-cooked overnight.',               dietaryTags:['vegetarian'], spiceLevel:'medium', calories:340, isAvailable:true, image:'' },
+        { id:'pm3', _id:'pm3', name:'Aloo Bhujia',              price:160, category:'main-course', description:'Soft potato curry with cumin tadka.',                  dietaryTags:['vegetarian'], spiceLevel:'mild', calories:280, isAvailable:true, image:'' },
+        { id:'pm4', _id:'pm4', name:'Sweet Lassi (Glass)',      price:140, category:'beverage',    description:'Thick whipped lassi with rose syrup.',                 dietaryTags:['vegetarian'], spiceLevel:'mild', calories:220, isAvailable:true, image:'' },
+      ],
+    },
+
+    // ─── 10. Paratha House — paratha-focused breakfast (no owner) ─────
+    {
+      owner_id: null,
+      name: 'Paratha House',
+      description: 'Hand-rolled parathas straight from the tawa · aloo · cheese · anda · chai on the side.',
+      cuisine: ['Paratha','Pakistani','Breakfast'],
+      address: baseAddr('Main Boulevard, Gulberg'),
+      contact: { phone:'042111800800', email:'orders@parathahouse.pk' },
+      images:  { cover: LOCAL('/brands/parathahouse/cover.jpg'), logo: 'https://ui-avatars.com/api/?name=PH&background=92400E&color=fff&size=200&bold=true' },
+      rating:  { average:4.5, count:1980 },
+      delivery:{ fee:69, saverFee:29, estimatedTime:25, isAvailable:true },
+      pricing: { commissionRate:15, minimumOrder:200, tier:1, discount:{ upTo:15 } },
+      status:  { isActive:true, isVerified:true, isFeatured:true },
+      menu: [
+        { id:'ph1', _id:'ph1', name:'Aloo Paratha',          price:180, category:'main-course', description:'Stuffed with spiced potato · served with yogurt.',         dietaryTags:['vegetarian'], spiceLevel:'mild', calories:420, isAvailable:true, image:'' },
+        { id:'ph2', _id:'ph2', name:'Cheese Paratha',        price:240, category:'main-course', description:'Loaded with melty cheese · golden crisp on the outside.', dietaryTags:['vegetarian'], spiceLevel:'mild', calories:520, isAvailable:true, image:'' },
+        { id:'ph3', _id:'ph3', name:'Anda Paratha',          price:220, category:'main-course', description:'Whole egg sealed inside a buttery paratha.',              dietaryTags:['halal'], spiceLevel:'mild',     calories:480, isAvailable:true, image:'' },
+        { id:'ph4', _id:'ph4', name:'Doodh Patti Chai',      price:120, category:'beverage',    description:'Strong milk-tea brewed the dhaba way.',                   dietaryTags:['vegetarian'], spiceLevel:'mild', calories:180, isAvailable:true, image:'' },
+      ],
+    },
   ];
 
   // For the owner's restaurant: prefer to UPDATE the existing one so
@@ -263,17 +327,27 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
   const brandDefs = restaurants.filter(r => r.owner_id !== owner.id);
 
   // ── owned restaurant ──────────────────────────────────────────────
-  const { data: existingOwned } = await supabase.from('restaurants').select('id,name').eq('owner_id', owner.id);
+  // Pick the active row matching the target name first (so re-runs are
+  // stable and don't keep hopping between rows). Fall back to any active
+  // row, then to whatever row exists.
+  const { data: existingOwned } = await supabase.from('restaurants').select('id,name,status').eq('owner_id', owner.id).order('created_at', { ascending: true });
   if (existingOwned && existingOwned.length > 0) {
-    // Update the first one in place; mark any extras as inactive so they
-    // don't pollute findByOwner / the public list.
-    const [primary, ...extras] = existingOwned;
+    const isActive = (r) => r.status?.isActive !== false;
+    const primary  = existingOwned.find(r => r.name === ownedDef.name && isActive(r))
+                  || existingOwned.find(r => isActive(r))
+                  || existingOwned[0];
+    const extras   = existingOwned.filter(r => r.id !== primary.id);
     const { error } = await supabase.from('restaurants').update(ownedDef).eq('id', primary.id);
     if (error) console.error(`Update ${ownedDef.name}:`, error.message);
     else console.log(`Updated: ${ownedDef.name} (${primary.id}, was "${primary.name}")`);
     for (const ex of extras) {
-      await supabase.from('restaurants').update({ status: { isActive: false, isVerified: false, isFeatured: false } }).eq('id', ex.id);
-      console.log(`Deactivated extra: ${ex.name} (${ex.id})`);
+      // Detach from the owner so /restaurants/my returns only the primary,
+      // and deactivate so the public list ignores them too. Order history
+      // (orders.restaurant_id) keeps pointing here, so nothing breaks.
+      await supabase.from('restaurants')
+        .update({ owner_id: null, status: { isActive: false, isVerified: false, isFeatured: false } })
+        .eq('id', ex.id);
+      console.log(`Detached extra: ${ex.name} (${ex.id})`);
     }
   } else {
     const { data, error } = await supabase.from('restaurants').insert(ownedDef).select('id,name').single();
