@@ -203,6 +203,11 @@ export default function CartPage() {
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {it.name}{sizeLabel && <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 600, marginLeft: 6 }}>· {sizeLabel}</span>}
                 </div>
+                {(it.selectedFlavors || []).length > 0 && (
+                  <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {it.selectedFlavors.join(' · ')}
+                  </div>
+                )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginTop: 8, border: '1.5px solid #E5E5E5', borderRadius: 20, width: 'fit-content', padding: '2px 4px' }}>
                   <Pressable onClick={() => removeItem(it.lineId || it._id)} style={{ width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Icons.Trash size={14} stroke="#374151"/>
