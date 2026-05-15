@@ -34,6 +34,7 @@ export default function RestaurantDashboard() {
   const [tab, setTab] = useState(0);
   const [orders, setOrders] = useState([]);
   const [restaurant, setRestaurant] = useState(null);
+  const [restoLoading, setRestoLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [newOrderAlert, setNewOrderAlert] = useState(null);
   const prevOrderIdsRef = useRef(null);
@@ -58,15 +59,38 @@ export default function RestaurantDashboard() {
     } catch {}
   };
 
-  useEffect(() => {
+  const fetchMyRestaurant = () =>
     api.get('/restaurants/my')
       .then(r => setRestaurant(r.data.data))
-      .catch(() => {});
+      .catch(() => setRestaurant(null))
+      .finally(() => setRestoLoading(false));
 
+  useEffect(() => {
+    fetchMyRestaurant();
     fetchOrders().finally(() => setLoading(false));
     const poll = setInterval(fetchOrders, 4000);
     return () => clearInterval(poll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const createMyRestaurant = async (form) => {
+    try {
+      const r = await api.post('/restaurants', {
+        name: form.name.trim(),
+        description: form.description.trim() || 'Welcome to my restaurant!',
+        cuisine: form.cuisine.split(',').map(s => s.trim()).filter(Boolean),
+        address: { street: form.street.trim(), city: 'Lahore', state: 'Punjab', zipCode: '54000', coordinates: { lat: 31.5204, lng: 74.3587 } },
+        contact: { phone: user?.phone || '', email: user?.email || '' },
+        images: { cover: '', logo: '' },
+        pricing: { commissionRate: 15, minimumOrder: 200 },
+        delivery: { fee: 79, saverFee: 39, estimatedTime: 30, isAvailable: true },
+      });
+      setRestaurant(r.data.data);
+      toast.success('Restaurant created — start adding menu items!');
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Could not create restaurant');
+    }
+  };
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
@@ -204,7 +228,7 @@ export default function RestaurantDashboard() {
         <AnimatePresence mode="wait">
           {tab === 2 ? (
             <motion.div key="menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <MenuTab restaurant={restaurant} onChange={() => api.get('/restaurants/my').then(r => setRestaurant(r.data.data)).catch(() => {})} />
+              <MenuTab restaurant={restaurant} restoLoading={restoLoading} onCreate={createMyRestaurant} onChange={fetchMyRestaurant} />
             </motion.div>
           ) : (
             <motion.div key={`orders-${tab}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -368,17 +392,21 @@ function OrderCard({ order, onUpdateStatus }) {
   );
 }
 
-function MenuTab({ restaurant, onChange }) {
+function MenuTab({ restaurant, restoLoading, onCreate, onChange }) {
   const [editing, setEditing] = useState(null); // null | 'new' | item object
   const [saving, setSaving]   = useState(false);
 
-  if (!restaurant) {
+  if (restoLoading) {
     return (
       <div style={{ background: '#fff', borderRadius: 20, padding: 32, textAlign: 'center', border: '1px dashed #E5E5E5' }}>
         <div style={{ fontSize: 32, marginBottom: 8 }}>🍽️</div>
         <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Loading your restaurant…</div>
       </div>
     );
+  }
+
+  if (!restaurant) {
+    return <CreateRestaurantCard onCreate={onCreate} />;
   }
 
   const items = restaurant.menu || [];
@@ -646,6 +674,40 @@ function SelectField({ label, value, onChange, options, style }) {
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
+  );
+}
+
+function CreateRestaurantCard({ onCreate }) {
+  const [form, setForm] = useState({ name: '', description: '', cuisine: 'Pakistani, Desi', street: '' });
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    if (!form.name.trim()) { toast.error('Restaurant name is required'); return; }
+    setSaving(true);
+    await onCreate(form);
+    setSaving(false);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      style={{ background: '#fff', borderRadius: 20, padding: 24, border: '1px solid #F0F0F0' }}>
+      <div style={{ fontSize: 36, marginBottom: 8 }}>🍽️</div>
+      <div style={{ fontSize: 18, fontWeight: 800, color: '#111', marginBottom: 4 }}>Set up your restaurant</div>
+      <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 18 }}>
+        Your account isn't linked to a restaurant yet. Fill in the basics to get started — you can edit details later.
+      </div>
+
+      <Field label="Restaurant name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} placeholder="e.g. Spice Junction" />
+      <Field label="Short tagline" value={form.description} onChange={(v) => setForm({ ...form, description: v })} placeholder="What makes you special?" textarea />
+      <Field label="Cuisines (comma separated)" value={form.cuisine} onChange={(v) => setForm({ ...form, cuisine: v })} placeholder="e.g. BBQ, Biryani, Desi" />
+      <Field label="Street address" value={form.street} onChange={(v) => setForm({ ...form, street: v })} placeholder="e.g. M.M. Alam Road, Gulberg III" />
+
+      <Pressable onClick={submit} disabled={saving}
+        style={{ width: '100%', marginTop: 16, padding: '14px 20px', background: 'var(--qb-primary)', color: '#fff',
+                 border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
+        {saving ? 'Creating…' : 'Create my restaurant'}
+      </Pressable>
+    </motion.div>
   );
 }
 
