@@ -78,9 +78,10 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
   const owner = await User.findByEmail('restaurant@demo.com');
   if (!owner) { console.error('Run seedDemoUsers first'); process.exit(1); }
 
-  // Wipe everything we own / brands so re-runs are clean.
-  await supabase.from('restaurants').delete().is('owner_id', null);
-  await supabase.from('restaurants').delete().eq('owner_id', owner.id);
+  // We can't blindly delete restaurants — orders.restaurant_id has a FK
+  // with no ON DELETE, so rows with order history can't be removed.
+  // Instead we upsert by name: existing rows get updated in place, new
+  // ones get inserted. Order history is preserved.
 
   const restaurants = [
     // ─── 1. Famous Karahi House — owned by restaurant@demo.com ──────────────
@@ -210,10 +211,42 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
     },
   ];
 
-  for (const r of restaurants) {
-    const { data, error } = await supabase.from('restaurants').insert(r).select('id,name').single();
-    if (error) console.error(`Error: ${r.name}:`, error.message);
+  // For the owner's restaurant: prefer to UPDATE the existing one so
+  // findByOwner keeps returning a single row. For brand chains: upsert by name.
+  const ownedDef = restaurants.find(r => r.owner_id === owner.id);
+  const brandDefs = restaurants.filter(r => r.owner_id !== owner.id);
+
+  // ── owned restaurant ──────────────────────────────────────────────
+  const { data: existingOwned } = await supabase.from('restaurants').select('id,name').eq('owner_id', owner.id);
+  if (existingOwned && existingOwned.length > 0) {
+    // Update the first one in place; mark any extras as inactive so they
+    // don't pollute findByOwner / the public list.
+    const [primary, ...extras] = existingOwned;
+    const { error } = await supabase.from('restaurants').update(ownedDef).eq('id', primary.id);
+    if (error) console.error(`Update ${ownedDef.name}:`, error.message);
+    else console.log(`Updated: ${ownedDef.name} (${primary.id}, was "${primary.name}")`);
+    for (const ex of extras) {
+      await supabase.from('restaurants').update({ status: { isActive: false, isVerified: false, isFeatured: false } }).eq('id', ex.id);
+      console.log(`Deactivated extra: ${ex.name} (${ex.id})`);
+    }
+  } else {
+    const { data, error } = await supabase.from('restaurants').insert(ownedDef).select('id,name').single();
+    if (error) console.error(`Insert ${ownedDef.name}:`, error.message);
     else console.log(`Created: ${data.name} (${data.id})`);
+  }
+
+  // ── brand chains: upsert by name ──────────────────────────────────
+  for (const r of brandDefs) {
+    const { data: hit } = await supabase.from('restaurants').select('id').eq('name', r.name).maybeSingle();
+    if (hit) {
+      const { error } = await supabase.from('restaurants').update(r).eq('id', hit.id);
+      if (error) console.error(`Update ${r.name}:`, error.message);
+      else console.log(`Updated: ${r.name} (${hit.id})`);
+    } else {
+      const { data, error } = await supabase.from('restaurants').insert(r).select('id,name').single();
+      if (error) console.error(`Insert ${r.name}:`, error.message);
+      else console.log(`Created: ${data.name} (${data.id})`);
+    }
   }
 
   console.log('\nAll restaurants seeded! restaurant@demo.com owns "Famous Karahi House" and can manage its menu from the dashboard.');
