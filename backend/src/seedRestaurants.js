@@ -10,8 +10,8 @@ const PIC = {
   // Restaurant covers
   cover_kfc:        IMG('photo-1626082927389-6cd097cdc6ec', 1200),
   cover_pizza:      IMG('photo-1565299624946-b28f40a0ae38', 1200),
-  cover_layers:     IMG('photo-1568901346375-23c9450c58cd', 1200),
-  cover_burger:     IMG('photo-1571091655789-405eb7a3a3a8', 1200),
+  cover_layers:     LOCAL('/brands/layers/cover.jpg'),
+  cover_burger:     LOCAL('/brands/burgerlab/cover.jpg'),
   cover_karahi:     IMG('photo-1602030638412-bb8dcc0bc8b0', 1200),
 
   // KFC-style fried chicken
@@ -179,8 +179,8 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
       pricing: { commissionRate:15, minimumOrder:500, tier:3, discount:{ upTo:15 } },
       status:  { isActive:true, isVerified:true, isFeatured:true },
       menu: [
-        { id:'ly1', _id:'ly1', name:'Cheese Burger',         price:680,  category:'main-course', description:'Smashed beef patty · American cheese · pickles', dietaryTags:['halal'], spiceLevel:'mild',   calories:740, isAvailable:true, image:PIC.cheeseBurger, addOns:[ADDON.cheese] },
-        { id:'ly2', _id:'ly2', name:'Smokey Beef Burger',    price:780,  category:'main-course', description:'Smoked beef · cheddar · BBQ sauce',              dietaryTags:['halal'], spiceLevel:'medium', calories:820, isAvailable:true, image:PIC.smokeyBeef },
+        { id:'ly1', _id:'ly1', name:'Cheese Burger',         price:680,  category:'main-course', description:'Smashed beef patty · American cheese · pickles', dietaryTags:['halal'], spiceLevel:'mild',   calories:740, isAvailable:true, image:LOCAL('/brands/layers/dish1.jpg'), addOns:[ADDON.cheese] },
+        { id:'ly2', _id:'ly2', name:'Smokey Beef Burger',    price:780,  category:'main-course', description:'Smoked beef · cheddar · BBQ sauce',              dietaryTags:['halal'], spiceLevel:'medium', calories:820, isAvailable:true, image:LOCAL('/brands/layers/dish2.jpg') },
         { id:'ly3', _id:'ly3', name:'Crispy Chicken Burger', price:640,  category:'main-course', description:'Crispy thigh · slaw · spicy mayo',               dietaryTags:['halal'], spiceLevel:'hot',    calories:780, isAvailable:true, image:PIC.crispyChicken },
         { id:'ly4', _id:'ly4', name:'Cheese Sticks',  price:380,  category:'appetizer',   description:'Crispy outside · stretchy mozzarella inside',    dietaryTags:['vegetarian'], spiceLevel:'mild', calories:520, isAvailable:true, image:PIC.cheeseSticks },
         { id:'ly5', _id:'ly5', name:'Loaded Fries',          price:380,  category:'appetizer',   description:'Cheese sauce · jalapeños · crispy onions',       dietaryTags:['vegetarian'], spiceLevel:'medium', calories:560, isAvailable:true, image:PIC.loadedFries },
@@ -202,8 +202,8 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
       pricing: { commissionRate:15, minimumOrder:400, tier:2, discount:{ upTo:25 } },
       status:  { isActive:true, isVerified:true, isFeatured:true },
       menu: [
-        { id:'bl1', _id:'bl1', name:'Lab Burger',           price:580, category:'main-course', description:'Signature beef patty · lab sauce · cheese',  dietaryTags:['halal'], spiceLevel:'mild',   calories:760, isAvailable:true, image:PIC.labBurger, addOns:[ADDON.cheese] },
-        { id:'bl2', _id:'bl2', name:'Crispy Chicken Burger',price:520, category:'main-course', description:'Crispy thigh · slaw · ranch',                dietaryTags:['halal'], spiceLevel:'hot',    calories:680, isAvailable:true, image:PIC.crispyChicken },
+        { id:'bl1', _id:'bl1', name:'Lab Burger',           price:580, category:'main-course', description:'Signature beef patty · lab sauce · cheese',  dietaryTags:['halal'], spiceLevel:'mild',   calories:760, isAvailable:true, image:LOCAL('/brands/burgerlab/dish1.jpg'), addOns:[ADDON.cheese] },
+        { id:'bl2', _id:'bl2', name:'Crispy Chicken Burger',price:520, category:'main-course', description:'Crispy thigh · slaw · ranch',                dietaryTags:['halal'], spiceLevel:'hot',    calories:680, isAvailable:true, image:LOCAL('/brands/burgerlab/dish2.jpg') },
         { id:'bl3', _id:'bl3', name:'Vegetable Burger',     price:420, category:'main-course', description:'House-made veggie patty · mayo · lettuce',   dietaryTags:['vegetarian'], spiceLevel:'mild', calories:520, isAvailable:true, image:PIC.veggieBurger },
         { id:'bl4', _id:'bl4', name:'Cheesy Fries',         price:340, category:'appetizer',   description:'Crinkle fries · cheese sauce',               dietaryTags:['vegetarian'], spiceLevel:'mild', calories:540, isAvailable:true, image:PIC.cheesyFries },
         { id:'bl5', _id:'bl5', name:'Chocolate Shake',      price:280, category:'beverage',    description:'Cold thick chocolate shake',                 dietaryTags:['vegetarian'], spiceLevel:'mild', calories:420, isAvailable:true, image:PIC.chocoShake, addOns:[ADDON.largeDrink] },
@@ -317,6 +317,50 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'ph2', _id:'ph2', name:'Cheese Paratha',        price:240, category:'main-course', description:'Loaded with melty cheese · golden crisp on the outside.', dietaryTags:['vegetarian'], spiceLevel:'mild', calories:520, isAvailable:true, image:'' },
         { id:'ph3', _id:'ph3', name:'Anda Paratha',          price:220, category:'main-course', description:'Whole egg sealed inside a buttery paratha.',              dietaryTags:['halal'], spiceLevel:'mild',     calories:480, isAvailable:true, image:'' },
         { id:'ph4', _id:'ph4', name:'Doodh Patti Chai',      price:120, category:'beverage',    description:'Strong milk-tea brewed the dhaba way.',                   dietaryTags:['vegetarian'], spiceLevel:'mild', calories:180, isAvailable:true, image:'' },
+      ],
+    },
+
+    // ─── 11. Domino's Pizza — F-7 (no owner) ───────────────────────────
+    {
+      owner_id: null,
+      name: "Domino's Pizza",
+      description: 'World-famous hand-tossed pizza · 30-minute delivery promise · loaded toppings.',
+      cuisine: ['Pizza','Fast Food','Italian'],
+      address: baseAddr('F-7 Markaz'),
+      contact: { phone:'051111366611', email:'orders@dominos.pk' },
+      images:  { cover: LOCAL('/brands/dominos/cover.jpg'), logo: 'https://ui-avatars.com/api/?name=DP&background=006491&color=fff&size=200&bold=true' },
+      rating:  { average:4.5, count:7180 },
+      delivery:{ fee:99, saverFee:49, estimatedTime:30, isAvailable:true },
+      pricing: { commissionRate:15, minimumOrder:500, tier:3, discount:{ upTo:25 } },
+      status:  { isActive:true, isVerified:true, isFeatured:true },
+      menu: [
+        { id:'dp1', _id:'dp1', name:'Pepperoni Feast',           price:1290, category:'main-course', description:'Classic hand-tossed pizza · halal beef pepperoni · mozzarella.', dietaryTags:['halal'],       spiceLevel:'medium', calories:920, isAvailable:true, image:LOCAL('/brands/dominos/dish1.jpg'), addOns:[ADDON.cheese] },
+        { id:'dp2', _id:'dp2', name:'Chicken Tikka Pizza',       price:1390, category:'main-course', description:'Spiced tikka chicken · onions · capsicum · BBQ drizzle.',        dietaryTags:['halal'],       spiceLevel:'medium', calories:980, isAvailable:true, image:LOCAL('/brands/dominos/dish2.jpg'), addOns:[ADDON.cheese] },
+        { id:'dp3', _id:'dp3', name:'Margherita',                price:990,  category:'main-course', description:'Tomato sauce · 100% mozzarella · fresh basil.',                  dietaryTags:['vegetarian'], spiceLevel:'mild',   calories:780, isAvailable:true, image:'' },
+        { id:'dp4', _id:'dp4', name:'Stuffed Garlic Bread',      price:380,  category:'appetizer',   description:'Cheese-stuffed garlic bread · marinara dip on the side.',         dietaryTags:['vegetarian'], spiceLevel:'mild',   calories:420, isAvailable:true, image:'' },
+        { id:'dp5', _id:'dp5', name:'Choco Lava Cake',           price:340,  category:'dessert',     description:'Warm chocolate cake · molten core.',                              dietaryTags:['vegetarian'], spiceLevel:'mild',   calories:380, isAvailable:true, image:'' },
+      ],
+    },
+
+    // ─── 12. PITA - The Shawarma Revolution (no owner) ─────────────────
+    {
+      owner_id: null,
+      name: 'PITA - The Shawarma Revolution',
+      description: 'Authentic Arabian shawarma · house-made garlic toum · fresh khubz baked daily.',
+      cuisine: ['Shawarma','Arabian','Mediterranean'],
+      address: baseAddr('Blue Area, Jinnah Avenue'),
+      contact: { phone:'051111800800', email:'orders@pita.pk' },
+      images:  { cover: LOCAL('/brands/pita/cover.jpg'), logo: 'https://ui-avatars.com/api/?name=PT&background=059669&color=fff&size=200&bold=true' },
+      rating:  { average:4.6, count:3120 },
+      delivery:{ fee:79, saverFee:39, estimatedTime:25, isAvailable:true },
+      pricing: { commissionRate:15, minimumOrder:300, tier:2, discount:{ upTo:15 } },
+      status:  { isActive:true, isVerified:true, isFeatured:true },
+      menu: [
+        { id:'pt1', _id:'pt1', name:'Chicken Shawarma Wrap',  price:380, category:'main-course', description:'Spit-roasted chicken · garlic toum · pickles · in fresh khubz.',     dietaryTags:['halal'], spiceLevel:'medium', calories:520, isAvailable:true, image:LOCAL('/brands/pita/dish1.jpg') },
+        { id:'pt2', _id:'pt2', name:'Beef Shawarma Plate',    price:680, category:'main-course', description:'Beef shawarma · saffron rice · hummus · tabbouleh · pita.',          dietaryTags:['halal'], spiceLevel:'medium', calories:880, isAvailable:true, image:LOCAL('/brands/pita/dish2.jpg') },
+        { id:'pt3', _id:'pt3', name:'Falafel Wrap',           price:340, category:'main-course', description:'Crispy chickpea falafel · tahini · cucumber · tomato.',              dietaryTags:['vegetarian'], spiceLevel:'mild', calories:480, isAvailable:true, image:LOCAL('/brands/pita/dish3.jpg') },
+        { id:'pt4', _id:'pt4', name:'Hummus Plate',           price:380, category:'appetizer',   description:'Smooth hummus · olive oil · warm pita on the side.',                 dietaryTags:['vegetarian'], spiceLevel:'mild', calories:380, isAvailable:true, image:'' },
+        { id:'pt5', _id:'pt5', name:'Mixed Grill Platter',    price:1450, category:'main-course', description:'Chicken shawarma · beef shawarma · seekh kebab · garlic rice.',     dietaryTags:['halal'], spiceLevel:'medium', calories:1180, isAvailable:true, image:'' },
       ],
     },
   ];
