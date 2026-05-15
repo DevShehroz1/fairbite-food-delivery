@@ -35,8 +35,12 @@ exports.findById = async (id) => {
 };
 
 exports.findByOwner = async (ownerId) => {
-  const { data } = await supabase.from('restaurants').select('*').eq('owner_id', ownerId).limit(1).maybeSingle();
-  return fmt(data);
+  // An owner may have multiple historical rows (deactivated stragglers from
+  // prior seeds). Prefer an active one; fall back to whatever exists.
+  const { data: rows } = await supabase.from('restaurants').select('*').eq('owner_id', ownerId);
+  if (!rows || rows.length === 0) return null;
+  const active = rows.find(r => r.status?.isActive !== false);
+  return fmt(active || rows[0]);
 };
 
 exports.create = async (fields) => {

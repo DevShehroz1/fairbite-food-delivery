@@ -29,10 +29,16 @@ const NAME_EMOJI = [
   [/karahi|nihari|curry/i,'🍛'],
   [/kebab|seekh|tikka/i,  '🍢'],
   [/shake|lassi|smoothie/i,'🥤'],
-  [/cake|kheer|jamun|chocolate/i, '🍰'],
+  [/halwa|puri|jalebi|nashta|naashta/i, '🥞'],
+  [/cake|kheer|jamun|chocolate|sundae|scoop|ice ?cream/i, '🍰'],
   [/fries/i,              '🍟'],
   [/salad|bowl|quinoa|avocado/i, '🥗'],
-  [/bread|paratha|naan/i, '🫓'],
+  [/paratha|roti|naan/i, '🫓'],
+  [/bread/i,             '🥖'],
+  [/chow.?mein|noodle|hakka/i, '🍜'],
+  [/manchurian|sweet.?and.?sour|szechuan|fried rice/i, '🥡'],
+  [/spring.?roll|dumpling|momo/i, '🥟'],
+  [/tea|chai|coffee/i,    '🫖'],
   [/chicken/i,            '🍗'],
 ];
 
