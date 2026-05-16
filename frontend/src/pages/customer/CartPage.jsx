@@ -114,7 +114,7 @@ export default function CartPage() {
           <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6, maxWidth: 240 }}>
             Browse restaurants and add items — checkout is fast and fair.
           </div>
-          <Pressable onClick={() => navigate('/restaurants')} style={{ marginTop: 20, padding: '12px 28px', borderRadius: 16, background: 'var(--qb-primary)', color: '#fff', fontSize: 14, fontWeight: 700 }}>
+          <Pressable onClick={() => navigate('/restaurants')} style={{ marginTop: 20, padding: '12px 28px', borderRadius: 5, background: 'var(--qb-primary)', color: '#fff', fontSize: 14, fontWeight: 700 }}>
             Browse Restaurants
           </Pressable>
         </div>
@@ -152,13 +152,13 @@ export default function CartPage() {
       </div>
 
       {/* ── Delivery / Pick-up toggle ─────────────────────────── */}
-      <div style={{ margin: '8px 16px', display: 'flex', background: '#F5F5F5', borderRadius: 30, padding: 3, gap: 0 }}>
+      <div style={{ margin: '8px 16px', display: 'flex', background: '#F5F5F5', borderRadius: 5, padding: 3, gap: 0 }}>
         {[
           { id: 'delivery', label: '🏍️  Delivery' },
           { id: 'pickup',   label: '🚶  Pick-up' },
         ].map(opt => (
           <Pressable key={opt.id} onClick={() => setDeliveryMode(opt.id)} style={{
-            flex: 1, padding: '10px 0', borderRadius: 28,
+            flex: 1, padding: '10px 0', borderRadius: 5,
             background: deliveryMode === opt.id ? '#fff' : 'transparent',
             textAlign: 'center', fontSize: 14, fontWeight: 700,
             color: deliveryMode === opt.id ? '#111' : '#6b7280',
@@ -192,7 +192,7 @@ export default function CartPage() {
           return (
             <div key={it.lineId || it._id} style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: '1px solid #F5F5F5', alignItems: 'center' }}>
               {/* Thumbnail */}
-              <div style={{ width: 64, height: 64, borderRadius: 10, background: '#F5F5F5', flexShrink: 0, overflow: 'hidden' }}>
+              <div style={{ width: 64, height: 64, borderRadius: 5, background: '#F5F5F5', flexShrink: 0, overflow: 'hidden' }}>
                 {it.image
                   ? <img src={it.image} alt={it.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
                   : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🍛</div>
@@ -208,7 +208,7 @@ export default function CartPage() {
                     {it.selectedFlavors.join(' · ')}
                   </div>
                 )}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginTop: 8, border: '1.5px solid #E5E5E5', borderRadius: 20, width: 'fit-content', padding: '2px 4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginTop: 8, border: '1.5px solid #E5E5E5', borderRadius: 5, width: 'fit-content', padding: '2px 4px' }}>
                   <Pressable onClick={() => removeItem(it.lineId || it._id)} style={{ width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Icons.Trash size={14} stroke="#374151"/>
                   </Pressable>
@@ -250,7 +250,7 @@ export default function CartPage() {
           <div className="qb-no-scrollbar" style={{ display: 'flex', gap: 10, padding: '12px 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
             {suggestions.map(item => (
               <div key={item.id} style={{ width: 170, flexShrink: 0 }}>
-                <div style={{ height: 140, borderRadius: 12, background: '#F5F5F5', overflow: 'hidden', position: 'relative', marginBottom: 8 }}>
+                <div style={{ height: 140, borderRadius: 5, background: '#F5F5F5', overflow: 'hidden', position: 'relative', marginBottom: 8 }}>
                   {item.image && <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>}
                   <Pressable onClick={() => addItem && addItem({ ...item, _id: item.id }, restaurantId, restaurantName)} style={{ position: 'absolute', bottom: 8, right: 8, width: 30, height: 30, borderRadius: 999, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
                     <Icons.Plus size={14} stroke="#111" sw={2.5}/>
@@ -287,7 +287,7 @@ export default function CartPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 14, color: '#374151' }}>
             QuickBite Fee
-            <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 4, background: '#10b981', color: '#fff' }}>FREE</span>
+            <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 5, background: '#10b981', color: '#fff' }}>FREE</span>
           </span>
           <span style={{ fontSize: 14, fontWeight: 600, color: '#10b981' }}>Rs. 0</span>
         </div>
@@ -307,7 +307,7 @@ export default function CartPage() {
       {/* ── Apply voucher ─────────────────────────────────────── */}
       {appliedCoupon ? (
         <div style={{
-          margin: '12px 16px', padding: '12px 14px', borderRadius: 12,
+          margin: '12px 16px', padding: '12px 14px', borderRadius: 5,
           border: '1.5px dashed #10b981', background: 'rgba(16,185,129,0.06)',
           display: 'flex', alignItems: 'center', gap: 12,
         }}>
@@ -321,14 +321,14 @@ export default function CartPage() {
             </div>
           </div>
           <Pressable onClick={removeCoupon} style={{
-            padding: '6px 10px', borderRadius: 8,
+            padding: '6px 10px', borderRadius: 5,
             background: '#fff', border: '1px solid #F0F0F0',
             fontSize: 11, fontWeight: 700, color: '#EF4444',
           }}>Remove</Pressable>
         </div>
       ) : (
         <Pressable onClick={() => setCouponSheetOpen(true)} style={{
-          margin: '12px 16px', padding: '14px', borderRadius: 12,
+          margin: '12px 16px', padding: '14px', borderRadius: 5,
           border: '1px solid #F0F0F0', width: 'calc(100% - 32px)',
           display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
         }}>
@@ -339,7 +339,7 @@ export default function CartPage() {
       )}
 
       {/* ── Cutlery toggle ────────────────────────────────────── */}
-      <div style={{ margin: '0 16px 14px', padding: '14px', borderRadius: 12, border: '1px solid #F0F0F0' }}>
+      <div style={{ margin: '0 16px 14px', padding: '14px', borderRadius: 5, border: '1px solid #F0F0F0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 18 }}>🍴</span>
@@ -347,7 +347,7 @@ export default function CartPage() {
           </div>
           {/* Toggle */}
           <Pressable onClick={() => setCutlery(v => !v)} style={{
-            width: 48, height: 26, borderRadius: 13,
+            width: 48, height: 26, borderRadius: 5,
             background: cutlery ? 'var(--qb-primary)' : '#D1D5DB',
             position: 'relative', transition: 'background 0.2s',
           }}>
@@ -364,7 +364,7 @@ export default function CartPage() {
       </div>
 
       {/* ── Total summary ─────────────────────────────────────── */}
-      <div style={{ margin: '0 16px 16px', padding: '14px', borderRadius: 12, border: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ margin: '0 16px 16px', padding: '14px', borderRadius: 5, border: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 15, fontWeight: 800, color: '#111' }}>Total <span style={{ fontWeight: 400, fontSize: 12, color: '#6b7280' }}>(incl. fees and tax)</span></div>
           <Pressable onClick={() => toast.info(`Subtotal ${PKR(subtotal)} · Tax ${PKR(tax)}${discount > 0 ? ' · Discount −' + PKR(discount) : ''}`, { autoClose: 3500 })} style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginTop: 2, textDecoration: 'underline' }}>
@@ -395,7 +395,7 @@ export default function CartPage() {
               transition={{ type: 'spring', stiffness: 280, damping: 32 }}
               style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 70,
-                background: '#fff', borderRadius: '20px 20px 0 0',
+                background: '#fff', borderRadius: '5px 5px 0 0',
                 padding: '12px 16px 24px', maxHeight: '78vh', overflowY: 'auto',
                 boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
               }}
@@ -410,13 +410,13 @@ export default function CartPage() {
                   onChange={e => setCouponInput((e.target.value || '').toUpperCase())}
                   placeholder="Enter code (e.g. QUICKBITE50)"
                   style={{
-                    flex: 1, height: 46, borderRadius: 12,
+                    flex: 1, height: 46, borderRadius: 5,
                     border: '1px solid #E5E5E5', padding: '0 14px',
                     fontSize: 14, fontWeight: 600, outline: 0, color: '#111',
                   }}
                 />
                 <Pressable onClick={() => validateCoupon(couponInput)} disabled={!couponInput || validating} style={{
-                  padding: '0 18px', borderRadius: 12,
+                  padding: '0 18px', borderRadius: 5,
                   background: couponInput ? 'var(--qb-primary)' : '#F0F0F0',
                   color: couponInput ? '#fff' : '#9CA3AF',
                   fontSize: 13, fontWeight: 800, height: 46,
@@ -433,7 +433,7 @@ export default function CartPage() {
                     {availableCoupons.map(c => (
                       <Pressable key={c.id} onClick={() => validateCoupon(c.code)} style={{
                         display: 'flex', alignItems: 'center', gap: 12,
-                        padding: '12px 14px', borderRadius: 12,
+                        padding: '12px 14px', borderRadius: 5,
                         border: '1px solid #F0F0F0', textAlign: 'left', width: '100%',
                       }}>
                         <span style={{ fontSize: 20 }}>🎟️</span>
@@ -461,7 +461,7 @@ export default function CartPage() {
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px 28px', background: '#fff', borderTop: '1px solid #F0F0F0' }}>
         <motion.div whileTap={{ scale: 0.98 }}>
           <Pressable onClick={handlePlace} style={{
-            width: '100%', height: 52, borderRadius: 26,
+            width: '100%', height: 52, borderRadius: 5,
             background: placing ? '#ccc' : 'var(--qb-primary)',
             color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 16, fontWeight: 700,

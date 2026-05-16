@@ -32,12 +32,12 @@ const theme = createTheme({
     subtitle1: { fontWeight: 600 },
     button: { fontWeight: 700, letterSpacing: 0.3 },
   },
-  shape: { borderRadius: 12 },
+  shape: { borderRadius: 5 },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 5,
           textTransform: 'none',
           fontWeight: 700,
           padding: '10px 24px',
@@ -53,7 +53,7 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
+          borderRadius: 5,
           boxShadow: '0 2px 16px rgba(0,0,0,0.07)',
           border: '1px solid rgba(0,0,0,0.04)',
         },
@@ -61,19 +61,19 @@ const theme = createTheme({
     },
     MuiChip: {
       styleOverrides: {
-        root: { borderRadius: 8, fontWeight: 600 },
+        root: { borderRadius: 5, fontWeight: 600 },
       },
     },
     MuiTextField: {
       styleOverrides: {
         root: {
-          '& .MuiOutlinedInput-root': { borderRadius: 12 },
+          '& .MuiOutlinedInput-root': { borderRadius: 5 },
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
-        root: { borderRadius: 16 },
+        root: { borderRadius: 5 },
       },
     },
     MuiAppBar: {

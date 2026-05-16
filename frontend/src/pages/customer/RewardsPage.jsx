@@ -54,7 +54,7 @@ export default function RewardsPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Pressable onClick={() => navigate('/profile')} style={{
-            width: 38, height: 38, borderRadius: 12, background: 'rgba(255,255,255,0.2)',
+            width: 38, height: 38, borderRadius: 5, background: 'rgba(255,255,255,0.2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}><Icons.ChevronL size={20} stroke="#fff" sw={2.5}/></Pressable>
           <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.3 }}>My Rewards</div>
@@ -111,7 +111,7 @@ function CouponCard({ coupon, isPublic, dim, onCopy }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
       style={{
-        background: '#fff', borderRadius: 16, marginTop: 10,
+        background: '#fff', borderRadius: 5, marginTop: 10,
         border: '1px solid #F0F0F0',
         boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
         display: 'flex', overflow: 'hidden',
@@ -145,7 +145,7 @@ function CouponCard({ coupon, isPublic, dim, onCopy }) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
           <div style={{
-            flex: 1, padding: '6px 10px', borderRadius: 8,
+            flex: 1, padding: '6px 10px', borderRadius: 5,
             background: '#F5F5F5', fontSize: 12, fontWeight: 800, color: '#111',
             letterSpacing: 0.7, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
@@ -153,13 +153,13 @@ function CouponCard({ coupon, isPublic, dim, onCopy }) {
           </div>
           {onCopy && (
             <Pressable onClick={onCopy} style={{
-              padding: '7px 12px', borderRadius: 8,
+              padding: '7px 12px', borderRadius: 5,
               background: meta.tint, color: '#fff',
               fontSize: 11, fontWeight: 800, letterSpacing: 0.5,
             }}>COPY</Pressable>
           )}
           {dim && (
-            <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 8px', borderRadius: 6, background: '#F5F5F5', color: '#9CA3AF', letterSpacing: 0.4 }}>USED</span>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 8px', borderRadius: 5, background: '#F5F5F5', color: '#9CA3AF', letterSpacing: 0.4 }}>USED</span>
           )}
         </div>
       </div>
@@ -184,7 +184,7 @@ function Skel() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 6 }}>
       {Array.from({ length: 3 }).map((_, i) => (
         <div key={i} style={{
-          height: 92, borderRadius: 16, background: '#EEE',
+          height: 92, borderRadius: 5, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
           backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite',
         }}/>

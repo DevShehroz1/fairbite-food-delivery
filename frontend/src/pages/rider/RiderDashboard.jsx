@@ -110,7 +110,7 @@ export default function RiderDashboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <SmartImg
               src={user?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop'}
-              style={{ width: 44, height: 44, borderRadius: 14 }}
+              style={{ width: 44, height: 44, borderRadius: 5 }}
             />
             <div>
               <div style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
@@ -122,7 +122,7 @@ export default function RiderDashboard() {
             </div>
           </div>
           <Pressable onClick={() => { logout(); navigate('/'); }} style={{
-            width: 40, height: 40, borderRadius: 12, background: '#F5F5F5',
+            width: 40, height: 40, borderRadius: 5, background: '#F5F5F5',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <Icons.LogOut size={18} stroke="#374151" />
@@ -132,7 +132,7 @@ export default function RiderDashboard() {
         {/* Earnings gradient card */}
         <div style={{
           background: 'linear-gradient(135deg, #E53935 0%, #FF7043 100%)',
-          borderRadius: 20, padding: '18px 18px 14px', color: '#fff',
+          borderRadius: 5, padding: '18px 18px 14px', color: '#fff',
           marginBottom: 16,
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -163,7 +163,7 @@ export default function RiderDashboard() {
                 animate={{ height: `${h}%` }}
                 transition={{ delay: i * 0.06, duration: 0.4 }}
                 style={{
-                  flex: 1, borderRadius: 4,
+                  flex: 1, borderRadius: 5,
                   background: i === 6 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)',
                   alignSelf: 'flex-end',
                 }}
@@ -181,14 +181,14 @@ export default function RiderDashboard() {
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '14px 16px',
-          borderRadius: 16,
+          borderRadius: 5,
           background: available ? 'rgba(16,185,129,0.06)' : '#F8F8F8',
           border: `1.5px solid ${available ? '#10b981' : '#E5E5E5'}`,
           marginBottom: 16,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
-              width: 36, height: 36, borderRadius: 10,
+              width: 36, height: 36, borderRadius: 5,
               background: available ? '#10b981' : '#D1D5DB',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
@@ -226,7 +226,7 @@ export default function RiderDashboard() {
             <motion.div
               key="active"
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
-              style={{ background: '#fff', borderRadius: 20, padding: 16, border: '1.5px solid var(--qb-primary)' }}
+              style={{ background: '#fff', borderRadius: 5, padding: 16, border: '1.5px solid var(--qb-primary)' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <motion.div
@@ -274,7 +274,7 @@ export default function RiderDashboard() {
                   <Pressable
                     onClick={() => updateStatus('picked-up')}
                     style={{
-                      flex: 1, height: 46, borderRadius: 12,
+                      flex: 1, height: 46, borderRadius: 5,
                       background: '#10b981', color: '#fff',
                       fontSize: 13, fontWeight: 700,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -288,7 +288,7 @@ export default function RiderDashboard() {
                   <Pressable
                     onClick={() => updateStatus('delivered')}
                     style={{
-                      flex: 1, height: 46, borderRadius: 12,
+                      flex: 1, height: 46, borderRadius: 5,
                       background: '#10b981', color: '#fff',
                       fontSize: 13, fontWeight: 700,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -313,7 +313,7 @@ export default function RiderDashboard() {
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             style={{
-              background: '#fff', borderRadius: 20, padding: 24,
+              background: '#fff', borderRadius: 5, padding: 24,
               textAlign: 'center', border: '1px dashed #E5E5E5',
             }}
           >
@@ -332,7 +332,7 @@ export default function RiderDashboard() {
                 Available Orders
               </div>
               <div style={{
-                padding: '4px 10px', borderRadius: 8,
+                padding: '4px 10px', borderRadius: 5,
                 background: availableOrders.length > 0 ? 'rgba(229,57,53,0.1)' : '#F5F5F5',
                 color: availableOrders.length > 0 ? 'var(--qb-primary)' : '#9CA3AF',
                 fontSize: 12, fontWeight: 700,
@@ -351,7 +351,7 @@ export default function RiderDashboard() {
               <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 style={{
-                  background: '#fff', borderRadius: 20, padding: 32,
+                  background: '#fff', borderRadius: 5, padding: 32,
                   textAlign: 'center', border: '1px dashed #E5E5E5',
                 }}
               >
@@ -389,12 +389,12 @@ function MiniStat({ label, value }) {
 function StatTile({ icon, label, value, color }) {
   return (
     <div style={{
-      background: '#fff', borderRadius: 16, padding: '14px 16px',
+      background: '#fff', borderRadius: 5, padding: '14px 16px',
       border: '1px solid #F0F0F0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <div style={{
-          width: 32, height: 32, borderRadius: 10,
+          width: 32, height: 32, borderRadius: 5,
           background: `${color}15`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
@@ -413,7 +413,7 @@ function RouteRow({ icon, color, title, sub, tag }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0' }}>
       <div style={{
-        width: 36, height: 36, borderRadius: 12, flexShrink: 0,
+        width: 36, height: 36, borderRadius: 5, flexShrink: 0,
         background: `${color === 'var(--qb-primary)' ? '#E5393515' : '#FF704315'}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
       }}>
@@ -424,7 +424,7 @@ function RouteRow({ icon, color, title, sub, tag }) {
         <div style={{ fontSize: 11, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>
       </div>
       <div style={{
-        fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+        fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 5,
         background: color === 'var(--qb-primary)' ? 'rgba(229,57,53,0.1)' : 'rgba(255,112,67,0.1)',
         color,
       }}>
@@ -448,7 +448,7 @@ function OrderCard({ order }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       style={{
-        background: '#fff', borderRadius: 20, padding: 16,
+        background: '#fff', borderRadius: 5, padding: 16,
         border: '1px solid #F0F0F0', boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
       }}
     >
@@ -456,7 +456,7 @@ function OrderCard({ order }) {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6,
-            padding: '4px 10px', borderRadius: 8,
+            padding: '4px 10px', borderRadius: 5,
             background: 'rgba(229,57,53,0.08)', color: 'var(--qb-primary)',
             fontSize: 11, fontWeight: 800, letterSpacing: 0.4 }}>
             <motion.span
@@ -490,7 +490,7 @@ function OrderCard({ order }) {
       </div>
 
       {/* Route */}
-      <div style={{ background: '#F8F8F8', borderRadius: 14, padding: '12px 14px', marginBottom: 12 }}>
+      <div style={{ background: '#F8F8F8', borderRadius: 5, padding: '12px 14px', marginBottom: 12 }}>
         <RouteRow
           icon="🍴"
           color="var(--qb-primary)"
@@ -511,7 +511,7 @@ function OrderCard({ order }) {
       {/* Meta info */}
       <div style={{
         display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap',
-        padding: '8px 12px', borderRadius: 10, background: '#F8F8F8',
+        padding: '8px 12px', borderRadius: 5, background: '#F8F8F8',
         fontSize: 12,
       }}>
         <span><b>~4 km</b> total</span>

@@ -55,7 +55,7 @@ const Navbar = () => {
           <Box sx={{ display:{ xs:'none', md:'flex' }, gap:0.5 }}>
             <Button
               component={Link} to="/restaurants"
-              sx={{ color:'text.primary', borderRadius:10, px:2, fontSize:14,
+              sx={{ color:'text.primary', borderRadius: 5, px:2, fontSize:14,
                 '&:hover':{ bgcolor:'#FFF5F5', color:'#E53935' } }}
             >
               Restaurants
@@ -63,7 +63,7 @@ const Navbar = () => {
             {isAuthenticated && user?.role === 'customer' && (
               <Button
                 component={Link} to="/orders"
-                sx={{ color:'text.primary', borderRadius:10, px:2, fontSize:14,
+                sx={{ color:'text.primary', borderRadius: 5, px:2, fontSize:14,
                   '&:hover':{ bgcolor:'#FFF5F5', color:'#E53935' } }}
               >
                 My Orders
@@ -77,7 +77,7 @@ const Navbar = () => {
             <Box sx={{
               display:'flex', alignItems:'center', gap:0.75,
               bgcolor: demo ? '#FFF5F5' : '#F7F7F7',
-              borderRadius:10, px:1.5, py:0.4,
+              borderRadius: 5, px:1.5, py:0.4,
               border: demo ? '1px solid #FFCDD2' : '1px solid #EEEEEE',
               transition:'all 0.3s',
             }}>
@@ -95,7 +95,7 @@ const Navbar = () => {
                 sx={{
                   bgcolor: itemCount > 0 ? '#FFF5F5' : 'transparent',
                   border: itemCount > 0 ? '1px solid #FFCDD2' : '1px solid transparent',
-                  borderRadius:12, width:40, height:40,
+                  borderRadius: 5, width:40, height:40,
                   '&:hover':{ bgcolor:'#FFF5F5' },
                 }}
               >
@@ -109,11 +109,11 @@ const Navbar = () => {
             {!isAuthenticated ? (
               <Box sx={{ display:'flex', gap:1 }}>
                 <Button onClick={() => navigate('/login')} variant="outlined" size="small"
-                  sx={{ borderRadius:12, borderColor:'#E53935', color:'#E53935', px:2, fontSize:13 }}>
+                  sx={{ borderRadius: 5, borderColor:'#E53935', color:'#E53935', px:2, fontSize:13 }}>
                   Login
                 </Button>
                 <Button onClick={() => navigate('/register')} variant="contained" size="small"
-                  sx={{ borderRadius:12, fontSize:13, px:2 }}>
+                  sx={{ borderRadius: 5, fontSize:13, px:2 }}>
                   Sign Up
                 </Button>
               </Box>
@@ -130,7 +130,7 @@ const Navbar = () => {
                 <Menu
                   anchorEl={anchorEl} open={Boolean(anchorEl)}
                   onClose={() => setAnchorEl(null)}
-                  PaperProps={{ sx:{ borderRadius:3, boxShadow:'0 8px 32px rgba(0,0,0,0.12)', mt:0.5, minWidth:160 } }}
+                  PaperProps={{ sx:{ borderRadius: 5, boxShadow:'0 8px 32px rgba(0,0,0,0.12)', mt:0.5, minWidth:160 } }}
                   transformOrigin={{ horizontal:'right', vertical:'top' }}
                   anchorOrigin={{ horizontal:'right', vertical:'bottom' }}
                 >
@@ -140,11 +140,11 @@ const Navbar = () => {
                       sx={{ mt:0.5, height:18, fontSize:10, bgcolor:'#FFF5F5', color:'#E53935', fontWeight:700 }}/>
                   </Box>
                   <MenuItem onClick={() => { navigate(getDashboardPath()); setAnchorEl(null); }}
-                    sx={{ fontSize:14, borderRadius:2, mx:1, mt:0.5 }}>
+                    sx={{ fontSize:14, borderRadius: 5, mx:1, mt:0.5 }}>
                     Dashboard
                   </MenuItem>
                   <MenuItem onClick={() => { logout(); setAnchorEl(null); navigate('/'); }}
-                    sx={{ fontSize:14, borderRadius:2, mx:1, mb:0.5, color:'#E53935' }}>
+                    sx={{ fontSize:14, borderRadius: 5, mx:1, mb:0.5, color:'#E53935' }}>
                     Logout
                   </MenuItem>
                 </Menu>

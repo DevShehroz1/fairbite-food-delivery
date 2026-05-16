@@ -120,7 +120,7 @@ export default function HomePage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <LocationPicker/>
           <Pressable onClick={() => navigate('/cart')} style={{
-            width: 40, height: 40, borderRadius: 14,
+            width: 40, height: 40, borderRadius: 5,
             background: 'rgba(255,255,255,0.2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
           }}>
@@ -143,7 +143,7 @@ export default function HomePage() {
 
         {/* White pill search bar */}
         <Pressable onClick={() => navigate('/restaurants')} style={{
-          width: '100%', height: 46, borderRadius: 23,
+          width: '100%', height: 46, borderRadius: 5,
           background: '#fff',
           display: 'flex', alignItems: 'center', gap: 10,
           padding: '0 16px', marginBottom: 18,
@@ -172,7 +172,7 @@ export default function HomePage() {
               Start ordering &rsaquo;
             </Pressable>
           </div>
-          <div style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 16, overflow: 'hidden',
+          <div style={{ flexShrink: 0, width: 110, height: 110, borderRadius: 5, overflow: 'hidden',
             boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
             <img
               src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&auto=format&fit=crop"
@@ -186,7 +186,7 @@ export default function HomePage() {
       {/* ── White rounded card overlapping pink section ── */}
       <div style={{
         background: '#fff',
-        borderRadius: '20px 20px 0 0',
+        borderRadius: '5px 5px 0 0',
         marginTop: -20,
         minHeight: '100vh',
       }}>
@@ -207,7 +207,7 @@ export default function HomePage() {
               flex: 1,
             }}>
               <div style={{
-                width: 60, height: 60, borderRadius: 16,
+                width: 60, height: 60, borderRadius: 5,
                 background: '#FFF0F0',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 26,
@@ -235,7 +235,7 @@ export default function HomePage() {
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
               }}>
                 <div style={{
-                  width: 76, height: 76, borderRadius: 18, overflow: 'hidden',
+                  width: 76, height: 76, borderRadius: 5, overflow: 'hidden',
                   background: '#F5F5F5',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
                 }}>
@@ -263,7 +263,7 @@ export default function HomePage() {
                 onClick={() => navigate('/restaurants')}
                 style={{
                   width: 200, height: 120, flexShrink: 0,
-                  borderRadius: 16, overflow: 'hidden',
+                  borderRadius: 5, overflow: 'hidden',
                   background: d.bg,
                   position: 'relative',
                   cursor: 'pointer',
@@ -280,7 +280,7 @@ export default function HomePage() {
                     position: 'absolute', right: -10, top: '50%',
                     transform: 'translateY(-50%)',
                     width: 90, height: 90,
-                    objectFit: 'cover', borderRadius: 12,
+                    objectFit: 'cover', borderRadius: 5,
                     opacity: 0.25,
                     pointerEvents: 'none',
                   }}
@@ -297,12 +297,12 @@ export default function HomePage() {
                   <Pressable onClick={(e) => copyDealCode(e, d.code)} style={{
                     display: 'inline-flex', alignItems: 'center', gap: 6,
                     background: 'rgba(255,255,255,0.25)',
-                    borderRadius: 6, padding: '3px 8px',
+                    borderRadius: 5, padding: '3px 8px',
                     fontSize: 11, fontWeight: 800, color: '#fff',
                     letterSpacing: 0.4,
                   }}>
                     <span>{d.code}</span>
-                    <span style={{ fontSize: 8, padding: '1px 5px', borderRadius: 4, background: 'rgba(255,255,255,0.3)', letterSpacing: 0.5 }}>COPY</span>
+                    <span style={{ fontSize: 8, padding: '1px 5px', borderRadius: 5, background: 'rgba(255,255,255,0.3)', letterSpacing: 0.5 }}>COPY</span>
                   </Pressable>
                 </div>
               </motion.div>
@@ -326,7 +326,7 @@ export default function HomePage() {
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
               }}>
                 <div style={{
-                  width: 86, height: 86, borderRadius: 20, overflow: 'hidden',
+                  width: 86, height: 86, borderRadius: 5, overflow: 'hidden',
                   border: '1px solid #F0F0F0', background: b.isLogo ? '#fff' : '#F5F5F5',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
@@ -382,7 +382,7 @@ function SectionHeader({ title, subtitle, onSeeAll }) {
 
 function SkeletonCard() {
   return (
-    <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
+    <div style={{ background: '#fff', borderRadius: 5, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
       <div style={{
         height: 152, background: '#EEE',
         backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
@@ -390,12 +390,12 @@ function SkeletonCard() {
       }}/>
       <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{
-          width: '60%', height: 14, borderRadius: 6, background: '#EEE',
+          width: '60%', height: 14, borderRadius: 5, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
           backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite',
         }}/>
         <div style={{
-          width: '40%', height: 10, borderRadius: 6, background: '#EEE',
+          width: '40%', height: 10, borderRadius: 5, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
           backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite',
         }}/>

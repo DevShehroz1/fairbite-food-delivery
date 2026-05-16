@@ -44,14 +44,14 @@ class AppErrorBoundary extends React.Component {
         </div>
         <pre style={{
           fontSize: 12, color: '#111', background: '#FFF1F0', padding: 14,
-          borderRadius: 12, border: '1px solid #FECACA', overflow: 'auto',
+          borderRadius: 5, border: '1px solid #FECACA', overflow: 'auto',
           whiteSpace: 'pre-wrap', wordBreak: 'break-word',
         }}>
           {String(this.state.err?.stack || this.state.err)}
           {this.state.info?.componentStack || ''}
         </pre>
         <button onClick={() => window.location.reload()} style={{
-          alignSelf: 'flex-start', padding: '10px 18px', borderRadius: 12,
+          alignSelf: 'flex-start', padding: '10px 18px', borderRadius: 5,
           border: 0, background: '#E53935', color: '#fff', fontWeight: 700, cursor: 'pointer',
         }}>Reload</button>
       </div>

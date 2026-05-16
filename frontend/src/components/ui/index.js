@@ -92,7 +92,7 @@ export function Stars({ rating, size = 12, color = '#F5A524' }) {
 export function Chip({ children, active, onClick, style }) {
   return (
     <Pressable onClick={onClick} style={{
-      padding: '8px 14px', borderRadius: 12, fontSize: 13, fontWeight: 600,
+      padding: '8px 14px', borderRadius: 5, fontSize: 13, fontWeight: 600,
       background: active ? 'var(--qb-primary)' : '#F5F5F5',
       color: active ? '#fff' : '#1f1f1f',
       whiteSpace: 'nowrap', flexShrink: 0,
@@ -113,7 +113,7 @@ export function Ribbon({ kind }) {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 4,
-      padding: '4px 8px', borderRadius: 8,
+      padding: '4px 8px', borderRadius: 5,
       fontSize: 11, fontWeight: 700, letterSpacing: 0.2,
       background: p.bg, color: p.fg,
       boxShadow: '0 2px 6px rgba(0,0,0,0.18)',
@@ -126,7 +126,7 @@ export function BrandButton({ children, onClick, full = true, disabled, style })
   return (
     <Pressable onClick={onClick} scale={disabled ? 1 : 0.97} style={{
       width: full ? '100%' : undefined,
-      height: 54, borderRadius: 24,
+      height: 54, borderRadius: 5,
       background: disabled ? '#ccc' : 'var(--qb-primary)',
       color: '#fff',
       fontSize: 16, fontWeight: 700, letterSpacing: 0.1,
@@ -284,7 +284,7 @@ export function BottomNav({ tab, onTab }) {
       pointerEvents: 'none',
     }}>
       <div style={{
-        margin: '0 16px 8px', height: 64, borderRadius: 22,
+        margin: '0 16px 8px', height: 64, borderRadius: 5,
         background: '#fff', border: '1px solid #F0F0F0',
         boxShadow: '0 12px 30px rgba(0,0,0,0.08)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-around',
@@ -360,7 +360,7 @@ export function WelcomeBanner({ name, avatar, autoDismissMs = 3500, onClose }) {
             display: 'flex', alignItems: 'center', gap: 12,
             padding: '12px 14px',
             background: '#fff',
-            borderRadius: 18,
+            borderRadius: 5,
             boxShadow: '0 14px 36px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)',
             border: '1px solid rgba(0,0,0,0.04)',
             overflow: 'hidden',
@@ -452,7 +452,7 @@ export function BigRestaurantCard({ r, onClick }) {
       whileTap={{ scale: 0.98 }} onClick={onClick}
       transition={{ duration: 0.2 }}
       style={{
-        background: '#fff', borderRadius: 16, overflow: 'hidden',
+        background: '#fff', borderRadius: 5, overflow: 'hidden',
         border: '1px solid #F0F0F0', cursor: 'pointer',
         boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
       }}>

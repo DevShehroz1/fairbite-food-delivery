@@ -117,7 +117,7 @@ button { font-family: inherit; }
   transform: translateX(-50%);
 }
 .qb-toast {
-  border-radius: 16px !important;
+  border-radius: 5px !important;
   padding: 0 !important;
   margin-bottom: 8px !important;
   min-height: auto !important;

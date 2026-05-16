@@ -304,13 +304,13 @@ export default function RestaurantDetailPage() {
         {/* Cuisine tags */}
         <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
           {(restaurant.cuisine || []).map(c => (
-            <span key={c} style={{ padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#F5F5F5', color: '#374151' }}>{c}</span>
+            <span key={c} style={{ padding: '3px 10px', borderRadius: 5, fontSize: 12, fontWeight: 600, background: '#F5F5F5', color: '#374151' }}>{c}</span>
           ))}
         </div>
       </div>
 
       {/* Delivery info row */}
-      <div style={{ margin: '14px 16px 0', padding: '14px', borderRadius: 14, border: '1px solid #F0F0F0' }}>
+      <div style={{ margin: '14px 16px 0', padding: '14px', borderRadius: 5, border: '1px solid #F0F0F0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 700, color: '#111' }}>
             <span>🏍️</span>
@@ -325,7 +325,7 @@ export default function RestaurantDetailPage() {
 
       {/* Spend-and-save promo card */}
       <div style={{ padding: '12px 16px 0' }}>
-        <div style={{ padding: '12px 14px', borderRadius: 12, background: 'rgba(229,57,53,0.06)', border: '1px solid rgba(229,57,53,0.15)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ padding: '12px 14px', borderRadius: 5, background: 'rgba(229,57,53,0.06)', border: '1px solid rgba(229,57,53,0.15)', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', right: -16, top: -16, width: 64, height: 64, borderRadius: '50%', background: 'rgba(229,57,53,0.08)' }}/>
           <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--qb-primary)' }}>15% off on orders over Rs. 1,999</div>
           <div style={{ fontSize: 11, color: '#374151', marginTop: 3, lineHeight: 1.5 }}>Auto-applied at checkout when your subtotal is Rs. 1,999 or more.</div>
@@ -334,7 +334,7 @@ export default function RestaurantDetailPage() {
 
       {/* Search menu input */}
       <div style={{ padding: '14px 16px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: '#F5F5F5' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 5, background: '#F5F5F5' }}>
           <Icons.Search size={16} stroke="#9CA3AF"/>
           <input value={menuSearch} onChange={e => setMenuSearch(e.target.value)} placeholder="Search menu" style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 14, color: '#111', outline: 'none' }}/>
         </div>
@@ -364,7 +364,7 @@ export default function RestaurantDetailPage() {
               {popularItems.map(item => {
                 const qty = getQty(item.id || item._id);
                 return (
-                  <div key={item.id || item._id} style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
+                  <div key={item.id || item._id} style={{ borderRadius: 5, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
                     <div style={{ height: 110, background: '#F5F5F5', position: 'relative', overflow: 'hidden' }}>
                       <MenuImage item={item} size="lg"/>
                       {qty === 0 ? (
@@ -397,7 +397,7 @@ export default function RestaurantDetailPage() {
             </div>
             <div className="qb-no-scrollbar" style={{ display: 'flex', gap: 10, padding: '0 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
               {pickReviews(restaurant).map(rev => (
-                <div key={rev.id} style={{ width: 240, flexShrink: 0, padding: '14px', borderRadius: 14, border: '1px solid #F0F0F0', background: '#fff' }}>
+                <div key={rev.id} style={{ width: 240, flexShrink: 0, padding: '14px', borderRadius: 5, border: '1px solid #F0F0F0', background: '#fff' }}>
                   <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.55, marginBottom: 12 }}>{rev.text}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Stars rating={rev.rating} size={12}/>
@@ -432,7 +432,7 @@ export default function RestaurantDetailPage() {
                       </div>
                     )}
                   </div>
-                  <div style={{ width: 88, height: 88, borderRadius: 12, background: '#F5F5F5', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ width: 88, height: 88, borderRadius: 5, background: '#F5F5F5', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
                     <MenuImage item={item}/>
                     {qty === 0 && (
                       <Pressable onClick={() => handleAdd(item)} style={{ position: 'absolute', bottom: 6, right: 6, width: 28, height: 28, borderRadius: 999, background: '#fff', border: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
@@ -469,7 +469,7 @@ export default function RestaurantDetailPage() {
               transition={{ type: 'spring', stiffness: 280, damping: 32 }}
               style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 70,
-                background: '#fff', borderRadius: '20px 20px 0 0',
+                background: '#fff', borderRadius: '5px 5px 0 0',
                 padding: '12px 16px 24px', maxHeight: '80vh', overflowY: 'auto',
                 boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
               }}
@@ -491,7 +491,7 @@ export default function RestaurantDetailPage() {
                   const deltaLabel = delta === 0 ? 'Regular' : (delta > 0 ? `+ ${PKR(delta)}` : `− ${PKR(-delta)}`);
                   return (
                     <Pressable key={s.key} onClick={() => setPickedSize(s.key)} style={{
-                      padding: '12px 8px', borderRadius: 12,
+                      padding: '12px 8px', borderRadius: 5,
                       border: `1.5px solid ${active ? 'var(--qb-primary)' : '#F0F0F0'}`,
                       background: active ? 'rgba(229,57,53,0.05)' : '#fff',
                       textAlign: 'center',
@@ -540,13 +540,13 @@ export default function RestaurantDetailPage() {
                   return (
                     <Pressable key={a.id} onClick={() => toggleAddOn(a)} style={{
                       display: 'flex', alignItems: 'center', gap: 12,
-                      padding: '12px 14px', borderRadius: 12,
+                      padding: '12px 14px', borderRadius: 5,
                       border: `1.5px solid ${picked ? 'var(--qb-primary)' : '#F0F0F0'}`,
                       background: picked ? 'rgba(229,57,53,0.05)' : '#fff',
                       textAlign: 'left',
                     }}>
                       <div style={{
-                        width: 20, height: 20, borderRadius: 6,
+                        width: 20, height: 20, borderRadius: 5,
                         border: `2px solid ${picked ? 'var(--qb-primary)' : '#D1D5DB'}`,
                         background: picked ? 'var(--qb-primary)' : '#fff',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
@@ -565,7 +565,7 @@ export default function RestaurantDetailPage() {
               </div>
 
               <Pressable onClick={confirmAddOns} style={{
-                marginTop: 16, width: '100%', height: 52, borderRadius: 14,
+                marginTop: 16, width: '100%', height: 52, borderRadius: 5,
                 background: 'var(--qb-primary)', color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 fontSize: 15, fontWeight: 800,
@@ -581,7 +581,7 @@ export default function RestaurantDetailPage() {
       {/* FoodPanda-style cart CTA */}
       {totalCartQty > 0 && (
         <motion.div initial={{ y: 100 }} animate={{ y: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, padding: '12px 16px 28px', background: 'linear-gradient(180deg, transparent, #fff 25%)' }}>
-          <Pressable onClick={() => navigate('/cart')} style={{ width: '100%', height: 58, borderRadius: 14, background: 'var(--qb-primary)', color: '#fff', display: 'flex', alignItems: 'center', padding: '0 18px', gap: 14, boxShadow: '0 8px 24px rgba(229,57,53,0.35)' }}>
+          <Pressable onClick={() => navigate('/cart')} style={{ width: '100%', height: 58, borderRadius: 5, background: 'var(--qb-primary)', color: '#fff', display: 'flex', alignItems: 'center', padding: '0 18px', gap: 14, boxShadow: '0 8px 24px rgba(229,57,53,0.35)' }}>
             <div style={{ width: 34, height: 34, borderRadius: 999, border: '2px solid rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, flexShrink: 0 }}>{totalCartQty}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 15, fontWeight: 800 }}>View your cart</div>
@@ -616,7 +616,7 @@ function LoadingState() {
         backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite' }}/>
       <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} style={{ height: 16, borderRadius: 8, background: '#EEE',
+          <div key={i} style={{ height: 16, borderRadius: 5, background: '#EEE',
             backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
             backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite',
             width: i % 2 === 0 ? '80%' : '50%' }}/>

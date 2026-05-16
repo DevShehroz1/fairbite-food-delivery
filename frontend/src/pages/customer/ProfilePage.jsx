@@ -34,7 +34,7 @@ function ReferralCard() {
 
   return (
     <div style={{
-      margin: '16px 16px 0', borderRadius: 18, overflow: 'hidden',
+      margin: '16px 16px 0', borderRadius: 5, overflow: 'hidden',
       background: 'linear-gradient(135deg, var(--qb-primary) 0%, #b91c1c 100%)',
       color: '#fff', position: 'relative',
     }}>
@@ -54,7 +54,7 @@ function ReferralCard() {
         </div>
 
         <Pressable onClick={copy} style={{
-          marginTop: 14, padding: '12px 14px', borderRadius: 12,
+          marginTop: 14, padding: '12px 14px', borderRadius: 5,
           background: 'rgba(255,255,255,0.18)', border: '1.5px dashed rgba(255,255,255,0.5)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           width: '100%', textAlign: 'left',
@@ -67,7 +67,7 @@ function ReferralCard() {
         </Pressable>
 
         <Pressable onClick={share} style={{
-          marginTop: 10, padding: '12px 14px', borderRadius: 12,
+          marginTop: 10, padding: '12px 14px', borderRadius: 5,
           background: '#fff', color: 'var(--qb-primary)',
           width: '100%', fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
@@ -208,7 +208,7 @@ export default function ProfilePage() {
 
         {/* Role badge */}
         <span style={{
-          padding: '5px 14px', borderRadius: 20,
+          padding: '5px 14px', borderRadius: 5,
           background: badge.bg, color: badge.color,
           fontSize: 12, fontWeight: 700,
         }}>
@@ -217,7 +217,7 @@ export default function ProfilePage() {
 
         {/* Stats row */}
         <div style={{
-          marginTop: 4, padding: '10px 20px', borderRadius: 14,
+          marginTop: 4, padding: '10px 20px', borderRadius: 5,
           background: '#F5F5F5', display: 'flex', alignItems: 'center', gap: 6,
         }}>
           <Icons.Gift size={15} stroke="#9CA3AF" sw={2}/>
@@ -230,7 +230,7 @@ export default function ProfilePage() {
       {role === 'customer' && <ReferralCard/>}
 
       {/* Menu list */}
-      <div style={{ margin: '16px 16px 0', background: '#fff', borderRadius: 18, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
+      <div style={{ margin: '16px 16px 0', background: '#fff', borderRadius: 5, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
         {menuItems.map((item, i) => {
           const Ic = item.icon;
           return (
@@ -244,7 +244,7 @@ export default function ProfilePage() {
                 textAlign: 'left',
               }}>
                 <div style={{
-                  width: 38, height: 38, borderRadius: 12,
+                  width: 38, height: 38, borderRadius: 5,
                   background: '#F5F5F5', flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
