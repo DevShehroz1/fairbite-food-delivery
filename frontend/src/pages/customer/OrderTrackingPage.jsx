@@ -200,7 +200,7 @@ export default function OrderTrackingPage() {
               initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
               style={{
                 position: 'absolute', top: 106, right: 16, zIndex: 5,
-                padding: '6px 10px', borderRadius: 12,
+                padding: '6px 10px', borderRadius: 5,
                 background: 'rgba(17,17,17,0.85)', backdropFilter: 'blur(8px)',
                 color: '#fff', fontSize: 11, fontWeight: 700,
                 display: 'flex', alignItems: 'center', gap: 5,
@@ -218,7 +218,7 @@ export default function OrderTrackingPage() {
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }}
               style={{
                 position: 'absolute', bottom: 14, left: 16, right: 16, zIndex: 5,
-                padding: '12px 14px', borderRadius: 14,
+                padding: '12px 14px', borderRadius: 5,
                 background: 'rgba(16,185,129,0.96)', backdropFilter: 'blur(8px)',
                 boxShadow: '0 8px 24px rgba(16,185,129,0.35)',
                 display: 'flex', alignItems: 'center', gap: 10,
@@ -283,7 +283,7 @@ export default function OrderTrackingPage() {
               <motion.div
                 initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 14 }}
                 style={{
-                  marginTop: 16, padding: 12, borderRadius: 16,
+                  marginTop: 16, padding: 12, borderRadius: 5,
                   background: 'linear-gradient(135deg, #111 0%, #1f1f1f 100%)',
                   display: 'flex', alignItems: 'center', gap: 12,
                 }}>

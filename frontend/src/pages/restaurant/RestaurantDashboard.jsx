@@ -122,7 +122,7 @@ export default function RestaurantDashboard() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
-              width: 44, height: 44, borderRadius: 14,
+              width: 44, height: 44, borderRadius: 5,
               background: 'linear-gradient(135deg, var(--qb-primary), var(--qb-accent))',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
             }}>🍽️</div>
@@ -136,7 +136,7 @@ export default function RestaurantDashboard() {
             </div>
           </div>
           <Pressable onClick={() => { logout(); navigate('/'); }} style={{
-            width: 40, height: 40, borderRadius: 12, background: '#F5F5F5',
+            width: 40, height: 40, borderRadius: 5, background: '#F5F5F5',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <Icons.LogOut size={18} stroke="#374151" />
@@ -154,7 +154,7 @@ export default function RestaurantDashboard() {
         {/* Commission banner */}
         <div style={{
           background: 'linear-gradient(135deg, #E53935 0%, #FF7043 100%)',
-          borderRadius: 16, padding: '13px 16px', color: '#fff',
+          borderRadius: 5, padding: '13px 16px', color: '#fff',
           marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12,
         }}>
           <div style={{ flex: 1 }}>
@@ -163,7 +163,7 @@ export default function RestaurantDashboard() {
               Keep more of what you earn — only <b>15% commission</b> on every order
             </div>
           </div>
-          <div style={{ padding: '6px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.2)', fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap' }}>
+          <div style={{ padding: '6px 12px', borderRadius: 5, background: 'rgba(255,255,255,0.2)', fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap' }}>
             15% only
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function RestaurantDashboard() {
               {t}
               {t === 'Active' && activeOrders.length > 0 && (
                 <span style={{
-                  marginLeft: 5, padding: '1px 6px', borderRadius: 6,
+                  marginLeft: 5, padding: '1px 6px', borderRadius: 5,
                   background: 'var(--qb-primary)', color: '#fff', fontSize: 10, fontWeight: 800,
                 }}>{activeOrders.length}</span>
               )}
@@ -199,14 +199,14 @@ export default function RestaurantDashboard() {
             <motion.div
               initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
               style={{
-                background: '#fff', borderRadius: 16, padding: '14px 16px',
+                background: '#fff', borderRadius: 5, padding: '14px 16px',
                 border: '2px solid var(--qb-primary)', marginBottom: 12,
                 display: 'flex', alignItems: 'center', gap: 12,
               }}
             >
               <motion.div
                 animate={{ scale: [1, 1.25, 1] }} transition={{ duration: 0.8, repeat: Infinity }}
-                style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(229,57,53,0.1)',
+                style={{ width: 40, height: 40, borderRadius: 5, background: 'rgba(229,57,53,0.1)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}
               >🔔</motion.div>
               <div style={{ flex: 1 }}>
@@ -216,7 +216,7 @@ export default function RestaurantDashboard() {
                 </div>
               </div>
               <Pressable onClick={() => setNewOrderAlert(null)} style={{
-                width: 28, height: 28, borderRadius: 8, background: '#F5F5F5',
+                width: 28, height: 28, borderRadius: 5, background: '#F5F5F5',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <Icons.X size={14} stroke="#6b7280" />
@@ -253,7 +253,7 @@ function MiniStatCard({ icon, label, value, color }) {
   const bgMap = { 'var(--qb-primary)': 'rgba(229,57,53,0.06)', '#10b981': 'rgba(16,185,129,0.06)', '#f59e0b': 'rgba(245,158,11,0.06)', '#8b5cf6': 'rgba(139,92,246,0.06)' };
   const brMap = { 'var(--qb-primary)': 'rgba(229,57,53,0.15)', '#10b981': 'rgba(16,185,129,0.15)', '#f59e0b': 'rgba(245,158,11,0.15)', '#8b5cf6': 'rgba(139,92,246,0.15)' };
   return (
-    <div style={{ padding: '10px', borderRadius: 14, background: bgMap[color] || '#F8F8F8', border: `1px solid ${brMap[color] || '#F0F0F0'}` }}>
+    <div style={{ padding: '10px', borderRadius: 5, background: bgMap[color] || '#F8F8F8', border: `1px solid ${brMap[color] || '#F0F0F0'}` }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>{icon}<span style={{ fontSize: 10, color: '#6b7280', fontWeight: 600 }}>{label}</span></div>
       <div style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>{value}</div>
     </div>
@@ -268,7 +268,7 @@ function OrderCard({ order, onUpdateStatus }) {
     <motion.div
       initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
       style={{
-        background: '#fff', borderRadius: 18, overflow: 'hidden',
+        background: '#fff', borderRadius: 5, overflow: 'hidden',
         border: order.status === 'pending' ? '1.5px solid var(--qb-primary)' : '1px solid #F0F0F0',
         boxShadow: '0 4px 14px rgba(0,0,0,0.05)',
       }}
@@ -281,18 +281,18 @@ function OrderCard({ order, onUpdateStatus }) {
           {order.status === 'pending' && (
             <motion.div
               animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity }}
-              style={{ width: 40, height: 40, borderRadius: 12, background: meta.bg, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}
+              style={{ width: 40, height: 40, borderRadius: 5, background: meta.bg, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}
             >🔔</motion.div>
           )}
           {order.status !== 'pending' && (
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: meta.bg, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 40, height: 40, borderRadius: 5, background: meta.bg, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Icons.Receipt size={16} stroke={meta.color} />
             </div>
           )}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>#{order.orderNumber}</span>
-              <span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: meta.bg, color: meta.color }}>{meta.label}</span>
+              <span style={{ padding: '2px 8px', borderRadius: 5, fontSize: 10, fontWeight: 700, background: meta.bg, color: meta.color }}>{meta.label}</span>
             </div>
             <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
               {order.customer?.name || 'Customer'} · {(order.items || []).length} item(s)
@@ -335,7 +335,7 @@ function OrderCard({ order, onUpdateStatus }) {
               </div>
 
               {/* Pricing */}
-              <div style={{ background: '#F8F8F8', borderRadius: 12, padding: '10px 12px', marginTop: 12 }}>
+              <div style={{ background: '#F8F8F8', borderRadius: 5, padding: '10px 12px', marginTop: 12 }}>
                 {[
                   { label: 'Subtotal', val: order.pricing?.subtotal },
                   { label: 'Delivery fee', val: order.pricing?.deliveryFee },
@@ -360,7 +360,7 @@ function OrderCard({ order, onUpdateStatus }) {
 
               {/* Rider info (when assigned) */}
               {order.rider && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, padding: '8px 12px', borderRadius: 10, background: 'rgba(139,92,246,0.06)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, padding: '8px 12px', borderRadius: 5, background: 'rgba(139,92,246,0.06)' }}>
                   <Icons.Bike size={14} stroke="#8b5cf6" />
                   <span style={{ fontSize: 12, fontWeight: 700, color: '#8b5cf6' }}>
                     Rider: {order.rider.name || 'Assigned'}
@@ -373,7 +373,7 @@ function OrderCard({ order, onUpdateStatus }) {
                 <Pressable
                   onClick={() => onUpdateStatus(meta.next)}
                   style={{
-                    width: '100%', height: 46, marginTop: 14, borderRadius: 12,
+                    width: '100%', height: 46, marginTop: 14, borderRadius: 5,
                     background: meta.next === 'ready' ? '#10b981' : 'var(--qb-primary)', color: '#fff',
                     fontSize: 14, fontWeight: 700,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -398,7 +398,7 @@ function MenuTab({ restaurant, restoLoading, onCreate, onChange }) {
 
   if (restoLoading) {
     return (
-      <div style={{ background: '#fff', borderRadius: 20, padding: 32, textAlign: 'center', border: '1px dashed #E5E5E5' }}>
+      <div style={{ background: '#fff', borderRadius: 5, padding: 32, textAlign: 'center', border: '1px dashed #E5E5E5' }}>
         <div style={{ fontSize: 32, marginBottom: 8 }}>🍽️</div>
         <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Loading your restaurant…</div>
       </div>
@@ -466,7 +466,7 @@ function MenuTab({ restaurant, restoLoading, onCreate, onChange }) {
           <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{items.length} item{items.length === 1 ? '' : 's'} · tap to edit</div>
         </div>
         <Pressable onClick={() => setEditing('new')} style={{
-          padding: '10px 16px', borderRadius: 12,
+          padding: '10px 16px', borderRadius: 5,
           background: 'var(--qb-primary)', color: '#fff',
           fontSize: 13, fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 6,
           boxShadow: '0 4px 12px rgba(229,57,53,0.25)',
@@ -476,7 +476,7 @@ function MenuTab({ restaurant, restoLoading, onCreate, onChange }) {
       </div>
 
       {items.length === 0 ? (
-        <div style={{ background: '#fff', borderRadius: 20, padding: 32, textAlign: 'center', border: '1px dashed #E5E5E5' }}>
+        <div style={{ background: '#fff', borderRadius: 5, padding: 32, textAlign: 'center', border: '1px dashed #E5E5E5' }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>🍽️</div>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>No items yet</div>
           <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4 }}>Tap "Add Item" to start your menu</div>
@@ -487,10 +487,10 @@ function MenuTab({ restaurant, restoLoading, onCreate, onChange }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {list.map(item => (
               <div key={item.id} style={{
-                background: '#fff', borderRadius: 14, padding: '12px 14px',
+                background: '#fff', borderRadius: 5, padding: '12px 14px',
                 display: 'flex', alignItems: 'center', gap: 12, border: '1px solid #F0F0F0',
               }}>
-                <div style={{ width: 48, height: 48, borderRadius: 12, flexShrink: 0, background: '#F8F8F8', overflow: 'hidden' }}>
+                <div style={{ width: 48, height: 48, borderRadius: 5, flexShrink: 0, background: '#F8F8F8', overflow: 'hidden' }}>
                   {item.image
                     ? <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                     : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🍛</div>
@@ -505,7 +505,7 @@ function MenuTab({ restaurant, restoLoading, onCreate, onChange }) {
                 <div style={{ flexShrink: 0, textAlign: 'right' }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{PKR(item.price)}</div>
                   <div style={{
-                    marginTop: 3, padding: '2px 7px', borderRadius: 6, fontSize: 10, fontWeight: 700,
+                    marginTop: 3, padding: '2px 7px', borderRadius: 5, fontSize: 10, fontWeight: 700,
                     background: item.isAvailable !== false ? 'rgba(16,185,129,0.1)' : '#F5F5F5',
                     color: item.isAvailable !== false ? '#10b981' : '#9CA3AF',
                   }}>{item.isAvailable !== false ? 'Live' : 'Off'}</div>
@@ -568,7 +568,7 @@ function MenuItemEditor({ item, saving, onCancel, onSave }) {
         onSubmit={submit}
         style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 70,
-          background: '#fff', borderRadius: '22px 22px 0 0',
+          background: '#fff', borderRadius: '5px 5px 0 0',
           padding: '12px 16px 24px', maxHeight: '90vh', overflowY: 'auto',
           boxShadow: '0 -10px 36px rgba(0,0,0,0.18)',
           maxWidth: 430, margin: '0 auto',
@@ -605,7 +605,7 @@ function MenuItemEditor({ item, saving, onCancel, onSave }) {
           ]} style={{ flex: 1 }}/>
         </div>
         <Pressable onClick={() => set('isAvailable')(!form.isAvailable)} style={{
-          marginTop: 14, padding: '12px 14px', borderRadius: 12,
+          marginTop: 14, padding: '12px 14px', borderRadius: 5,
           background: form.isAvailable ? 'rgba(16,185,129,0.06)' : '#F8F8F8',
           border: `1.5px solid ${form.isAvailable ? '#10b981' : '#E5E5E5'}`,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -634,12 +634,12 @@ function MenuItemEditor({ item, saving, onCancel, onSave }) {
 
         <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
           <Pressable onClick={onCancel} style={{
-            flex: 1, height: 50, borderRadius: 14, background: '#F5F5F5',
+            flex: 1, height: 50, borderRadius: 5, background: '#F5F5F5',
             color: '#111', fontSize: 14, fontWeight: 700,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>Cancel</Pressable>
           <button type="submit" disabled={saving} style={{
-            flex: 2, height: 50, borderRadius: 14, border: 0, cursor: 'pointer',
+            flex: 2, height: 50, borderRadius: 5, border: 0, cursor: 'pointer',
             background: saving ? '#ccc' : 'var(--qb-primary)', color: '#fff',
             fontSize: 14, fontWeight: 800,
             boxShadow: '0 6px 18px rgba(229,57,53,0.3)',
@@ -656,10 +656,10 @@ function Field({ label, value, onChange, type='text', placeholder, textarea, sty
       <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
       {textarea ? (
         <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={2}
-          style={{ width: '100%', border: '1px solid #E5E5E5', borderRadius: 12, padding: '10px 12px', fontSize: 14, fontFamily: 'inherit', outline: 0, resize: 'vertical' }}/>
+          style={{ width: '100%', border: '1px solid #E5E5E5', borderRadius: 5, padding: '10px 12px', fontSize: 14, fontFamily: 'inherit', outline: 0, resize: 'vertical' }}/>
       ) : (
         <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-          style={{ width: '100%', border: '1px solid #E5E5E5', borderRadius: 12, padding: '12px', fontSize: 14, outline: 0, fontFamily: 'inherit' }}/>
+          style={{ width: '100%', border: '1px solid #E5E5E5', borderRadius: 5, padding: '12px', fontSize: 14, outline: 0, fontFamily: 'inherit' }}/>
       )}
     </div>
   );
@@ -670,7 +670,7 @@ function SelectField({ label, value, onChange, options, style }) {
     <div style={{ marginTop: 12, ...style }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
       <select value={value} onChange={e => onChange(e.target.value)}
-        style={{ width: '100%', border: '1px solid #E5E5E5', borderRadius: 12, padding: '12px', fontSize: 14, background: '#fff', outline: 0, fontFamily: 'inherit' }}>
+        style={{ width: '100%', border: '1px solid #E5E5E5', borderRadius: 5, padding: '12px', fontSize: 14, background: '#fff', outline: 0, fontFamily: 'inherit' }}>
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
@@ -690,7 +690,7 @@ function CreateRestaurantCard({ onCreate }) {
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      style={{ background: '#fff', borderRadius: 20, padding: 24, border: '1px solid #F0F0F0' }}>
+      style={{ background: '#fff', borderRadius: 5, padding: 24, border: '1px solid #F0F0F0' }}>
       <div style={{ fontSize: 36, marginBottom: 8 }}>🍽️</div>
       <div style={{ fontSize: 18, fontWeight: 800, color: '#111', marginBottom: 4 }}>Set up your restaurant</div>
       <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 18 }}>
@@ -704,7 +704,7 @@ function CreateRestaurantCard({ onCreate }) {
 
       <Pressable onClick={submit} disabled={saving}
         style={{ width: '100%', marginTop: 16, padding: '14px 20px', background: 'var(--qb-primary)', color: '#fff',
-                 border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
+                 border: 'none', borderRadius: 5, fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
         {saving ? 'Creating…' : 'Create my restaurant'}
       </Pressable>
     </motion.div>
@@ -715,7 +715,7 @@ function SkeletonOrders() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {[1, 2, 3].map(i => (
-        <div key={i} style={{ background: '#fff', borderRadius: 18, height: 72, border: '1px solid #F0F0F0', animation: 'qb-shimmer 1.5s infinite', backgroundSize: '200% 100%' }} />
+        <div key={i} style={{ background: '#fff', borderRadius: 5, height: 72, border: '1px solid #F0F0F0', animation: 'qb-shimmer 1.5s infinite', backgroundSize: '200% 100%' }} />
       ))}
     </div>
   );
@@ -724,7 +724,7 @@ function SkeletonOrders() {
 function EmptyOrders({ active }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{
-      background: '#fff', borderRadius: 20, padding: 40, textAlign: 'center', border: '1px dashed #E5E5E5',
+      background: '#fff', borderRadius: 5, padding: 40, textAlign: 'center', border: '1px dashed #E5E5E5',
     }}>
       <div style={{ fontSize: 40, marginBottom: 10 }}>{active ? '⏳' : '📋'}</div>
       <div style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>{active ? 'No active orders' : 'No order history'}</div>

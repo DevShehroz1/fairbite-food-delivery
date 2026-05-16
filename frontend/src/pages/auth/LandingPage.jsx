@@ -41,7 +41,7 @@ function GoogleSignInBlock({ selectedRole, referralCode, onSuccess, selectedRole
   });
   return (
     <Pressable onClick={() => googleLogin()} disabled={loading} style={{
-      width: '100%', height: 52, borderRadius: 16,
+      width: '100%', height: 52, borderRadius: 5,
       background: '#fff', color: '#111',
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
       fontSize: 15, fontWeight: 700,
@@ -184,7 +184,7 @@ export default function LandingPage() {
               const active = selectedRole === r.key;
               return (
                 <Pressable key={r.key} onClick={() => setSelectedRole(r.key)} style={{
-                  padding: '12px 8px', borderRadius: 14, textAlign: 'center',
+                  padding: '12px 8px', borderRadius: 5, textAlign: 'center',
                   background: active ? 'rgba(229,57,53,0.18)' : 'rgba(255,255,255,0.07)',
                   border: `1.5px solid ${active ? 'var(--qb-primary)' : 'rgba(255,255,255,0.12)'}`,
                   transition: 'all .2s',
@@ -221,11 +221,11 @@ export default function LandingPage() {
 
         {/* login / register tab */}
         <motion.div variants={item} style={{
-          display: 'flex', background: 'rgba(255,255,255,0.1)', borderRadius: 14, padding: 4, marginBottom: 14,
+          display: 'flex', background: 'rgba(255,255,255,0.1)', borderRadius: 5, padding: 4, marginBottom: 14,
         }}>
           {['login', 'register'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
-              flex: 1, padding: '10px 0', borderRadius: 10,
+              flex: 1, padding: '10px 0', borderRadius: 5,
               background: tab === t ? '#fff' : 'transparent',
               color: tab === t ? '#111' : 'rgba(255,255,255,0.8)',
               border: 0, fontSize: 13, fontWeight: 700, cursor: 'pointer',
@@ -289,7 +289,7 @@ function FloatField({ label, value, onChange, type = 'text', trailing }) {
   const float = focus || value;
   return (
     <div style={{
-      position: 'relative', height: 54, borderRadius: 14,
+      position: 'relative', height: 54, borderRadius: 5,
       background: 'rgba(255,255,255,0.07)',
       border: `1px solid ${focus ? 'rgba(255,112,67,0.6)' : 'rgba(255,255,255,0.13)'}`,
       transition: 'border .2s',

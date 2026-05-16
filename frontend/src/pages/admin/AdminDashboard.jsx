@@ -40,7 +40,7 @@ const IMPACT_STATS = [
 
 const cardStyle = {
   background: '#F5F5F5',
-  borderRadius: 16,
+  borderRadius: 5,
   boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
   overflow: 'hidden',
 };
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
           onClick={handleLogout}
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            padding: '8px 14px', borderRadius: 12,
+            padding: '8px 14px', borderRadius: 5,
             background: '#fff1f1', color: '#ef4444',
             fontSize: 13, fontWeight: 600,
             border: '1px solid #fecaca',
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
               style={{ ...cardStyle, padding: '16px 14px' }}
             >
               <div style={{
-                width: 36, height: 36, borderRadius: 10,
+                width: 36, height: 36, borderRadius: 5,
                 background: accent + '18',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 marginBottom: 10, color: accent,
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
           style={{
-            borderRadius: 20,
+            borderRadius: 5,
             background: 'linear-gradient(135deg, var(--qb-primary) 0%, #b91c1c 100%)',
             padding: '20px 18px',
             marginBottom: 20,
@@ -160,7 +160,7 @@ export default function AdminDashboard() {
         {/* ── Tab Bar ─────────────────────────────────────────── */}
         <div style={{
           display: 'flex', gap: 6,
-          background: '#F5F5F5', borderRadius: 14,
+          background: '#F5F5F5', borderRadius: 5,
           padding: 4, marginBottom: 16,
         }}>
           {['Users', 'Restaurants'].map((label, i) => (
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
               onClick={() => setTab(i)}
               style={{
                 flex: 1, padding: '9px 0',
-                borderRadius: 11, fontSize: 13, fontWeight: 700,
+                borderRadius: 5, fontSize: 13, fontWeight: 700,
                 background: tab === i ? '#fff' : 'transparent',
                 color: tab === i ? '#111' : '#6b7280',
                 boxShadow: tab === i ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
@@ -198,7 +198,7 @@ export default function AdminDashboard() {
               >
                 {/* Avatar */}
                 <div style={{
-                  width: 40, height: 40, borderRadius: 12,
+                  width: 40, height: 40, borderRadius: 5,
                   background: (ROLE_COLORS[u.role] || '#6b7280') + '18',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0,
@@ -264,7 +264,7 @@ export default function AdminDashboard() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{
-                      width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                      width: 36, height: 36, borderRadius: 5, flexShrink: 0,
                       background: '#fef3c7',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 18,

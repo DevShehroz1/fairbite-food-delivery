@@ -77,11 +77,11 @@ export default function RestaurantListPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Pressable onClick={() => navigate('/home')} style={{
-            width: 38, height: 38, borderRadius: 12, background: '#F5F5F5',
+            width: 38, height: 38, borderRadius: 5, background: '#F5F5F5',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}><Icons.ChevronL size={20} stroke="#111" sw={2.5}/></Pressable>
           <div style={{
-            flex: 1, height: 44, borderRadius: 14, background: '#F5F5F5',
+            flex: 1, height: 44, borderRadius: 5, background: '#F5F5F5',
             display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px',
           }}>
             <Icons.Search size={18} stroke="#9CA3AF"/>
@@ -184,15 +184,15 @@ export default function RestaurantListPage() {
 
 function SkeletonCard() {
   return (
-    <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
+    <div style={{ background: '#fff', borderRadius: 5, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
       <div style={{ height: 152, background: '#EEE',
         backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
         backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite' }}/>
       <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ width: '60%', height: 14, borderRadius: 6, background: '#EEE',
+        <div style={{ width: '60%', height: 14, borderRadius: 5, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
           backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite' }}/>
-        <div style={{ width: '40%', height: 10, borderRadius: 6, background: '#EEE',
+        <div style={{ width: '40%', height: 10, borderRadius: 5, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
           backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite' }}/>
       </div>
@@ -211,7 +211,7 @@ function EmptySearch({ query, onClear }) {
         Try a different search term
       </div>
       <Pressable onClick={onClear} style={{
-        marginTop: 16, padding: '10px 20px', borderRadius: 12,
+        marginTop: 16, padding: '10px 20px', borderRadius: 5,
         background: 'var(--qb-primary)', color: '#fff',
         fontSize: 14, fontWeight: 700,
       }}>Clear search</Pressable>
@@ -230,7 +230,7 @@ function EmptyFiltered({ title, onClear }) {
         Try clearing the filter or pick another category.
       </div>
       <Pressable onClick={onClear} style={{
-        marginTop: 16, padding: '10px 20px', borderRadius: 12,
+        marginTop: 16, padding: '10px 20px', borderRadius: 5,
         background: 'var(--qb-primary)', color: '#fff',
         fontSize: 14, fontWeight: 700,
       }}>Show all restaurants</Pressable>

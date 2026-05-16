@@ -75,7 +75,7 @@ export default function LocationPicker() {
               transition={{ type: 'spring', stiffness: 300, damping: 32 }}
               style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 110,
-                background: '#fff', borderRadius: '22px 22px 0 0',
+                background: '#fff', borderRadius: '5px 5px 0 0',
                 padding: '12px 16px 28px', maxHeight: '85vh', overflowY: 'auto',
                 boxShadow: '0 -10px 36px rgba(0,0,0,0.2)',
                 maxWidth: 430, margin: '0 auto',
@@ -91,12 +91,12 @@ export default function LocationPicker() {
               {/* GPS shortcut */}
               <Pressable onClick={useGPS} style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '12px 14px', borderRadius: 12, marginTop: 14,
+                padding: '12px 14px', borderRadius: 5, marginTop: 14,
                 background: 'rgba(229,57,53,0.06)',
                 border: '1.5px solid rgba(229,57,53,0.2)',
                 width: '100%', textAlign: 'left',
               }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--qb-primary)',
+                <div style={{ width: 36, height: 36, borderRadius: 5, background: 'var(--qb-primary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Icons.MapPin size={18} stroke="#fff" sw={2.5}/>
                 </div>
@@ -115,7 +115,7 @@ export default function LocationPicker() {
               <div style={{
                 marginTop: 14,
                 display: 'flex', alignItems: 'center', gap: 10,
-                padding: '10px 14px', borderRadius: 12, background: '#F5F5F5',
+                padding: '10px 14px', borderRadius: 5, background: '#F5F5F5',
               }}>
                 <Icons.Search size={16} stroke="#9CA3AF"/>
                 <input
@@ -154,7 +154,7 @@ export default function LocationPicker() {
                       width: '100%', textAlign: 'left',
                     }}>
                       <div style={{
-                        width: 38, height: 38, borderRadius: 12,
+                        width: 38, height: 38, borderRadius: 5,
                         background: active ? 'rgba(229,57,53,0.1)' : '#F5F5F5',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 18,

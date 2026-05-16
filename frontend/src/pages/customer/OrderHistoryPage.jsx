@@ -48,7 +48,7 @@ export default function OrderHistoryPage() {
         display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <Pressable onClick={() => navigate('/home')} style={{
-          width: 38, height: 38, borderRadius: 12, background: '#F5F5F5',
+          width: 38, height: 38, borderRadius: 5, background: '#F5F5F5',
           display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}>
           <Icons.ChevronL size={20} stroke="#111" sw={2.5}/>
@@ -86,7 +86,7 @@ function OrderCard({ order, navigate }) {
 
   return (
     <div style={{
-      background: '#fff', borderRadius: 16, border: '1px solid #F0F0F0',
+      background: '#fff', borderRadius: 5, border: '1px solid #F0F0F0',
       boxShadow: '0 4px 12px rgba(0,0,0,0.04)', padding: '14px 16px',
       display: 'flex', flexDirection: 'column', gap: 10,
     }}>
@@ -97,7 +97,7 @@ function OrderCard({ order, navigate }) {
         </span>
         <span style={{
           display: 'inline-flex', alignItems: 'center', gap: 5,
-          padding: '4px 10px', borderRadius: 20,
+          padding: '4px 10px', borderRadius: 5,
           background: dotColor + '18', fontSize: 12, fontWeight: 700, color: dotColor,
         }}>
           <span style={{
@@ -131,7 +131,7 @@ function OrderCard({ order, navigate }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {isActive && (
             <Pressable onClick={() => navigate(`/orders/${orderId}/track`)} style={{
-              padding: '7px 16px', borderRadius: 12,
+              padding: '7px 16px', borderRadius: 5,
               background: 'var(--qb-primary)', color: '#fff',
               fontSize: 13, fontWeight: 700,
             }}>
@@ -158,22 +158,22 @@ function SkeletonCard() {
     backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
     backgroundSize: '200% 100%',
     animation: 'qb-shimmer 1.2s linear infinite',
-    borderRadius: 8,
+    borderRadius: 5,
   };
   return (
     <div style={{
-      background: '#fff', borderRadius: 16, border: '1px solid #F0F0F0',
+      background: '#fff', borderRadius: 5, border: '1px solid #F0F0F0',
       padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <div style={{ width: '40%', height: 14, ...shimmer }}/>
-        <div style={{ width: '25%', height: 22, borderRadius: 20, ...shimmer }}/>
+        <div style={{ width: '25%', height: 22, borderRadius: 5, ...shimmer }}/>
       </div>
       <div style={{ width: '55%', height: 12, ...shimmer }}/>
       <div style={{ borderTop: '1px dashed #ECECEC' }}/>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ width: '30%', height: 16, ...shimmer }}/>
-        <div style={{ width: '28%', height: 32, borderRadius: 12, ...shimmer }}/>
+        <div style={{ width: '28%', height: 32, borderRadius: 5, ...shimmer }}/>
       </div>
     </div>
   );
@@ -188,7 +188,7 @@ function EmptyState({ navigate }) {
         Your order history will appear here
       </div>
       <Pressable onClick={() => navigate('/restaurants')} style={{
-        marginTop: 20, padding: '12px 28px', borderRadius: 14,
+        marginTop: 20, padding: '12px 28px', borderRadius: 5,
         background: 'var(--qb-primary)', color: '#fff',
         fontSize: 15, fontWeight: 700, display: 'inline-flex',
       }}>
