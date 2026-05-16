@@ -426,13 +426,6 @@ const cuisineFallback = (cuisines = []) => {
   return '🍽️';
 };
 
-const priceTier = (tier) => {
-  if (tier === 4) return '$$$$';
-  if (tier === 3) return '$$$';
-  if (tier === 2) return '$$';
-  return '$';
-};
-
 const formatReviewCount = (n) => {
   if (!n) return '0';
   if (n >= 1000) return `${Math.floor(n / 1000)}k+`;
@@ -451,7 +444,6 @@ export function BigRestaurantCard({ r, onClick }) {
   const img = r.images?.cover;
   const time = r.delivery?.estimatedTime || 30;
   const fee  = r.delivery?.fee || 50;
-  const tier = r.pricing?.tier || 2;
   const discount = r.pricing?.discount?.upTo || r.discount?.upTo || 0;
   const saverFee = r.delivery?.saverFee || Math.max(0, fee - 30);
 
@@ -472,13 +464,6 @@ export function BigRestaurantCard({ r, onClick }) {
             <Ribbon kind={ribbon}/>
           </div>
         )}
-        {/* Ad-style chip */}
-        <div style={{
-          position: 'absolute', top: 10, right: 10,
-          padding: '3px 8px', borderRadius: 6,
-          background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)',
-          color: '#fff', fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
-        }}>Ad</div>
       </div>
 
       {/* Info — name + ⭐ row */}
@@ -499,12 +484,10 @@ export function BigRestaurantCard({ r, onClick }) {
           </div>
         </div>
 
-        {/* Meta — time · $$ · cuisine */}
+        {/* Meta — time · cuisine */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6,
           fontSize: 13, color: '#6b7280', fontWeight: 500 }}>
           <span>From {time} min</span>
-          <span style={{ color: '#D1D5DB' }}>·</span>
-          <span style={{ fontWeight: 700, color: '#374151' }}>{priceTier(tier)}</span>
           <span style={{ color: '#D1D5DB' }}>·</span>
           <span>{cuisineLabel(r.cuisine)}</span>
         </div>
