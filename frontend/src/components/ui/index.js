@@ -185,7 +185,7 @@ export function SmartImg({ src, alt = '', style, radius = 0, fallback = '🍽️
           fontSize: 'clamp(28px, 6vw, 56px)',
         }}>{fallback}</div>
       ) : (
-        <img src={src} alt={alt} loading="lazy"
+        <img src={src} alt={alt} decoding="async"
           onLoad={() => setLoaded(true)}
           onError={() => setErrored(true)}
           style={{
