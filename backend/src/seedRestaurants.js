@@ -232,7 +232,7 @@ const mkDrinks = (prefix) => ([
       rating:  { average:4.5, count:2950 },
       delivery:{ fee:79, saverFee:39, estimatedTime:22, isAvailable:true },
       pricing: { commissionRate:15, minimumOrder:400, tier:2, discount:{ upTo:25 } },
-      status:  { isActive:true, isVerified:true, isFeatured:true },
+      status:  { isActive:false, isVerified:true, isFeatured:false },
       menu: [
         { id:'bl1', _id:'bl1', name:'Lab Burger',           price:580, category:'main-course', description:'Signature beef patty · lab sauce · cheese',  dietaryTags:['halal'], spiceLevel:'mild',   calories:760, isAvailable:true, image:LOCAL('/brands/burgerlab/dish1.jpg'), addOns:[ADDON.cheese] },
         { id:'bl2', _id:'bl2', name:'Crispy Chicken Burger',price:520, category:'main-course', description:'Crispy thigh · slaw · ranch',                dietaryTags:['halal'], spiceLevel:'hot',    calories:680, isAvailable:true, image:LOCAL('/brands/burgerlab/dish2.jpg') },
@@ -281,7 +281,7 @@ const mkDrinks = (prefix) => ([
       rating:  { average:4.6, count:2120 },
       delivery:{ fee:89, saverFee:39, estimatedTime:35, isAvailable:true },
       pricing: { commissionRate:15, minimumOrder:300, tier:2, discount:{ upTo:15 } },
-      status:  { isActive:true, isVerified:true, isFeatured:true },
+      status:  { isActive:false, isVerified:true, isFeatured:false },
       menu: [
         { id:'cs1', _id:'cs1', name:'Belgian Chocolate Ice Cream',     price:130, category:'dessert', description:'Crafted with the finest cocoa, real Belgian chocolate. Each scoop offers a deep, velvety chocolate experience.',                            dietaryTags:['vegetarian'], spiceLevel:'mild', calories:260, isAvailable:true, image:LOCAL('/brands/churn/belgian.jpg') },
         { id:'cs2', _id:'cs2', name:'Lotus Cheesecake Ice Cream',      price:130, category:'dessert', description:'A dreamy blend of velvety cheesecake infused with the rich and caramelized notes of Lotus Biscoff.',                                          dietaryTags:['vegetarian'], spiceLevel:'mild', calories:280, isAvailable:true, image:LOCAL('/brands/churn/lotus.jpg') },

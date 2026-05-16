@@ -40,7 +40,6 @@ export const BRAND_LABEL = {
   pizzahut:   'Pizza Hut',
   subway:     'Subway',
   cheezious:  'Cheezious',
-  burgerlab:  'Burger Lab',
 };
 
 export const matchesCategory = (restaurant, categoryId) => {

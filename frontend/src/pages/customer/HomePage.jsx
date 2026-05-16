@@ -49,7 +49,6 @@ const TOP_BRANDS = [
   { id: 'pizzahut',    name: 'Pizza Hut',          sub: 'From 35 min', logo: '/brands/pizzahut.jpg',     isLogo: true },
   { id: 'layers',      name: 'Layers',             sub: 'From 30 min', logo: '/brands/layers.jpg',       isLogo: true },
   { id: 'dominos',     name: "Domino's",           sub: 'From 40 min', logo: '/brands/dominos.jpg',      isLogo: true },
-  { id: 'burgerlab',   name: 'Burger Lab',         sub: 'From 25 min', logo: '/brands/burgerlab.jpg',    isLogo: true },
   { id: 'simplysufi',  name: 'Simply Sufi',        sub: 'From 20 min', logo: '/brands/simplysufi.webp',  isLogo: true },
   { id: '14thstreet',  name: '14th Street Pizza',  sub: 'From 35 min', logo: '/brands/14thstreet.webp',  isLogo: true },
   { id: 'kfc',         name: 'KFC',                sub: 'From 25 min', logo: 'https://logo.clearbit.com/kfc.com',       isLogo: true },
