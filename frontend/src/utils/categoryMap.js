@@ -45,6 +45,10 @@ export const BRAND_LABEL = {
 
 export const matchesCategory = (restaurant, categoryId) => {
   if (!categoryId) return true;
+  // Burgers category is curated to Daily Deli Co only.
+  if (categoryId === 'burgers') {
+    return (restaurant.name || '').toLowerCase().includes('daily deli');
+  }
   const wanted = CATEGORY_TO_CUISINES[categoryId] || [];
   if (!wanted.length) return true;
   const cuisines = (restaurant.cuisine || []).map(c => (c || '').toLowerCase());

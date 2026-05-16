@@ -35,23 +35,14 @@ function BrandLogo({ brand }) {
 }
 
 const FOOD_CATEGORIES = [
-  // Featured first — these have hand-curated illustrations in /public/cuisines.
+  { id: 'burgers',    label: 'Burgers',     img: '/brands/dailydeli/sunny-rocket.jpg' },
   { id: 'pizza',      label: 'Pizza',       img: '/cuisines/pizza.png' },
   { id: 'chinese',    label: 'Chinese',     img: '/cuisines/chinese.png' },
-  { id: 'halwa-puri', label: 'Halwa Puri',  img: '/cuisines/halwa-puri.png' },
-  { id: 'paratha',    label: 'Paratha',     img: '/cuisines/paratha.png' },
   { id: 'ice-cream',  label: 'Ice Cream',   img: '/cuisines/ice-cream.png' },
   { id: 'shawarma',   label: 'Shawarma',    img: '/brands/pita/dish1.jpg' },
-  // Rest stay on Unsplash for now.
-  { id: 'fast-food',  label: 'Fast Food',   img: 'https://images.unsplash.com/photo-1562967916-eb82221dfb92?w=300&auto=format&fit=crop' },
   { id: 'biryani',    label: 'Biryani',     img: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop' },
   { id: 'pakistani',  label: 'Pakistani',   img: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=300&auto=format&fit=crop' },
-  { id: 'burgers',    label: 'Burgers',     img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&auto=format&fit=crop' },
-  { id: 'desserts',   label: 'Desserts',    img: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300&auto=format&fit=crop' },
   { id: 'pasta',      label: 'Pasta',       img: 'https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=300&auto=format&fit=crop' },
-  { id: 'pulao',      label: 'Pulao',       img: 'https://images.unsplash.com/photo-1604908554007-1ec5d4f1f8b3?w=300&auto=format&fit=crop' },
-  { id: 'shawarma',   label: 'Shawarma',    img: 'https://images.unsplash.com/photo-1561651823-34feb02250e4?w=300&auto=format&fit=crop' },
-  { id: 'haleem',     label: 'Haleem',      img: 'https://images.unsplash.com/photo-1574653853027-5382a3d23a15?w=300&auto=format&fit=crop' },
 ];
 
 const TOP_BRANDS = [
