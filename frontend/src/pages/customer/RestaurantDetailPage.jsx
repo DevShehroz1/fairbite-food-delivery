@@ -67,11 +67,81 @@ function MenuImage({ item, size }) {
   );
 }
 
-const DEMO_REVIEWS = [
-  { id: 1, text: 'Amazing food! The karahi was perfectly spiced and naan was fresh out of the tandoor.', rating: 5, author: 'Usman K.', ago: '2 days ago' },
-  { id: 2, text: 'Good portions and fast delivery. The biryani was fragrant and well-seasoned. Will order again!', rating: 4, author: 'Ayesha R.', ago: '1 week ago' },
-  { id: 3, text: 'Best food near UOL. Generous portions, great taste and rider was on time.', rating: 5, author: 'Bilal M.', ago: '3 days ago' },
-];
+const REVIEW_SETS = {
+  bakery: [
+    { id: 1, text: 'The honey cake was unreal — soft sponge, perfect sweetness. Arrived chilled and intact.',  rating: 5, author: 'Maryam S.', ago: '2 days ago' },
+    { id: 2, text: 'Got the chocolate dreamcake for my sister\'s birthday — everyone asked where it was from.', rating: 5, author: 'Hassan A.', ago: '5 days ago' },
+    { id: 3, text: 'Salted caramel was rich and not too sweet. Packaging was lovely too.',                     rating: 4, author: 'Zoya R.',   ago: '1 week ago' },
+  ],
+  burger: [
+    { id: 1, text: 'Smashed patty was juicy and the bun held up till the last bite. Fries were hot and crisp.', rating: 5, author: 'Ali H.',    ago: '1 day ago' },
+    { id: 2, text: 'Cheese burger hit the spot — melty, smoky, generous. Will be a regular order.',             rating: 4, author: 'Sara K.',   ago: '4 days ago' },
+    { id: 3, text: 'Loaded fries were a vibe. Rider was on time and food was still warm.',                      rating: 5, author: 'Bilal M.',  ago: '6 days ago' },
+  ],
+  pizza: [
+    { id: 1, text: 'Crust was perfectly crisp on the edges, soft in the middle. Cheese pull was unmatched.',     rating: 5, author: 'Hamza T.',  ago: '2 days ago' },
+    { id: 2, text: 'Ordered the pepperoni — generous toppings and arrived piping hot. Garlic dip was great.',     rating: 4, author: 'Iqra M.',   ago: '1 week ago' },
+    { id: 3, text: 'Pasta alfredo was creamy without being heavy. Solid value for the portion.',                   rating: 5, author: 'Faraz N.',  ago: '3 days ago' },
+  ],
+  chicken: [
+    { id: 1, text: 'Zinger was crunchy outside, tender inside — just like dine-in. Sauce packets were generous.', rating: 5, author: 'Usman K.',  ago: '2 days ago' },
+    { id: 2, text: 'Hot wings had real heat and the fries were properly seasoned. Quick delivery too.',           rating: 4, author: 'Ayesha R.', ago: '5 days ago' },
+    { id: 3, text: 'Family bucket was fresh and well-packed. Coleslaw was a nice touch.',                          rating: 5, author: 'Noman L.',  ago: '1 week ago' },
+  ],
+  desi: [
+    { id: 1, text: 'Karahi was perfectly spiced and naan came fresh out of the tandoor. Tasted like home.',       rating: 5, author: 'Usman K.',  ago: '2 days ago' },
+    { id: 2, text: 'Biryani was fragrant and well-seasoned, raita on point. Will order again!',                    rating: 4, author: 'Ayesha R.', ago: '1 week ago' },
+    { id: 3, text: 'Nihari with the boti was rich and slow-cooked just right. Great portion for the price.',       rating: 5, author: 'Bilal M.',  ago: '3 days ago' },
+  ],
+  chinese: [
+    { id: 1, text: 'Chowmein had that proper wok-hei flavor. Manchurian sauce was spot on — sweet, tangy, glossy.', rating: 5, author: 'Mehwish A.', ago: '2 days ago' },
+    { id: 2, text: 'Egg fried rice was fluffy and not oily. Spring rolls were crisp till the last bite.',            rating: 4, author: 'Saad I.',    ago: '5 days ago' },
+    { id: 3, text: 'Hot and sour soup had real depth. Quick delivery and packed neatly.',                            rating: 5, author: 'Hira F.',    ago: '1 week ago' },
+  ],
+  iceCream: [
+    { id: 1, text: 'Scoops arrived perfectly frozen — pistachio was the standout. Loved the flavor selection.',     rating: 5, author: 'Anaya K.', ago: '1 day ago' },
+    { id: 2, text: 'Sundae was generous with toppings and sauces. My kids were obsessed.',                           rating: 5, author: 'Hassan B.', ago: '4 days ago' },
+    { id: 3, text: 'Mint choc chip and cookies-and-cream both fresh, no freezer-burn. Will reorder for sure.',       rating: 4, author: 'Zara N.',   ago: '1 week ago' },
+  ],
+  shawarma: [
+    { id: 1, text: 'Shawarma wrap was loaded — meat was tender, garlic sauce was creamy. Fries inside? Genius.',     rating: 5, author: 'Faisal M.', ago: '2 days ago' },
+    { id: 2, text: 'Hummus and pita were fresh, great mezze platter. Felt like a proper Beirut meal.',                rating: 4, author: 'Nida R.',   ago: '6 days ago' },
+    { id: 3, text: 'Falafel was crisp outside, fluffy inside. Generous portions for the price.',                       rating: 5, author: 'Omar S.',   ago: '4 days ago' },
+  ],
+  milkSweets: [
+    { id: 1, text: 'Kheer was thick, creamy and lightly perfumed with cardamom. Tasted homemade.',                    rating: 5, author: 'Rabia I.',  ago: '2 days ago' },
+    { id: 2, text: 'Gulab jamun was warm, soft and soaked just right. Lassi was thick and refreshing.',                rating: 5, author: 'Kashif A.', ago: '5 days ago' },
+    { id: 3, text: 'Falooda was a treat — proper layering and fresh flavors. Will order again.',                       rating: 4, author: 'Sana M.',   ago: '1 week ago' },
+  ],
+  breakfast: [
+    { id: 1, text: 'Halwa puri was a classic Sunday morning win — fresh, flaky and hot. Channa was rich.',             rating: 5, author: 'Aslam Q.',  ago: '1 day ago' },
+    { id: 2, text: 'Anda paratha was perfectly layered and not greasy. Solid breakfast spot.',                           rating: 5, author: 'Sadia P.',  ago: '4 days ago' },
+    { id: 3, text: 'Lassi with the nashta combo was the best decision. Will be a weekend regular.',                      rating: 4, author: 'Junaid B.', ago: '6 days ago' },
+  ],
+  generic: [
+    { id: 1, text: 'Food was fresh, packaging was neat, and the rider was right on time. Solid order overall.',         rating: 5, author: 'Zara H.',   ago: '2 days ago' },
+    { id: 2, text: 'Good portions and consistent flavors. Easy to recommend for a weekday meal.',                        rating: 4, author: 'Imran S.',  ago: '5 days ago' },
+    { id: 3, text: 'Quick delivery and the food held up well. Will order again.',                                         rating: 5, author: 'Nadia R.',  ago: '1 week ago' },
+  ],
+};
+
+function pickReviews(restaurant) {
+  const tags = (restaurant?.cuisine || []).join(' ').toLowerCase();
+  const name = (restaurant?.name || '').toLowerCase();
+  const hay  = `${tags} ${name}`;
+
+  if (/bakery|cake|dessert|sweet/.test(hay) && !/milk|kheer|jalebi|jamun/.test(hay)) return REVIEW_SETS.bakery;
+  if (/ice ?cream|gelato|frozen yog/.test(hay))                                       return REVIEW_SETS.iceCream;
+  if (/pizza|italian/.test(hay))                                                      return REVIEW_SETS.pizza;
+  if (/burger|smash/.test(hay))                                                       return REVIEW_SETS.burger;
+  if (/kfc|fried chicken|broast/.test(hay))                                           return REVIEW_SETS.chicken;
+  if (/shawarma|pita|middle.?eastern|arab|lebanese/.test(hay))                        return REVIEW_SETS.shawarma;
+  if (/chinese|asian|wok|hakka|chow|manchurian/.test(hay))                            return REVIEW_SETS.chinese;
+  if (/milk|kheer|jalebi|jamun|falooda|halwa|mithai/.test(hay))                       return REVIEW_SETS.milkSweets;
+  if (/paratha|nashta|naashta|breakfast|halwa.?puri/.test(hay))                       return REVIEW_SETS.breakfast;
+  if (/karahi|nihari|biryani|desi|pakistani|bbq|tikka|kebab/.test(hay))               return REVIEW_SETS.desi;
+  return REVIEW_SETS.generic;
+}
 
 export default function RestaurantDetailPage() {
   const { id } = useParams();
@@ -326,7 +396,7 @@ export default function RestaurantDetailPage() {
               <Pressable onClick={() => toast.info('Full reviews coming soon!')} style={{ fontSize: 12, fontWeight: 700, color: 'var(--qb-primary)' }}>See all</Pressable>
             </div>
             <div className="qb-no-scrollbar" style={{ display: 'flex', gap: 10, padding: '0 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-              {DEMO_REVIEWS.map(rev => (
+              {pickReviews(restaurant).map(rev => (
                 <div key={rev.id} style={{ width: 240, flexShrink: 0, padding: '14px', borderRadius: 14, border: '1px solid #F0F0F0', background: '#fff' }}>
                   <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.55, marginBottom: 12 }}>{rev.text}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
