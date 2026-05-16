@@ -7,10 +7,25 @@ import { QBLogoMark } from './components/ui';
 // LandingPage handles both sign-in and registration tabs.
 import LandingPage from './pages/auth/LandingPage';
 
+// ChunkLoadError = stale tab requesting a JS chunk that was replaced by a
+// new deploy. Reload once to pull the fresh HTML + chunk hashes; the
+// sessionStorage guard stops a reload loop if the chunk is genuinely 404.
+const isChunkLoadError = (err) =>
+  err && (err.name === 'ChunkLoadError' || /Loading chunk [^ ]+ failed/i.test(err.message || ''));
+
 class AppErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { err: null, info: null }; }
   static getDerivedStateFromError(err) { return { err }; }
   componentDidCatch(err, info) {
+    if (isChunkLoadError(err)) {
+      try {
+        if (!sessionStorage.getItem('qb_chunk_reload')) {
+          sessionStorage.setItem('qb_chunk_reload', '1');
+          window.location.reload();
+          return;
+        }
+      } catch (_) { /* sessionStorage unavailable — fall through to red screen */ }
+    }
     this.setState({ err, info });
     console.error('QuickBite render error:', err, info);
   }
