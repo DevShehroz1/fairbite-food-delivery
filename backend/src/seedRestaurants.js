@@ -47,7 +47,7 @@ const PIC = {
   cheesyFries:      IMG('photo-1573080496219-bb080dd4f877'),
 
   // Daily Deli Co (Islamabad)
-  cover_dailydeli:  LOCAL('/brands/dailydeli/sunny-rocket.jpg'),
+  cover_dailydeli:  LOCAL('/brands/dailydeli/cover.jpg'),
   dd_sunnyRocket:   LOCAL('/brands/dailydeli/sunny-rocket.jpg'),
   dd_alfredo:       LOCAL('/brands/dailydeli/alfredo.webp'),
   dd_curlyFries:    LOCAL('/brands/dailydeli/curly-fries.jpg'),
