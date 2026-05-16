@@ -23,7 +23,7 @@ function ReferralCard() {
     );
   };
   const share = async () => {
-    const msg = `Join me on QuickBite! Use my code ${info.code} for 50% off your first order: ${info.shareUrl}`;
+    const msg = `Join me on QuickBite! Use my code ${info.code} and get Rs. 250 off your first order: ${info.shareUrl}`;
     if (navigator.share) {
       try { await navigator.share({ title: 'QuickBite', text: msg, url: info.shareUrl }); } catch {}
     } else {

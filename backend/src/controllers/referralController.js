@@ -2,8 +2,8 @@ const User = require('../models/User');
 const supabase = require('../config/supabase');
 
 const REFERRAL_REWARDS = {
-  referrer: { type: 'flat',    value: 200, minOrder: 500, label: 'Rs. 200 off (friend joined!)' },
-  referee:  { type: 'percent', value: 50,  minOrder: 300, maxDiscount: 250, label: '50% off your first order (welcome!)' },
+  referrer: { type: 'flat', value: 500, minOrder: 1000, label: 'Rs. 500 off (friend joined!)' },
+  referee:  { type: 'flat', value: 250, minOrder: 500,  label: 'Rs. 250 off your first order (welcome!)' },
 };
 
 const makeCoupon = (template, source) => ({

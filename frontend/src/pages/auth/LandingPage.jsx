@@ -267,7 +267,7 @@ export default function LandingPage() {
               />
               {referralCode && params.get('ref') && (
                 <div style={{ fontSize: 11, color: 'var(--qb-accent)', marginTop: 6, paddingLeft: 4 }}>
-                  ✓ Friend's code applied — you'll get 50% off your first order
+                  ✓ Friend's code applied — you'll get Rs. 250 off your first order
                 </div>
               )}
             </motion.div>
