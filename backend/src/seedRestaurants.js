@@ -46,6 +46,26 @@ const PIC = {
   veggieBurger:     IMG('photo-1551782450-a2132b4ba21d'),
   cheesyFries:      IMG('photo-1573080496219-bb080dd4f877'),
 
+  // Daily Deli Co (Islamabad)
+  cover_dailydeli:  LOCAL('/brands/dailydeli/sunny-rocket.jpg'),
+  dd_sunnyRocket:   LOCAL('/brands/dailydeli/sunny-rocket.jpg'),
+  dd_alfredo:       LOCAL('/brands/dailydeli/alfredo.webp'),
+  dd_curlyFries:    LOCAL('/brands/dailydeli/curly-fries.jpg'),
+  dd_smokeyBurger:  LOCAL('/brands/dailydeli/other-burger.jpg'),
+  dd_chickenFing:   LOCAL('/brands/dailydeli/chicken-fingers.jpg'),
+  dd_swissMush:     LOCAL('/brands/dailydeli/other-burger.jpg'),
+  dd_shake1:        LOCAL('/brands/dailydeli/shakes/shake1.jpg'),
+  dd_shake2:        LOCAL('/brands/dailydeli/shakes/shake2.jpg'),
+  dd_shake3:        LOCAL('/brands/dailydeli/shakes/shake3.jpg'),
+  dd_shake4:        LOCAL('/brands/dailydeli/shakes/shake4.jpg'),
+  dd_shake5:        LOCAL('/brands/dailydeli/shakes/shake5.jpg'),
+
+  // Bottled drinks (used across all restaurants)
+  drink_pepsi:      LOCAL('/drinks/pepsi.jpg'),
+  drink_dew:        LOCAL('/drinks/mountain-dew.jpg'),
+  drink_mirinda:    LOCAL('/drinks/mirinda.jpg'),
+  drink_7up:        LOCAL('/drinks/7up.jpg'),
+
   // Famous Karahi House (desi)
   chickenKarahi:    IMG('photo-1567188040759-fb8a883dc6d8'),
   muttonKarahi:     IMG('photo-1574484284002-952d92456975'),
@@ -73,6 +93,15 @@ const ADDON = {
 };
 
 const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'54000', coordinates:{ lat:31.5204, lng:74.3587 } });
+
+// Bottled drinks shown in every restaurant's beverage section.
+// Prefix gives each row a unique ID per restaurant.
+const mkDrinks = (prefix) => ([
+  { id:`${prefix}-pepsi`,   _id:`${prefix}-pepsi`,   name:'Pepsi',         price:150, category:'beverage', description:'Chilled 345ml bottle.',           dietaryTags:['vegetarian'], spiceLevel:'mild', calories:140, isAvailable:true, image:PIC.drink_pepsi,   addOns:[ADDON.bottle1_5L] },
+  { id:`${prefix}-dew`,     _id:`${prefix}-dew`,     name:'Mountain Dew',  price:150, category:'beverage', description:'Chilled 345ml bottle.',           dietaryTags:['vegetarian'], spiceLevel:'mild', calories:160, isAvailable:true, image:PIC.drink_dew,     addOns:[ADDON.bottle1_5L] },
+  { id:`${prefix}-mirinda`, _id:`${prefix}-mirinda`, name:'Mirinda',       price:150, category:'beverage', description:'Chilled 345ml orange bottle.',    dietaryTags:['vegetarian'], spiceLevel:'mild', calories:150, isAvailable:true, image:PIC.drink_mirinda, addOns:[ADDON.bottle1_5L] },
+  { id:`${prefix}-7up`,     _id:`${prefix}-7up`,     name:'7Up',           price:150, category:'beverage', description:'Chilled 345ml lemon-lime bottle.',dietaryTags:['vegetarian'], spiceLevel:'mild', calories:140, isAvailable:true, image:PIC.drink_7up,     addOns:[ADDON.bottle1_5L] },
+]);
 
 (async () => {
   const owner = await User.findByEmail('restaurant@demo.com');
@@ -111,6 +140,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'fk10',_id:'fk10',name:'Mango Lassi',           price:180,  category:'beverage',    description:'Chilled mango yogurt drink',                       dietaryTags:['vegetarian'], spiceLevel:'mild', calories:180, isAvailable:true, image:PIC.mangoLassi, addOns:[ADDON.largeDrink] },
         { id:'fk11',_id:'fk11',name:'Kheer',                 price:120,  category:'dessert',     description:'Pakistani rice pudding',                           dietaryTags:['vegetarian'], spiceLevel:'mild', calories:220, isAvailable:true, image:PIC.kheer },
         { id:'fk12',_id:'fk12',name:'Gulab Jamun',    price:200,  category:'dessert',     description:'Soft milk dumplings in syrup',                     dietaryTags:['vegetarian'], spiceLevel:'mild', calories:380, isAvailable:true, image:PIC.gulabJamun },
+        ...mkDrinks('fk'),
       ],
     },
 
@@ -137,7 +167,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'kfc7', _id:'kfc7', name:'Boneless Strips',  price:560, category:'appetizer',   description:'Tender · crunchy · dippable',                     dietaryTags:['halal'], spiceLevel:'medium', calories:520, isAvailable:true, image:PIC.bonelessStrips, addOns:[ADDON.extraSauce] },
         { id:'kfc8', _id:'kfc8', name:'Hot Wings',        price:620, category:'appetizer',   description:'Crispy spicy wings',                              dietaryTags:['halal'], spiceLevel:'hot',    calories:480, isAvailable:true, image:PIC.bonelessStrips },
         { id:'kfc9', _id:'kfc9', name:'Rice & Spice',            price:340, category:'main-course', description:'Spiced rice · crispy chicken topping',            dietaryTags:['halal'], spiceLevel:'medium', calories:580, isAvailable:true, image:PIC.rice_n_spice },
-        { id:'kfc10',_id:'kfc10',name:'Pepsi',         price:120, category:'beverage',    description:'Chilled · 345ml',                                  dietaryTags:['vegetarian'], spiceLevel:'mild', calories:140, isAvailable:true, image:PIC.pepsi, addOns:[ADDON.largeDrink, ADDON.bottle1_5L] },
+        ...mkDrinks('kfc'),
       ],
     },
 
@@ -162,6 +192,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'ch5', _id:'ch5', name:'Garlic Bread',         price:340,  category:'appetizer',   description:'Buttered garlic bread sticks',               dietaryTags:['vegetarian'], spiceLevel:'mild', calories:380, isAvailable:true, image:PIC.garlicBread, addOns:[ADDON.extraSauce] },
         { id:'ch6', _id:'ch6', name:'Pasta Alfredo',               price:780,  category:'main-course', description:'Creamy mushroom alfredo',                    dietaryTags:['vegetarian'], spiceLevel:'mild', calories:680, isAvailable:true, image:PIC.pastaAlfredo },
         { id:'ch7', _id:'ch7', name:'Chocolate Lava Cake',         price:380,  category:'dessert',     description:'Warm molten chocolate centre',               dietaryTags:['vegetarian'], spiceLevel:'mild', calories:420, isAvailable:true, image:PIC.lavaCake },
+        ...mkDrinks('ch'),
       ],
     },
 
@@ -185,6 +216,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'ly4', _id:'ly4', name:'Chocolate Dreamcake',      price:3100, category:'dessert', description:'A luscious chocolate mousse cake made with lots of love and heavenly chocolate.',                                                  dietaryTags:['vegetarian'], spiceLevel:'mild', calories:2100, isAvailable:true, image:LOCAL('/brands/layers/dish4.jpg') },
         { id:'ly5', _id:'ly5', name:'Hersheys Chocolate Cake',  price:2000, category:'dessert', description:'Chocolate sponge with creamy fudge icing, layered with thin silky imported chocolate.',                                            dietaryTags:['vegetarian'], spiceLevel:'mild', calories:1750, isAvailable:true, image:LOCAL('/brands/layers/dish5.jpg') },
         { id:'ly6', _id:'ly6', name:'Salted Caramel Cake',      price:2600, category:'dessert', description:'Salted caramel, creamy cheese & moist vanilla sponge. 2.5 lbs.',                                                                   dietaryTags:['vegetarian'], spiceLevel:'mild', calories:1850, isAvailable:true, image:LOCAL('/brands/layers/dish6.jpg') },
+        ...mkDrinks('ly'),
       ],
     },
 
@@ -207,6 +239,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'bl3', _id:'bl3', name:'Vegetable Burger',     price:420, category:'main-course', description:'House-made veggie patty · mayo · lettuce',   dietaryTags:['vegetarian'], spiceLevel:'mild', calories:520, isAvailable:true, image:PIC.veggieBurger },
         { id:'bl4', _id:'bl4', name:'Cheesy Fries',         price:340, category:'appetizer',   description:'Crinkle fries · cheese sauce',               dietaryTags:['vegetarian'], spiceLevel:'mild', calories:540, isAvailable:true, image:PIC.cheesyFries },
         { id:'bl5', _id:'bl5', name:'Chocolate Shake',      price:280, category:'beverage',    description:'Cold thick chocolate shake',                 dietaryTags:['vegetarian'], spiceLevel:'mild', calories:420, isAvailable:true, image:PIC.chocoShake, addOns:[ADDON.largeDrink] },
+        ...mkDrinks('bl'),
       ],
     },
 
@@ -232,6 +265,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
           flavors:['Vanilla','Chocolate','Strawberry','Mint Chocolate Chip','Cookies n Cream','Pistachio Almond','Rocky Road','Pralines n Cream','Mango Tango','Cotton Candy','Bubble Gum','Cherries Jubilee'] },
         { id:'br4', _id:'br4', name:'Family Pack — 2 Cups', price:1280, category:'dessert', description:'Two single-scoop cups for sharing · pick two flavors.',         dietaryTags:['vegetarian'], spiceLevel:'mild', calories:480, isAvailable:true, image:LOCAL('/brands/baskin/two-single.jpg'),
           flavors:['Vanilla','Chocolate','Strawberry','Mint Chocolate Chip','Cookies n Cream','Pistachio Almond','Rocky Road','Pralines n Cream','Mango Tango','Cotton Candy','Bubble Gum','Cherries Jubilee'] },
+        ...mkDrinks('br'),
       ],
     },
 
@@ -253,6 +287,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'cs2', _id:'cs2', name:'Lotus Cheesecake Ice Cream',      price:130, category:'dessert', description:'A dreamy blend of velvety cheesecake infused with the rich and caramelized notes of Lotus Biscoff.',                                          dietaryTags:['vegetarian'], spiceLevel:'mild', calories:280, isAvailable:true, image:LOCAL('/brands/churn/lotus.jpg') },
         { id:'cs3', _id:'cs3', name:'Dairy Delight Ice Cream',         price:130, category:'dessert', description:'Rich chocolate ice cream expertly blended with creamy, melt-in-your-mouth chocolate flakes.',                                                  dietaryTags:['vegetarian'], spiceLevel:'mild', calories:270, isAvailable:true, image:LOCAL('/brands/churn/dairy.jpg') },
         { id:'cs4', _id:'cs4', name:'Cookies & Cream Ice Cream',       price:130, category:'dessert', description:'Delightful blend of rich vanilla ice cream swirled with chunks of crunchy chocolate cookies.',                                                 dietaryTags:['vegetarian'], spiceLevel:'mild', calories:250, isAvailable:true, image:LOCAL('/brands/churn/cookies.jpg') },
+        ...mkDrinks('cs'),
       ],
     },
 
@@ -275,6 +310,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'aw3', _id:'aw3', name:'Chicken Chow Mein',        price:580, category:'main-course', description:'Hakka noodles tossed with chicken and crunchy veg.',     dietaryTags:['halal'], spiceLevel:'mild',   calories:660, isAvailable:true, image:'' },
         { id:'aw4', _id:'aw4', name:'Sweet and Sour Chicken',   price:660, category:'main-course', description:'Battered chicken in sweet & sour pineapple sauce.',     dietaryTags:['halal'], spiceLevel:'mild',   calories:680, isAvailable:true, image:'' },
         { id:'aw5', _id:'aw5', name:'Spring Rolls (4pcs)',      price:280, category:'appetizer',   description:'Crispy veggie rolls with sweet chilli dip.',             dietaryTags:['vegetarian'], spiceLevel:'mild', calories:320, isAvailable:true, image:'' },
+        ...mkDrinks('aw'),
       ],
     },
 
@@ -296,6 +332,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'pm2', _id:'pm2', name:'Channay (Bowl)',           price:180, category:'main-course', description:'Spicy chickpeas slow-cooked overnight.',               dietaryTags:['vegetarian'], spiceLevel:'medium', calories:340, isAvailable:true, image:'' },
         { id:'pm3', _id:'pm3', name:'Aloo Bhujia',              price:160, category:'main-course', description:'Soft potato curry with cumin tadka.',                  dietaryTags:['vegetarian'], spiceLevel:'mild', calories:280, isAvailable:true, image:'' },
         { id:'pm4', _id:'pm4', name:'Sweet Lassi (Glass)',      price:140, category:'beverage',    description:'Thick whipped lassi with rose syrup.',                 dietaryTags:['vegetarian'], spiceLevel:'mild', calories:220, isAvailable:true, image:'' },
+        ...mkDrinks('pm'),
       ],
     },
 
@@ -317,6 +354,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'ph2', _id:'ph2', name:'Cheese Paratha',        price:240, category:'main-course', description:'Loaded with melty cheese · golden crisp on the outside.', dietaryTags:['vegetarian'], spiceLevel:'mild', calories:520, isAvailable:true, image:'' },
         { id:'ph3', _id:'ph3', name:'Anda Paratha',          price:220, category:'main-course', description:'Whole egg sealed inside a buttery paratha.',              dietaryTags:['halal'], spiceLevel:'mild',     calories:480, isAvailable:true, image:'' },
         { id:'ph4', _id:'ph4', name:'Doodh Patti Chai',      price:120, category:'beverage',    description:'Strong milk-tea brewed the dhaba way.',                   dietaryTags:['vegetarian'], spiceLevel:'mild', calories:180, isAvailable:true, image:'' },
+        ...mkDrinks('ph'),
       ],
     },
 
@@ -339,6 +377,7 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'dp3', _id:'dp3', name:'Margherita',                price:990,  category:'main-course', description:'Tomato sauce · 100% mozzarella · fresh basil.',                  dietaryTags:['vegetarian'], spiceLevel:'mild',   calories:780, isAvailable:true, image:'' },
         { id:'dp4', _id:'dp4', name:'Stuffed Garlic Bread',      price:380,  category:'appetizer',   description:'Cheese-stuffed garlic bread · marinara dip on the side.',         dietaryTags:['vegetarian'], spiceLevel:'mild',   calories:420, isAvailable:true, image:'' },
         { id:'dp5', _id:'dp5', name:'Choco Lava Cake',           price:340,  category:'dessert',     description:'Warm chocolate cake · molten core.',                              dietaryTags:['vegetarian'], spiceLevel:'mild',   calories:380, isAvailable:true, image:'' },
+        ...mkDrinks('dp'),
       ],
     },
 
@@ -361,6 +400,36 @@ const baseAddr = (street) => ({ street, city:'Lahore', state:'Punjab', zipCode:'
         { id:'pt3', _id:'pt3', name:'Falafel Wrap',           price:340, category:'main-course', description:'Crispy chickpea falafel · tahini · cucumber · tomato.',              dietaryTags:['vegetarian'], spiceLevel:'mild', calories:480, isAvailable:true, image:LOCAL('/brands/pita/dish3.jpg') },
         { id:'pt4', _id:'pt4', name:'Hummus Plate',           price:380, category:'appetizer',   description:'Smooth hummus · olive oil · warm pita on the side.',                 dietaryTags:['vegetarian'], spiceLevel:'mild', calories:380, isAvailable:true, image:'' },
         { id:'pt5', _id:'pt5', name:'Mixed Grill Platter',    price:1450, category:'main-course', description:'Chicken shawarma · beef shawarma · seekh kebab · garlic rice.',     dietaryTags:['halal'], spiceLevel:'medium', calories:1180, isAvailable:true, image:'' },
+        ...mkDrinks('pt'),
+      ],
+    },
+
+    // ─── 13. Daily Deli Co — Islamabad burger specialist (no owner) ──────
+    {
+      owner_id: null,
+      name: 'Daily Deli Co',
+      description: 'The Burger Specialist · Made in Pakistan · smashed beef patties, signature sauces and house-cut curly fries.',
+      cuisine: ['Burgers','American','Fast Food'],
+      address: baseAddr('F-7 Markaz, Islamabad'),
+      contact: { phone:'051111325325', email:'orders@dailydeli.pk' },
+      images:  { cover: PIC.cover_dailydeli, logo: 'https://ui-avatars.com/api/?name=DD&background=F97316&color=fff&size=200&bold=true' },
+      rating:  { average:4.7, count:4180 },
+      delivery:{ fee:99, saverFee:49, estimatedTime:30, isAvailable:true },
+      pricing: { commissionRate:15, minimumOrder:500, tier:3, discount:{ upTo:20 } },
+      status:  { isActive:true, isVerified:true, isFeatured:true },
+      menu: [
+        { id:'dd1', _id:'dd1', name:'The Sunny Rocket (Beef)',  price:860,  category:'main-course', description:'Buttered Buns, Rocket Leaves, Pickled Onions, Sundried Tomatoes & signature sauce.',          dietaryTags:['halal'], spiceLevel:'mild',   calories:780, isAvailable:true, image:PIC.dd_sunnyRocket, addOns:[ADDON.cheese] },
+        { id:'dd2', _id:'dd2', name:'Chicken Alfredo Pasta',    price:1080, category:'main-course', description:'Creamy and flavorful white alfredo pasta with just the perfect balance of garlic and herbs.', dietaryTags:['halal'], spiceLevel:'mild',   calories:820, isAvailable:true, image:PIC.dd_alfredo },
+        { id:'dd3', _id:'dd3', name:'Curly Fries Large',        price:450,  category:'appetizer',   description:'Crispy and addictive — house-cut, double-fried.',                                              dietaryTags:['vegetarian'], spiceLevel:'mild', calories:480, isAvailable:true, image:PIC.dd_curlyFries },
+        { id:'dd4', _id:'dd4', name:'DD Smokey House Burger',   price:740,  category:'main-course', description:'Patty with cheese, fried Onion Rings, Bologna slices and Smokehouse sauce.',                  dietaryTags:['halal'], spiceLevel:'mild',   calories:840, isAvailable:true, image:PIC.dd_smokeyBurger, addOns:[ADDON.cheese] },
+        { id:'dd5', _id:'dd5', name:'Fried Chicken Fingers',    price:620,  category:'appetizer',   description:'4 pieces of long cut crispy fried tender chicken served with salted fries.',                  dietaryTags:['halal'], spiceLevel:'mild',   calories:680, isAvailable:true, image:PIC.dd_chickenFing,  addOns:[ADDON.extraSauce] },
+        { id:'dd6', _id:'dd6', name:'Swiss Mushroom (Beef)',    price:820,  category:'main-course', description:'Buttered Buns, Swiss Cheese Slice, Mushroom Sauce & Sauteed mushrooms.',                       dietaryTags:['halal'], spiceLevel:'mild',   calories:820, isAvailable:true, image:PIC.dd_swissMush,    addOns:[ADDON.cheese] },
+        { id:'dd-shake1', _id:'dd-shake1', name:'Mango Tango Shake',     price:380, category:'beverage', description:'Thick mango shake blended with vanilla ice cream.',     dietaryTags:['vegetarian'], spiceLevel:'mild', calories:420, isAvailable:true, image:PIC.dd_shake1, addOns:[ADDON.largeDrink] },
+        { id:'dd-shake2', _id:'dd-shake2', name:'Cookies & Cream Shake', price:420, category:'beverage', description:'Crushed cookies whipped into a cold creamy shake.',     dietaryTags:['vegetarian'], spiceLevel:'mild', calories:480, isAvailable:true, image:PIC.dd_shake2, addOns:[ADDON.largeDrink] },
+        { id:'dd-shake3', _id:'dd-shake3', name:'Strawberry Cream Shake',price:400, category:'beverage', description:'Fresh strawberry blend with thick cream and ice.',      dietaryTags:['vegetarian'], spiceLevel:'mild', calories:440, isAvailable:true, image:PIC.dd_shake3, addOns:[ADDON.largeDrink] },
+        { id:'dd-shake4', _id:'dd-shake4', name:'Caramel Cloud Shake',   price:420, category:'beverage', description:'Salted caramel swirled into a velvety shake.',          dietaryTags:['vegetarian'], spiceLevel:'mild', calories:480, isAvailable:true, image:PIC.dd_shake4, addOns:[ADDON.largeDrink] },
+        { id:'dd-shake5', _id:'dd-shake5', name:'Vanilla Bean Shake',    price:380, category:'beverage', description:'Classic vanilla bean shake with a thick cream top.',    dietaryTags:['vegetarian'], spiceLevel:'mild', calories:440, isAvailable:true, image:PIC.dd_shake5, addOns:[ADDON.largeDrink] },
+        ...mkDrinks('dd'),
       ],
     },
   ];
