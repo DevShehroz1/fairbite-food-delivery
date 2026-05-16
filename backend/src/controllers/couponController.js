@@ -70,7 +70,12 @@ exports.validateCoupon = async (req, res, next) => {
 
     const me = await User.findById(req.user.id);
     const own = (me?.rewards || []).find(r => r.code === code && !r.redeemed);
+    const alreadyUsed = (me?.rewards || []).some(r => r.code === code && r.redeemed);
     const publicTpl = PUBLIC_COUPONS[code];
+
+    if (alreadyUsed && !own) {
+      return res.status(400).json({ success: false, message: 'This code has already been used' });
+    }
 
     const coupon = own || (publicTpl ? { code, ...publicTpl } : null);
     if (!coupon) {
@@ -132,8 +137,10 @@ exports.applyCouponToOrder = async ({ userId, code, subtotal, deliveryFee }) => 
   const upper = code.toUpperCase();
   const me = await User.findById(userId);
   const own = (me?.rewards || []).find(r => r.code === upper && !r.redeemed);
+  const alreadyUsed = (me?.rewards || []).some(r => r.code === upper && r.redeemed);
   const publicTpl = PUBLIC_COUPONS[upper];
 
+  if (alreadyUsed && !own) throw new Error('This code has already been used');
   const coupon = own || (publicTpl ? { code: upper, ...publicTpl } : null);
   if (!coupon) throw new Error('Invalid or already used coupon code');
   if (subtotal < (coupon.minOrder || 0)) {
