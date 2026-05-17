@@ -184,7 +184,7 @@ export default function OrderTrackingPage() {
       </div>
 
       {/* ── Map – top 55% ── */}
-      <div style={{ position: 'relative', flex: '0 0 55%', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', flex: '0 0 55%', overflow: 'hidden', borderTop: '6px solid #F3F4F6' }}>
         <LeafletMap
           restaurant={
             order?.restaurant?.address?.coordinates

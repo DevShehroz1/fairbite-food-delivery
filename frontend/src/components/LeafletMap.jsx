@@ -93,7 +93,8 @@ export default function LeafletMap({
       scrollWheelZoom={false}
     >
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{y}/{x}.png"
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
+        maxZoom={19}
       />
       <FitToRoute a={restaurant} b={customer}/>
 

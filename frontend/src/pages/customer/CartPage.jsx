@@ -21,6 +21,7 @@ export default function CartPage() {
   const { items, restaurantId, restaurantName, subtotal, updateQuantity, removeItem, clearCart, addItem } = useCart();
   const [placing, setPlacing]         = useState(false);
   const [deliveryMode, setDeliveryMode] = useState('delivery');
+  const [streetAddress, setStreetAddress] = useState(location?.name || '');
   const [cutlery, setCutlery]         = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [couponSheetOpen, setCouponSheetOpen] = useState(false);
@@ -81,7 +82,7 @@ export default function CartPage() {
       restaurantId,
       items: items.map(i => ({ menuItemId: i._id || i.id, quantity: i.quantity })),
       deliveryAddress: {
-        street: location?.name || '1-KM Raiwind Road, Thokar Niaz Baig',
+        street: streetAddress || location?.name || '1-KM Raiwind Road, Thokar Niaz Baig',
         city:   location?.area || 'Lahore',
         state:  'Punjab',
         zipCode: '54000',
@@ -182,6 +183,36 @@ export default function CartPage() {
           </Pressable>
         ))}
       </div>
+
+      {/* ── Delivery address ─────────────────────────────────── */}
+      {deliveryMode === 'delivery' && (
+        <div style={{ margin: '0 16px 12px', padding: '14px', borderRadius: 5, border: '1px solid #F0F0F0', background: '#FAFAFA' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: 16 }}>📍</span>
+            <span style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>Delivery Address</span>
+          </div>
+          <input
+            type="text"
+            value={streetAddress}
+            onChange={e => setStreetAddress(e.target.value)}
+            placeholder="Enter your street address…"
+            style={{
+              width: '100%', height: 46, borderRadius: 5,
+              border: '1.5px solid #E5E7EB', background: '#fff',
+              padding: '0 14px', fontSize: 14, color: '#111',
+              outline: 'none', boxSizing: 'border-box',
+              fontFamily: 'inherit',
+            }}
+            onFocus={e => e.target.style.borderColor = 'var(--qb-primary)'}
+            onBlur={e => e.target.style.borderColor = '#E5E7EB'}
+          />
+          {location?.area && (
+            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>
+              📦 Delivering to <strong>{location.area}</strong> · {location.name}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Delivery time row ────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px 14px' }}>
