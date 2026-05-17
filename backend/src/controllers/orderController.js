@@ -186,3 +186,13 @@ exports.cancelOrder = async (req, res, next) => {
     res.status(200).json({ success: true, data: order });
   } catch (err) { next(err); }
 };
+
+// Demo reset — wipes every order + review in the database. Behind admin
+// auth so a regular customer can't trigger it. Use this to clear the
+// fixture data before a live demo.
+exports.wipeAll = async (req, res, next) => {
+  try {
+    const removed = await Order.deleteAll();
+    res.status(200).json({ success: true, message: `Wiped ${removed} orders + all reviews.` });
+  } catch (err) { next(err); }
+};

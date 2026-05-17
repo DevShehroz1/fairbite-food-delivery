@@ -13,12 +13,17 @@ const CAT_LABELS = {
   beverage:      'Drinks',
 };
 
+// Restaurant-side action map. Orders auto-confirm on create (backend
+// sets status='confirmed') so there's no "Confirm Order" button — the
+// restaurant's first action is "Start Preparing", followed by
+// "Assign Rider" which marks the order ready and the backend
+// automatically picks an available rider from the pool.
 const STATUS_META = {
-  pending:            { label: 'New',       color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',   next: 'confirmed',  nextLabel: 'Confirm Order' },
+  pending:            { label: 'New',       color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',   next: 'preparing',  nextLabel: 'Start Preparing' },
   confirmed:          { label: 'Confirmed', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)',   next: 'preparing',  nextLabel: 'Start Preparing' },
-  preparing:          { label: 'Preparing', color: 'var(--qb-primary)', bg: 'rgba(229,57,53,0.08)', next: 'ready', nextLabel: 'Mark Ready — Assign Rider' },
-  ready:              { label: 'Ready',     color: '#10b981', bg: 'rgba(16,185,129,0.1)',   next: null,         nextLabel: null },
-  'ready-for-pickup': { label: 'Ready',     color: '#10b981', bg: 'rgba(16,185,129,0.1)',   next: null,         nextLabel: null },
+  preparing:          { label: 'Preparing', color: 'var(--qb-primary)', bg: 'rgba(229,57,53,0.08)', next: 'ready', nextLabel: 'Assign Rider' },
+  ready:              { label: 'Rider Assigned', color: '#10b981', bg: 'rgba(16,185,129,0.1)', next: null,       nextLabel: null },
+  'ready-for-pickup': { label: 'Rider Assigned', color: '#10b981', bg: 'rgba(16,185,129,0.1)', next: null,       nextLabel: null },
   'picked-up':        { label: 'Picked Up', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)',   next: null,         nextLabel: null },
   'on-the-way':       { label: 'On the Way', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', next: null,         nextLabel: null },
   delivered:          { label: 'Delivered', color: '#6b7280', bg: '#F5F5F5',               next: null,         nextLabel: null },
@@ -97,7 +102,9 @@ export default function RestaurantDashboard() {
       await api.put(`/orders/${orderId}/status`, { status: newStatus });
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
       if (newStatus === 'ready') {
-        toast.success('Order ready — rider is being assigned automatically!');
+        toast.success('Rider assigned!');
+      } else if (newStatus === 'preparing') {
+        toast.success('Started preparing — customer notified.');
       } else {
         toast.success('Order updated');
       }
