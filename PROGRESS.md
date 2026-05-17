@@ -1,5 +1,87 @@
 # QuickBite — Progress Tracker
-> Resume from here when continuing in a new session. Updated: April 2026
+> Resume from here when continuing in a new session. Last updated: **17 May 2026**
+
+---
+
+## ⚠️ DO NOT TOUCH — THESE FILES ARE STABLE, LEAVE THEM ALONE
+
+| File | Why it must not change |
+|------|------------------------|
+| `frontend/src/pages/auth/LandingPage.jsx` | Login + Google OAuth is working. The `GoogleSignInBlock` component and `handleGoogleSuccess` structure are final. |
+| `frontend/src/services/api.js` | Token key is `quickbite_token`, interceptor only redirects on 401. Do not change. |
+| `backend/src/routes/authRoutes.js` | All auth routes (`/register`, `/login`, `/google`, `/google-token`, `/me`) are wired correctly. |
+| `backend/src/controllers/authController.js` | `googleTokenAuth` (access-token flow) and `googleAuth` (ID-token flow) both work. Do not merge or change. |
+| `frontend/src/index.js` | `GoogleOAuthProvider` uses `REACT_APP_GOOGLE_CLIENT_ID`. Do not remove. |
+| `frontend/.env.production` | Backend URL is `quickbite-backend-two.vercel.app`. Google Client ID is set. Do not change URLs. |
+| `backend/src/app.js` | CORS accepts `*.vercel.app` and `*.netlify.app`. Do not narrow it back to localhost only. |
+| `frontend/src/context/AuthContext.jsx` | Uses local JWT decode first (prevents session loss on cold-start). Do not revert to network-only approach. |
+| `frontend/src/App.js` | `RoleRoute` checks `loading` flag before redirect. Works correctly. Do not change. |
+
+---
+
+## 🐛 BUGS FIXED — 17 May 2026
+
+### 1. Both email + Google login broken in production
+- **Root cause:** Backend CORS only allowed `http://localhost:3000`. Production frontend on Vercel was blocked.
+- **Fix:** `backend/src/app.js` — added `*.vercel.app` + `*.netlify.app` + `ALLOWED_ORIGINS` env var support.
+
+### 2. Google login failing ("Google sign-in failed. Try email login.")
+- **Root cause:** `REACT_APP_GOOGLE_CLIENT_ID` was missing from `frontend/.env.production`. `GoogleOAuthProvider` got an empty string as `clientId` in production.
+- **Fix:** Added `REACT_APP_GOOGLE_CLIENT_ID=...` to `.env.production`.
+- **Google Cloud Console:** Already configured — `quickbite-frontend-eosin.vercel.app` and `quickbite-frontend-hok-s-projects.vercel.app` are in Authorized JavaScript Origins. Do not remove them.
+
+### 3. Session lost after 5–10 min inactivity (redirect to login)
+- **Root cause:** `/auth/me` network error (Vercel cold-start) → `user = null` → `isAuthenticated = false` → `RoleRoute` redirected to login, even with a valid token.
+- **Fix:** `AuthContext.jsx` now decodes the JWT locally first (instant, no network) to set `user` and `loading = false`. Then calls `/auth/me` in the background to hydrate full user data. Network errors no longer log the user out — only a real `401` response does.
+
+### 4. Order placed → immediately redirected to login
+- **Root cause:** `AuthContext` was removing the token on ANY error from `/auth/me`, including network errors during Vercel cold-start.
+- **Fix:** Token only removed on `err.response?.status === 401`.
+
+### 5. "Failed to place order" intermittent error in Cart
+- **Root cause:** Vercel serverless function cold-start caused the first order request to timeout.
+- **Fix:** `CartPage.jsx` retries the order request once (2s delay) on network errors.
+
+### 6. Welcome banner cut off on right side (not centered)
+- **Root cause:** Framer Motion's `y` animation writes `transform: translateY(...)` which overwrote our `translateX(-50%)` centering on the same `motion.div`.
+- **Fix:** Separated into two elements — plain `div` for `position:fixed` centering (`left:12, right:12, margin:auto`), inner `motion.div` for the slide animation only.
+
+### 7. Leaflet map showing blank/plain (no road tiles)
+- **Root cause:** Tile URL had `{z}/{y}/{x}` — x and y were swapped. Correct format is `{z}/{x}/{y}`.
+- **Fix:** Fixed URL in `LeafletMap.jsx`. Now shows real CartoCDN Voyager street map.
+
+### 8. Map zoom too wide (pins too small)
+- **Fix:** `FitToRoute` padding reduced from `0.4` → `0.15`, `maxZoom: 15` added.
+
+### 9. Restaurant images slow / not loading (Daily Deli, Baskin Robbins)
+- **Fix:** `SmartImg` in `ui/index.js` now calls `optimizeImg()` which rewrites Supabase URLs to use the render/transform API (`?width=600&quality=80`) and adds Unsplash quality params. Shows emoji fallback on error instead of broken image.
+
+---
+
+## ✅ WHAT WAS CHANGED — 17 May 2026
+
+| File | What changed |
+|------|-------------|
+| `backend/src/app.js` | CORS: accepts `*.vercel.app`, `*.netlify.app`, and `ALLOWED_ORIGINS` env var |
+| `frontend/.env.production` | Added `REACT_APP_GOOGLE_CLIENT_ID`; backend URL updated to `quickbite-backend-two.vercel.app` |
+| `frontend/src/context/AuthContext.jsx` | Local JWT decode first → prevents cold-start session loss |
+| `frontend/src/pages/auth/LandingPage.jsx` | `GoogleSignInBlock` improved error handling (`profileRes.ok` check, `catch(err)`) |
+| `frontend/src/components/ui/index.js` | `SmartImg` uses `optimizeImg()`, emoji fallback; `WelcomeBanner` centering fixed (split motion/layout) |
+| `frontend/src/pages/customer/OrderTrackingPage.jsx` | Orange header, ETA row, LeafletMap, vertical timeline, spacing fixes |
+| `frontend/src/pages/customer/CartPage.jsx` | Retry logic on order placement; delivery address text input added |
+| `frontend/src/components/LeafletMap.jsx` | Fixed tile URL `{y}/{x}` → `{x}/{y}`; tighter zoom (pad 0.15, maxZoom 15) |
+
+---
+
+## CURRENT DEPLOYMENT
+
+| Service | URL |
+|---------|-----|
+| Frontend | `https://quickbite-frontend-eosin.vercel.app` |
+| Backend  | `https://quickbite-backend-two.vercel.app` |
+| GitHub   | `https://github.com/DevShehroz1/fairbite-food-delivery` |
+
+---
 
 ---
 
