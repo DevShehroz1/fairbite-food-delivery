@@ -175,7 +175,13 @@ function optimizeImg(url, width = 600) {
 }
 
 // ─── SmartImg ────────────────────────────────────────────────────────────────
-export function SmartImg({ src, alt = '', style, radius = 0, fallback = '🍽️', width = 600 }) {
+// `priority` opt-in is for the very first card above the fold; everything
+// else lazy-loads + low-priority so the home page paints fast and below-
+// the-fold cards only fetch when scrolled into view.
+export function SmartImg({
+  src, alt = '', style, radius = 0, fallback = '🍽️', width = 600,
+  priority = false,
+}) {
   const [status, setStatus] = useState('loading'); // loading | done | error
   const optimized = optimizeImg(src, width);
   useEffect(() => { setStatus('loading'); }, [src]);
@@ -201,6 +207,8 @@ export function SmartImg({ src, alt = '', style, radius = 0, fallback = '🍽️
           src={optimized}
           alt={alt}
           decoding="async"
+          loading={priority ? 'eager' : 'lazy'}
+          fetchpriority={priority ? 'high' : 'low'}
           onLoad={() => setStatus('done')}
           onError={() => setStatus('error')}
           style={{
