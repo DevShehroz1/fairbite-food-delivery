@@ -143,6 +143,24 @@ function pickReviews(restaurant) {
   return REVIEW_SETS.generic;
 }
 
+// "2 days ago" style formatter for real review timestamps. Keeps the same
+// visual cadence as the hardcoded placeholders.
+function formatReviewAgo(iso) {
+  if (!iso) return 'just now';
+  const t = new Date(iso).getTime();
+  if (!t) return 'just now';
+  const diff = Math.max(0, Date.now() - t);
+  const min  = Math.floor(diff / 60000);
+  const hr   = Math.floor(diff / 3600000);
+  const day  = Math.floor(diff / 86400000);
+  if (min < 1)  return 'just now';
+  if (min < 60) return `${min} min ago`;
+  if (hr  < 24) return `${hr} hour${hr === 1 ? '' : 's'} ago`;
+  if (day < 7)  return `${day} day${day === 1 ? '' : 's'} ago`;
+  const week = Math.floor(day / 7);
+  return `${week} week${week === 1 ? '' : 's'} ago`;
+}
+
 export default function RestaurantDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -158,6 +176,9 @@ export default function RestaurantDetailPage() {
   const [pickedAddOns, setPickedAddOns] = useState([]);
   const [pickedSize, setPickedSize] = useState('medium');
   const [pickedFlavors, setPickedFlavors] = useState([]);
+  // Real reviews from /api/reviews/restaurant/:id. New reviews appear at
+  // the TOP of the list (backend returns newest-first).
+  const [liveReviews, setLiveReviews] = useState(null); // null = still loading
 
   useEffect(() => {
     api.get(`/restaurants/${id}`)
@@ -166,6 +187,12 @@ export default function RestaurantDetailPage() {
       })
       .catch(() => toast.error('Could not load restaurant'))
       .finally(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    api.get(`/reviews/restaurant/${id}`)
+      .then(r => setLiveReviews(r.data.data || []))
+      .catch(() => setLiveReviews([]));
   }, [id]);
 
   useEffect(() => {
@@ -388,26 +415,46 @@ export default function RestaurantDetailPage() {
           </div>
         )}
 
-        {/* Fellow foodies say — reviews, only on popular tab when no search */}
-        {showPopularGrid && (
-          <div style={{ marginTop: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', marginBottom: 12 }}>
-              <span style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>Fellow foodies say</span>
-              <Pressable onClick={() => toast.info('Full reviews coming soon!')} style={{ fontSize: 12, fontWeight: 700, color: 'var(--qb-primary)' }}>See all</Pressable>
-            </div>
-            <div className="qb-no-scrollbar" style={{ display: 'flex', gap: 10, padding: '0 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-              {pickReviews(restaurant).map(rev => (
-                <div key={rev.id} style={{ width: 240, flexShrink: 0, padding: '14px', borderRadius: 5, border: '1px solid #F0F0F0', background: '#fff' }}>
-                  <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.55, marginBottom: 12 }}>{rev.text}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Stars rating={rev.rating} size={12}/>
-                    <span style={{ fontSize: 11, color: '#6b7280' }}>· {rev.author} · {rev.ago}</span>
+        {/* Fellow foodies say — reviews, only on popular tab when no
+            search. Real reviews from /api/reviews/restaurant/:id take
+            precedence; if none exist, fall back to the cuisine-based
+            placeholders so the section never feels empty. */}
+        {showPopularGrid && (() => {
+          const realCards = (liveReviews || []).map(rev => ({
+            id:     rev.id || rev._id,
+            text:   rev.comment || '',
+            rating: rev.rating?.overall || 0,
+            author: rev.customer?.name || 'Customer',
+            ago:    formatReviewAgo(rev.created_at),
+            isReal: true,
+          })).filter(r => r.rating > 0 || r.text); // hide reviews with no useful content
+          const cards = realCards.length > 0 ? realCards : pickReviews(restaurant);
+          return (
+            <div style={{ marginTop: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', marginBottom: 12 }}>
+                <span style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>Fellow foodies say</span>
+                {realCards.length > 0 && (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981', letterSpacing: 0.4, textTransform: 'uppercase' }}>
+                    {realCards.length} review{realCards.length === 1 ? '' : 's'}
+                  </span>
+                )}
+              </div>
+              <div className="qb-no-scrollbar" style={{ display: 'flex', gap: 10, padding: '0 16px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+                {cards.map(rev => (
+                  <div key={rev.id} style={{ width: 240, flexShrink: 0, padding: '14px', borderRadius: 5, border: '1px solid #F0F0F0', background: '#fff' }}>
+                    <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.55, marginBottom: 12 }}>
+                      {rev.text || (rev.isReal ? '(No comment)' : '')}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Stars rating={rev.rating} size={12}/>
+                      <span style={{ fontSize: 11, color: '#6b7280' }}>· {rev.author} · {rev.ago}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Menu sections list view */}
         {displayMenu.map(({ cat, items }) => (

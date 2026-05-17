@@ -6,26 +6,32 @@ import api from '../../services/api';
 import { Icons, Pressable, SmartImg, BrandButton } from '../../components/ui';
 import LeafletMap, { DEFAULT_RESTAURANT, DEFAULT_CUSTOMER } from '../../components/LeafletMap';
 
-// 5-step customer UI mapping. We split "On the Way" into a moving phase
-// and the "Arriving" phase so the map can show the rider gliding to the door.
+// 5-step customer UI mapping aligned with the rework flow:
+//   0  Order Placed       — pending/confirmed (auto-confirmed on create)
+//   1  Preparing          — restaurant clicked "Start Preparing"
+//   2  Rider Assigned     — restaurant clicked "Assign Rider"; rider pin
+//                            appears on the map but does NOT move yet
+//   3  On the Way         — rider clicked "Confirm Pickup"; animation runs
+//   4  Delivered          — rider clicked "Mark Delivered"; review popup
 const UI_STEPS = [
-  { label: 'Order Placed',  sub: 'We received your order' },
-  { label: 'Preparing',     sub: 'Restaurant is cooking your order' },
-  { label: 'On the Way',    sub: 'Rider is heading to you' },
-  { label: 'Arriving',      sub: 'Rider is almost at your door' },
-  { label: 'Delivered',     sub: 'Enjoy your meal! 🎉' },
+  { label: 'Order Placed',   sub: 'We received your order' },
+  { label: 'Preparing',      sub: 'Restaurant is making your order' },
+  { label: 'Rider Assigned', sub: 'A rider has been assigned to your order' },
+  { label: 'On the Way',     sub: 'Rider is heading to you' },
+  { label: 'Delivered',      sub: 'Enjoy your meal! 🎉' },
 ];
 
 function backendToStep(status) {
   switch (status) {
-    case 'pending':    return 0;
-    case 'confirmed':  return 1;
-    case 'preparing':
-    case 'ready':      return 2;
+    case 'pending':
+    case 'confirmed':         return 0;
+    case 'preparing':         return 1;
+    case 'ready':
+    case 'ready-for-pickup':  return 2;     // rider assigned, pin static
     case 'picked-up':
-    case 'on-the-way': return 2;     // rider is moving — animation drives 2 → 3
-    case 'delivered':  return 4;
-    default:           return 0;
+    case 'on-the-way':        return 3;     // rider moving — map animates
+    case 'delivered':         return 4;
+    default:                  return 0;
   }
 }
 
@@ -85,27 +91,55 @@ export default function OrderTrackingPage() {
     return () => clearInterval(t);
   }, []);
 
-  // Detect the moment the rider arrives — fires once per session. Uses a
-  // ref instead of a state dep so the poll re-running with the same step
-  // never re-triggers the popup.
+  // Step-change bookkeeping — currently a no-op placeholder. The arrival
+  // popup is fired from the ride-animation effect (when animProgress
+  // reaches 1) and the review popup is fired from the delivered-state
+  // effect below. We still track prevStep so future transitions have an
+  // easy hook.
   useEffect(() => {
-    const prev = prevStepRef.current;
-    if (prev < 3 && step >= 3 && step < 4) {
-      setShowArrivedPopup(true);
-      toast.success('Your rider has arrived! Please pick up your order.', { autoClose: 4000 });
-      // Browser-level notification too, so the user is alerted even if the
-      // tab is in the background. Respects whatever permission they granted.
-      try {
-        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          new Notification('QuickBite — Rider has arrived', {
-            body: 'Pick up your order from the door.',
-            icon: '/favicon.ico',
-          });
-        }
-      } catch (_) { /* notifications unavailable — toast already covers it */ }
-    }
     prevStepRef.current = step;
   }, [step]);
+
+  // Review popup state — fires once when the order is marked delivered.
+  const [showReviewPopup, setShowReviewPopup] = useState(false);
+  const [reviewRating, setReviewRating]       = useState(0);
+  const [reviewComment, setReviewComment]     = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted]   = useState(false);
+  const prevDeliveredRef = useRef(false);
+
+  useEffect(() => {
+    const wasDelivered = prevDeliveredRef.current;
+    const isDelivered  = step >= 4;
+    if (!wasDelivered && isDelivered && !reviewSubmitted) {
+      setShowReviewPopup(true);
+      toast.success('Order delivered! Please rate your experience.', { autoClose: 3000 });
+    }
+    prevDeliveredRef.current = isDelivered;
+  }, [step, reviewSubmitted]);
+
+  const submitReview = async () => {
+    if (!order || reviewRating === 0) {
+      toast.error('Please pick a rating before submitting.');
+      return;
+    }
+    setReviewSubmitting(true);
+    try {
+      await api.post('/reviews', {
+        orderId:      order._id || order.id,
+        restaurantId: order.restaurant?._id || order.restaurant?.id || order.restaurant,
+        rating:       { overall: reviewRating },
+        comment:      reviewComment.trim(),
+      });
+      setReviewSubmitted(true);
+      setShowReviewPopup(false);
+      toast.success('Thanks for the review!');
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Could not submit review');
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
 
   // Ask for notification permission once on mount so the arrival popup can
   // also surface as an OS-level notification. Silent failure is fine —
@@ -118,32 +152,49 @@ export default function OrderTrackingPage() {
     } catch (_) {}
   }, []);
 
-  // Smooth rider animation:
-  //   step <  2 → rider sits at the restaurant (progress 0)
-  //   step == 2 → ride starts, progress eases 0 → 1 over RIDE_DURATION_MS
-  //   step >= 3 → already arrived (progress stays 1)
+  // Smooth rider animation. Gated on the new step model:
+  //   step <  3 → rider pin is at the restaurant, NOT moving. This covers
+  //               step 2 ("Rider Assigned") where the user just sees the
+  //               pin without travel — exactly the behavior the new flow
+  //               specifies: "rider position only changes after rider
+  //               clicks On my way / Confirm Pickup".
+  //   step == 3 → rider has confirmed pickup; animation eases 0 → 1 over
+  //               RIDE_DURATION_MS. When it completes the rider is "at
+  //               the door" but step does NOT auto-bump to 4 — delivery
+  //               only happens when the rider taps Mark Delivered.
+  //   step >= 4 → delivered; pin sits at the customer.
   useEffect(() => {
-    if (step < 2) {
+    if (step < 3) {
       setAnimProgress(0);
       rideStartRef.current = null;
       return;
     }
-    if (step >= 3) {
+    if (step >= 4) {
       setAnimProgress(1);
       rideStartRef.current = null;
       return;
     }
+    // step === 3: run the 7-second arrival animation, capping at 1.
     if (rideStartRef.current == null) rideStartRef.current = performance.now();
     let raf;
     const tick = (now) => {
       const t = (now - rideStartRef.current) / RIDE_DURATION_MS;
       const eased = 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
       setAnimProgress(eased);
-      if (t < 1) raf = requestAnimationFrame(tick);
-      else setStep(s => Math.max(s, 3));
+      if (t < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        setAnimProgress(1);
+        // Surface the arrival popup once the rider has reached the door
+        // (animation complete), regardless of whether the rider has tapped
+        // "Mark Delivered" yet. The delivery step still requires the rider
+        // to confirm — this only signals the visual arrival.
+        if (!showArrivedPopup) setShowArrivedPopup(true);
+      }
     };
     raf = requestAnimationFrame(tick);
     return () => raf && cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
   const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -169,11 +220,11 @@ export default function OrderTrackingPage() {
     </div>
   );
 
-  const rider    = order?.rider;
-  const showRider  = step >= 2;
-  const arrived    = step >= 3 && step < 4;
-  const delivered  = step >= 4;
-  const kmAway     = (1.6 * (1 - animProgress)).toFixed(1);
+  const rider     = order?.rider;
+  const showRider = step >= 2;                 // rider pin visible at step ≥ 2
+  const arrived   = step === 3 && animProgress >= 1; // rider at door but not yet delivered
+  const delivered = step >= 4;
+  const kmAway    = (1.6 * (1 - animProgress)).toFixed(1);
 
   return (
     <div style={{ height: '100vh', background: '#fff', display: 'flex',
@@ -468,6 +519,136 @@ export default function OrderTrackingPage() {
                 }}
               >
                 <Icons.X size={18} sw={2.2}/>
+              </Pressable>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Order-delivered review popup — fires once the order status
+            flips to "delivered". 5 stars + a short message; POSTs to
+            /api/reviews and the new review surfaces at the top of the
+            restaurant's review list (server returns newest-first). ── */}
+      <AnimatePresence>
+        {showReviewPopup && (
+          <>
+            <motion.div
+              key="review-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+              style={{
+                position: 'fixed', inset: 0, zIndex: 1002,
+                background: 'rgba(0,0,0,0.55)',
+                backdropFilter: 'blur(4px)',
+              }}
+            />
+            <motion.div
+              key="review-card"
+              role="dialog"
+              aria-modal="true"
+              initial={{ opacity: 0, scale: 0.88, y: 18 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 8 }}
+              transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+              style={{
+                position: 'fixed', zIndex: 1003,
+                left: '50%', top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 'min(88vw, 360px)',
+                background: '#fff',
+                borderRadius: 18,
+                padding: '24px 22px 20px',
+                textAlign: 'center',
+                boxShadow: '0 24px 60px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.12)',
+              }}
+            >
+              <div style={{ fontSize: 38, lineHeight: 1, marginBottom: 6 }}>🎉</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#111', letterSpacing: -0.3 }}>
+                Order Delivered!
+              </div>
+              <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4, lineHeight: 1.45 }}>
+                How was your order from {order?.restaurant?.name || 'the restaurant'}?
+              </div>
+
+              {/* 5-star selector */}
+              <div style={{
+                display: 'flex', justifyContent: 'center', gap: 6,
+                margin: '16px 0 6px',
+              }}>
+                {[1, 2, 3, 4, 5].map(n => {
+                  const active = n <= reviewRating;
+                  return (
+                    <Pressable
+                      key={n}
+                      onClick={() => setReviewRating(n)}
+                      aria-label={`${n} star${n === 1 ? '' : 's'}`}
+                      style={{
+                        width: 36, height: 36, borderRadius: 999,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >
+                      <Icons.Star
+                        size={28}
+                        stroke={active ? '#F5A524' : '#D1D5DB'}
+                        fill={active ? '#F5A524' : 'none'}
+                      />
+                    </Pressable>
+                  );
+                })}
+              </div>
+              <div style={{
+                fontSize: 11, fontWeight: 700, color: reviewRating ? 'var(--qb-primary)' : '#9CA3AF',
+                letterSpacing: 0.4, textTransform: 'uppercase',
+                minHeight: 14,
+              }}>
+                {reviewRating === 0 ? 'Tap to rate' :
+                 reviewRating <= 2 ? 'Could be better' :
+                 reviewRating === 3 ? 'Decent' :
+                 reviewRating === 4 ? 'Pretty good' : 'Amazing!'}
+              </div>
+
+              <textarea
+                value={reviewComment}
+                onChange={e => setReviewComment(e.target.value)}
+                placeholder="Share a quick note (optional)"
+                rows={3}
+                style={{
+                  width: '100%', marginTop: 14,
+                  padding: '10px 12px',
+                  border: '1.5px solid #E5E5E5',
+                  borderRadius: 12,
+                  fontSize: 13, fontFamily: 'inherit',
+                  resize: 'none', outline: 'none',
+                  color: '#111',
+                }}
+              />
+
+              <button
+                onClick={submitReview}
+                disabled={reviewSubmitting || reviewRating === 0}
+                style={{
+                  marginTop: 14, width: '100%', height: 48,
+                  borderRadius: 12, border: 0,
+                  background: reviewRating === 0 ? '#D1D5DB' : 'var(--qb-primary)',
+                  color: '#fff',
+                  fontSize: 15, fontWeight: 800, letterSpacing: 0.2,
+                  cursor: reviewRating === 0 ? 'not-allowed' : 'pointer',
+                  boxShadow: reviewRating === 0 ? 'none' : '0 8px 22px rgba(229,57,53,0.4)',
+                }}
+              >
+                {reviewSubmitting ? 'Submitting…' : 'Submit Review'}
+              </button>
+              <Pressable
+                onClick={() => setShowReviewPopup(false)}
+                style={{
+                  marginTop: 6, width: '100%', height: 36,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 12, fontWeight: 700, color: '#9CA3AF',
+                }}
+              >
+                Skip for now
               </Pressable>
             </motion.div>
           </>

@@ -28,15 +28,38 @@ const JOINS = `
 `;
 
 exports.create = async (fields) => {
-  const { deliveryAddress, statusHistory, ...rest } = fields;
+  const { deliveryAddress, statusHistory, status, ...rest } = fields;
+  // Orders auto-confirm on creation so the restaurant doesn't need a
+  // manual "Confirm" step — they see the order already confirmed and
+  // their first action is "Start Preparing".
+  const now = new Date();
+  const history = statusHistory || rest.status_history || [
+    { status: 'pending',   note: 'Order placed',      time: now },
+    { status: 'confirmed', note: 'Auto-confirmed',    time: now },
+  ];
   const { data, error } = await supabase.from('orders').insert({
     ...rest,
+    status:           status || 'confirmed',
     order_number:     genOrderNumber(),
     delivery_address: deliveryAddress || rest.delivery_address,
-    status_history:   statusHistory || rest.status_history || [{ status: 'pending', note: 'Order placed', time: new Date() }],
+    status_history:   history,
   }).select(JOINS).single();
   if (error) throw new Error(error.message);
   return fmt(data);
+};
+
+// Wipe-all utility used by the admin demo-reset endpoint. Cascades to
+// reviews + status history by virtue of FK constraints (or just sweeps
+// reviews first if no FK cascade is configured).
+exports.deleteAll = async () => {
+  // Delete reviews referencing orders first to keep FKs happy.
+  await supabase.from('reviews').delete().not('id', 'is', null);
+  const { error, count } = await supabase
+    .from('orders')
+    .delete({ count: 'exact' })
+    .not('id', 'is', null);
+  if (error) throw new Error(error.message);
+  return count || 0;
 };
 
 exports.findById = async (id) => {
