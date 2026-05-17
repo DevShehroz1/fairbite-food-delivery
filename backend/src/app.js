@@ -5,11 +5,26 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
+// On Vercel every request enters through their proxy, so X-Forwarded-For is
+// the only way to see the real client IP. Without this, express-rate-limit
+// treats the proxy as the sole client and the whole world shares one bucket.
+app.set('trust proxy', 1);
+
 app.use(helmet());
 
+// Per-IP limit (real client IPs thanks to trust proxy above). Tracking pages
+// poll every 1.5s so a single 15-minute session can legitimately exceed a
+// few hundred requests — keep the ceiling high enough to never block real
+// usage, low enough to throttle brute-force or runaway scripts.
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 2000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  // The /health and root /api endpoints get hit by Vercel's health checks +
+  // any uptime monitor — excluding them prevents background pings from
+  // eating the user-visible budget.
+  skip: (req) => req.path === '/health' || req.path === '/' || req.path === '/api' || req.path === '/api/',
 });
 app.use('/api/', limiter);
 
