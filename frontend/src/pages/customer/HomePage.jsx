@@ -10,7 +10,9 @@ import LocationPicker from '../../components/LocationPicker';
 import {
   Icons, Pressable, SmartImg,
   BigRestaurantCard, BottomNav, WelcomeBanner,
+  SkeletonRestaurantCard,
 } from '../../components/ui';
+import { useCartTargetRef } from '../../context/CartFlyContext';
 
 const copyDealCode = (e, code) => {
   if (e && e.stopPropagation) e.stopPropagation();
@@ -69,6 +71,7 @@ export default function HomePage() {
   const [loading, setLoading]         = useState(true);
   const [tab, setTab]                 = useState('home');
   const [showWelcome, setShowWelcome] = useState(false);
+  const cartIconRef = useCartTargetRef();
 
   useEffect(() => {
     api.get('/restaurants')
@@ -119,7 +122,7 @@ export default function HomePage() {
         {/* Row: deliver to + cart */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <LocationPicker/>
-          <Pressable onClick={() => navigate('/cart')} style={{
+          <Pressable onClick={() => navigate('/cart')} ref={cartIconRef} style={{
             width: 40, height: 40, borderRadius: 5,
             background: 'rgba(255,255,255,0.2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
@@ -346,7 +349,7 @@ export default function HomePage() {
           <SectionHeader title="Popular Restaurants" onSeeAll={() => navigate('/restaurants')}/>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12 }}>
             {loading
-              ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i}/>)
+              ? Array.from({ length: 3 }).map((_, i) => <SkeletonRestaurantCard key={i} delay={i * 80}/>)
               : topRated.map(r => (
                 <BigRestaurantCard key={r.id} r={r} onClick={() => navigate(`/restaurants/${r.id}`)}/>
               ))
@@ -376,30 +379,6 @@ function SectionHeader({ title, subtitle, onSeeAll }) {
           See all
         </Pressable>
       )}
-    </div>
-  );
-}
-
-function SkeletonCard() {
-  return (
-    <div style={{ background: '#fff', borderRadius: 5, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
-      <div style={{
-        height: 152, background: '#EEE',
-        backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-        backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite',
-      }}/>
-      <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{
-          width: '60%', height: 14, borderRadius: 5, background: '#EEE',
-          backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-          backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite',
-        }}/>
-        <div style={{
-          width: '40%', height: 10, borderRadius: 5, background: '#EEE',
-          backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-          backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite',
-        }}/>
-      </div>
     </div>
   );
 }

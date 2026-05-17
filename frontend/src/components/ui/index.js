@@ -63,10 +63,54 @@ export const Icons = {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 export const PKR = (n) => `Rs. ${Math.round(n).toLocaleString('en-PK')}`;
 
+// ─── Skeleton primitives ─────────────────────────────────────────────────────
+// Single source of truth for loading shimmers. The qb-shimmer keyframe lives
+// in global.css so the same animation runs in sync across siblings.
+const SHIMMER_BG = 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)';
+
+export function Skeleton({
+  width = '100%', height = 14, radius = 5, style,
+  // Slight delay lets staggered skeletons feel like cascading liquid rather
+  // than a solid block — pass an index to shift the highlight start.
+  delay = 0,
+}) {
+  return (
+    <div style={{
+      width, height, borderRadius: radius,
+      background: '#EEE',
+      backgroundImage: SHIMMER_BG,
+      backgroundSize: '200% 100%',
+      animation: 'qb-shimmer 1.2s linear infinite',
+      animationDelay: delay ? `${delay}ms` : undefined,
+      ...style,
+    }}/>
+  );
+}
+
+export function SkeletonRestaurantCard({ delay = 0 }) {
+  return (
+    <div style={{
+      background: '#fff', borderRadius: 5, overflow: 'hidden',
+      border: '1px solid #F0F0F0',
+    }}>
+      <Skeleton width="100%" height={152} radius={0} delay={delay}/>
+      <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Skeleton width="60%" height={14} delay={delay + 60}/>
+        <Skeleton width="40%" height={10} delay={delay + 120}/>
+      </div>
+    </div>
+  );
+}
+
+
 // ─── Pressable ───────────────────────────────────────────────────────────────
-export function Pressable({ children, onClick, style, scale = 0.97, hover = 1.0, ...rest }) {
+export const Pressable = React.forwardRef(function Pressable(
+  { children, onClick, style, scale = 0.97, hover = 1.0, ...rest },
+  ref,
+) {
   return (
     <motion.button
+      ref={ref}
       whileTap={{ scale }}
       whileHover={{ scale: hover }}
       onClick={onClick}
@@ -76,7 +120,7 @@ export function Pressable({ children, onClick, style, scale = 0.97, hover = 1.0,
       {children}
     </motion.button>
   );
-}
+});
 
 // ─── Stars ───────────────────────────────────────────────────────────────────
 export function Stars({ rating, size = 12, color = '#F5A524' }) {
@@ -467,17 +511,37 @@ export function BigRestaurantCard({ r, onClick }) {
   const saverFee = r.delivery?.saverFee || Math.max(0, fee - 30);
 
   return (
-    <motion.div whileHover={{ y: -2, boxShadow: '0 12px 30px rgba(0,0,0,0.10)' }}
-      whileTap={{ scale: 0.98 }} onClick={onClick}
-      transition={{ duration: 0.2 }}
+    <motion.div
+      initial="rest"
+      whileHover="hover"
+      whileTap="press"
+      animate="rest"
+      variants={{
+        rest:  { y: 0, scale: 1, boxShadow: '0 4px 12px rgba(0,0,0,0.04)' },
+        hover: { y: -4, scale: 1, boxShadow: '0 18px 36px rgba(0,0,0,0.12)' },
+        press: { y: -1, scale: 0.985, boxShadow: '0 8px 18px rgba(0,0,0,0.10)' },
+      }}
+      transition={{ type: 'spring', stiffness: 360, damping: 28, mass: 0.9 }}
+      onClick={onClick}
       style={{
         background: '#fff', borderRadius: 5, overflow: 'hidden',
         border: '1px solid #F0F0F0', cursor: 'pointer',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+        willChange: 'transform',
       }}>
-      {/* Cover image */}
-      <div style={{ position: 'relative', height: 168 }}>
-        <SmartImg src={img} fallback={cuisineFallback(r.cuisine)} style={{ position: 'absolute', inset: 0 }}/>
+      {/* Cover image — soft zoom while parent is hovered, mimics Apple's
+          gallery cards where the image scales 1 → 1.05 on focus. */}
+      <div style={{ position: 'relative', height: 168, overflow: 'hidden' }}>
+        <motion.div
+          variants={{
+            rest:  { scale: 1 },
+            hover: { scale: 1.06 },
+            press: { scale: 1.02 },
+          }}
+          transition={{ type: 'spring', stiffness: 240, damping: 26 }}
+          style={{ position: 'absolute', inset: 0, willChange: 'transform' }}
+        >
+          <SmartImg src={img} fallback={cuisineFallback(r.cuisine)} style={{ position: 'absolute', inset: 0 }}/>
+        </motion.div>
         {ribbon && (
           <div style={{ position: 'absolute', top: 10, left: 10 }}>
             <Ribbon kind={ribbon}/>

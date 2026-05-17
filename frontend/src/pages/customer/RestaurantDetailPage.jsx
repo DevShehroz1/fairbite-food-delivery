@@ -7,6 +7,7 @@ import useCart, { SIZE_DELTAS } from '../../hooks/useCart';
 import {
   Icons, PKR, Pressable, SmartImg, Stars, Stepper,
 } from '../../components/ui';
+import { useCartFly, useCartTargetRef } from '../../context/CartFlyContext';
 
 const CAT_LABELS = {
   'main-course': 'Main Course',
@@ -148,6 +149,15 @@ export default function RestaurantDetailPage() {
   const navigate = useNavigate();
   const { items: cartItems, subtotal, addItem, updateQuantity, restaurantId } = useCart();
   const scrollRef = useRef(null);
+  // Floating "View cart" CTA at the bottom is the in-page cart anchor;
+  // useCartTargetRef returns a callback ref that re-registers each time the
+  // CTA conditionally mounts/unmounts.
+  const cartCtaRef = useCartTargetRef();
+  const { flyToCart } = useCartFly();
+  // Track which trigger element to fly from. The "Add to cart" confirm
+  // button drives the fly, but stepper "+" presses on already-added items
+  // also trigger fly animations — we capture the source from those clicks.
+  const flySourceRef = useRef(null);
 
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading]       = useState(true);
@@ -189,11 +199,14 @@ export default function RestaurantDetailPage() {
   };
 
   // Always open the customize sheet so the user picks a size — and add-ons
-  // when the dish has them.
-  const handleAdd = (menuItem) => {
+  // when the dish has them. The source element is captured here so the
+  // fly-to-cart animation can launch from the exact "+" button the user
+  // tapped, not from somewhere generic.
+  const handleAdd = (menuItem, evt) => {
     if (restaurantId && restaurantId !== id) {
       if (!window.confirm('Your cart has items from another restaurant. Clear it?')) return;
     }
+    flySourceRef.current = evt?.currentTarget || null;
     setAddOnItem(menuItem);
     setPickedAddOns([]);
     setPickedSize('medium');
@@ -210,7 +223,7 @@ export default function RestaurantDetailPage() {
     return (item.flavors || []).length > 0 ? 1 : 0;
   };
 
-  const confirmAddOns = () => {
+  const confirmAddOns = (evt) => {
     if (!addOnItem) return;
     const slots = flavorSlots(addOnItem);
     if (slots > 0 && pickedFlavors.length === 0) {
@@ -226,6 +239,12 @@ export default function RestaurantDetailPage() {
     const sizeNote = pickedSize !== 'medium' ? ` (${pickedSize})` : '';
     const extras = pickedAddOns.length ? ` + ${pickedAddOns.length} extra` : '';
     toast.success(`${addOnItem.name}${sizeNote}${extras} added!`, { autoClose: 1500 });
+    // Launch the flying-emoji from the original "+" button if we captured
+    // one, else from the confirm button so the projectile always has a
+    // sensible origin even when the sheet is dismissed.
+    const launchFrom = flySourceRef.current || evt?.currentTarget || null;
+    flyToCart(launchFrom, guessEmoji(addOnItem));
+    flySourceRef.current = null;
     setAddOnItem(null);
     setPickedAddOns([]);
     setPickedSize('medium');
@@ -368,7 +387,7 @@ export default function RestaurantDetailPage() {
                     <div style={{ height: 110, background: '#F5F5F5', position: 'relative', overflow: 'hidden' }}>
                       <MenuImage item={item} size="lg"/>
                       {qty === 0 ? (
-                        <Pressable onClick={() => handleAdd(item)} style={{ position: 'absolute', bottom: 8, right: 8, width: 30, height: 30, borderRadius: 999, background: '#fff', border: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
+                        <Pressable onClick={(e) => handleAdd(item, e)} style={{ position: 'absolute', bottom: 8, right: 8, width: 30, height: 30, borderRadius: 999, background: '#fff', border: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
                           <Icons.Plus size={15} stroke="#111" sw={2.5}/>
                         </Pressable>
                       ) : (
@@ -435,7 +454,7 @@ export default function RestaurantDetailPage() {
                   <div style={{ width: 88, height: 88, borderRadius: 5, background: '#F5F5F5', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
                     <MenuImage item={item}/>
                     {qty === 0 && (
-                      <Pressable onClick={() => handleAdd(item)} style={{ position: 'absolute', bottom: 6, right: 6, width: 28, height: 28, borderRadius: 999, background: '#fff', border: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
+                      <Pressable onClick={(e) => handleAdd(item, e)} style={{ position: 'absolute', bottom: 6, right: 6, width: 28, height: 28, borderRadius: 999, background: '#fff', border: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
                         <Icons.Plus size={14} stroke="#111" sw={2.5}/>
                       </Pressable>
                     )}
@@ -564,7 +583,7 @@ export default function RestaurantDetailPage() {
                 })}
               </div>
 
-              <Pressable onClick={confirmAddOns} style={{
+              <Pressable onClick={(e) => confirmAddOns(e)} style={{
                 marginTop: 16, width: '100%', height: 52, borderRadius: 5,
                 background: 'var(--qb-primary)', color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -582,7 +601,14 @@ export default function RestaurantDetailPage() {
       {totalCartQty > 0 && (
         <motion.div initial={{ y: 100 }} animate={{ y: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, padding: '12px 16px 28px', background: 'linear-gradient(180deg, transparent, #fff 25%)' }}>
           <Pressable onClick={() => navigate('/cart')} style={{ width: '100%', height: 58, borderRadius: 5, background: 'var(--qb-primary)', color: '#fff', display: 'flex', alignItems: 'center', padding: '0 18px', gap: 14, boxShadow: '0 8px 24px rgba(229,57,53,0.35)' }}>
-            <div style={{ width: 34, height: 34, borderRadius: 999, border: '2px solid rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, flexShrink: 0 }}>{totalCartQty}</div>
+            <motion.div
+              ref={cartCtaRef}
+              key={totalCartQty}
+              initial={{ scale: 1 }}
+              animate={{ scale: [1, 1.25, 1] }}
+              transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1], times: [0, 0.5, 1] }}
+              style={{ width: 34, height: 34, borderRadius: 999, border: '2px solid rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, flexShrink: 0, willChange: 'transform' }}
+            >{totalCartQty}</motion.div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 15, fontWeight: 800 }}>View your cart</div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 1 }}>{restaurant.name}</div>

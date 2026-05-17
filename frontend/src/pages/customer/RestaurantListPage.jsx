@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
-import { Icons, Pressable, Chip, BigRestaurantCard, BottomNav } from '../../components/ui';
+import { Icons, Pressable, Chip, BigRestaurantCard, BottomNav, SkeletonRestaurantCard } from '../../components/ui';
 import {
   CATEGORY_LABEL, BRAND_LABEL, matchesCategory, matchesBrand,
 } from '../../utils/categoryMap';
@@ -139,7 +139,7 @@ export default function RestaurantListPage() {
 
       <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {loading ? (
-          Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i}/>)
+          Array.from({ length: 4 }).map((_, i) => <SkeletonRestaurantCard key={i} delay={i * 80}/>)
         ) : sorted.length === 0 ? (
           search
             ? <EmptySearch query={search} onClear={() => setSearch('')}/>
@@ -168,8 +168,13 @@ export default function RestaurantListPage() {
             )}
             {sorted.map((r, i) => (
               <motion.div key={r.id}
-                initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05, duration: 0.3 }}>
+                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{
+                  delay: Math.min(i, 8) * 0.05,
+                  duration: 0.42,
+                  ease: [0.32, 0.72, 0, 1],
+                }}>
                 <BigRestaurantCard r={r} onClick={() => navigate(`/restaurants/${r.id}`)}/>
               </motion.div>
             ))}
@@ -178,24 +183,6 @@ export default function RestaurantListPage() {
       </div>
 
       <BottomNav tab={tab} onTab={handleTab}/>
-    </div>
-  );
-}
-
-function SkeletonCard() {
-  return (
-    <div style={{ background: '#fff', borderRadius: 5, overflow: 'hidden', border: '1px solid #F0F0F0' }}>
-      <div style={{ height: 152, background: '#EEE',
-        backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-        backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite' }}/>
-      <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ width: '60%', height: 14, borderRadius: 5, background: '#EEE',
-          backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-          backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite' }}/>
-        <div style={{ width: '40%', height: 10, borderRadius: 5, background: '#EEE',
-          backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
-          backgroundSize: '200% 100%', animation: 'qb-shimmer 1.2s linear infinite' }}/>
-      </div>
     </div>
   );
 }
