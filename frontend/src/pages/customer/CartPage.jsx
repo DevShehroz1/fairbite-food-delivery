@@ -77,29 +77,43 @@ export default function CartPage() {
     if (!items.length) return;
     if (!user) { navigate('/'); return; }
     setPlacing(true);
-    try {
-      const orderItems = items.map(i => ({ menuItemId: i._id || i.id, quantity: i.quantity }));
-      const { data } = await api.post('/orders', {
-        restaurantId,
-        items: orderItems,
-        deliveryAddress: {
-          street: location.name,
-          city:   location.area,
-          state:  'Punjab',
-          zipCode: '54000',
-          coordinates: { lat: location.coords[0], lng: location.coords[1] },
-        },
-        payment: { method: 'cash', status: 'pending' },
-        couponCode: appliedCoupon?.code,
-      });
-      clearCart();
-      toast.success('Order placed!');
-      navigate(`/orders/${data.data.id}/track`);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to place order');
-    } finally {
-      setPlacing(false);
+    const payload = {
+      restaurantId,
+      items: items.map(i => ({ menuItemId: i._id || i.id, quantity: i.quantity })),
+      deliveryAddress: {
+        street: location?.name || '1-KM Raiwind Road, Thokar Niaz Baig',
+        city:   location?.area || 'Lahore',
+        state:  'Punjab',
+        zipCode: '54000',
+        coordinates: location?.coords ? { lat: location.coords[0], lng: location.coords[1] } : undefined,
+      },
+      payment: { method: 'cash', status: 'pending' },
+      couponCode: appliedCoupon?.code,
+    };
+
+    // Retry once on network/timeout errors (handles server cold-start)
+    let data;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const res = await api.post('/orders', payload);
+        data = res.data;
+        break;
+      } catch (err) {
+        const isNetworkErr = !err.response;
+        if (isNetworkErr && attempt === 1) {
+          await new Promise(r => setTimeout(r, 2000));
+          continue;
+        }
+        toast.error(err.response?.data?.message || 'Failed to place order');
+        setPlacing(false);
+        return;
+      }
     }
+
+    clearCart();
+    toast.success('Order placed!');
+    navigate(`/orders/${data.data.id}/track`);
+    setPlacing(false);
   };
 
   if (!items.length) {

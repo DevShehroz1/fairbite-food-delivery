@@ -7,7 +7,7 @@ import { Icons, Pressable, SmartImg, BrandButton } from '../../components/ui';
 import LeafletMap, { DEFAULT_RESTAURANT, DEFAULT_CUSTOMER } from '../../components/LeafletMap';
 
 // 5-step customer UI mapping. We split "On the Way" into a moving phase
-// and the "Arrived" phase so the map can show the rider gliding to the door.
+// and the "Arriving" phase so the map can show the rider gliding to the door.
 const UI_STEPS = [
   { label: 'Order Placed',  sub: 'We received your order' },
   { label: 'Preparing',     sub: 'Restaurant is cooking your order' },
@@ -19,9 +19,9 @@ const UI_STEPS = [
 function backendToStep(status) {
   switch (status) {
     case 'pending':    return 0;
-    case 'confirmed':
+    case 'confirmed':  return 1;
     case 'preparing':
-    case 'ready':      return 1;
+    case 'ready':      return 2;
     case 'picked-up':
     case 'on-the-way': return 2;     // rider is moving — animation drives 2 → 3
     case 'delivered':  return 4;
@@ -29,22 +29,21 @@ function backendToStep(status) {
   }
 }
 
-const RIDE_DURATION_MS = 5500;       // rider takes ~5.5s to glide to the door
-const POLL_INTERVAL_MS = 1500;       // tighter than before for snappier sync
+const RIDE_DURATION_MS = 5500;
+const POLL_INTERVAL_MS = 1500;
 
 export default function OrderTrackingPage() {
   const { id }   = useParams();
   const navigate = useNavigate();
 
-  const [order, setOrder]     = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [step, setStep]       = useState(0);
+  const [order, setOrder]       = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [step, setStep]         = useState(0);
   const [cancelled, setCancelled] = useState(false);
-  const [eta, setEta]         = useState(28 * 60);
+  const [eta, setEta]           = useState(28 * 60);
   const [animProgress, setAnimProgress] = useState(0);
   const rideStartRef = useRef(null);
 
-  // Initial fetch
   useEffect(() => {
     api.get(`/orders/${id}`)
       .then(r => {
@@ -74,17 +73,15 @@ export default function OrderTrackingPage() {
     return () => clearInterval(poll);
   }, [id]);
 
-  // ETA countdown
   useEffect(() => {
     const t = setInterval(() => setEta(e => Math.max(0, e - 1)), 1000);
     return () => clearInterval(t);
   }, []);
 
   // Smooth rider animation:
-  //   - step <  2  → rider sits at the restaurant (progress 0)
-  //   - step == 2  → ride starts, progress eases 0 → 1 over RIDE_DURATION_MS
-  //   - step == 3  → already arrived (progress stays 1)
-  //   - step >= 4  → delivered, progress at 1
+  //   step <  2 → rider sits at the restaurant (progress 0)
+  //   step == 2 → ride starts, progress eases 0 → 1 over RIDE_DURATION_MS
+  //   step >= 3 → already arrived (progress stays 1)
   useEffect(() => {
     if (step < 2) {
       setAnimProgress(0);
@@ -96,22 +93,21 @@ export default function OrderTrackingPage() {
       rideStartRef.current = null;
       return;
     }
-    // step === 2 → run the glide animation
     if (rideStartRef.current == null) rideStartRef.current = performance.now();
     let raf;
     const tick = (now) => {
       const t = (now - rideStartRef.current) / RIDE_DURATION_MS;
-      // cubic ease-out for a smooth deceleration as the rider arrives
       const eased = 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
       setAnimProgress(eased);
       if (t < 1) raf = requestAnimationFrame(tick);
-      else setStep(s => Math.max(s, 3)); // bump UI to "Arriving" once we hit the door
+      else setStep(s => Math.max(s, 3));
     };
     raf = requestAnimationFrame(tick);
     return () => raf && cancelAnimationFrame(raf);
   }, [step]);
 
   const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const fmtEta = s => { const m = Math.floor(s / 60); return `${m} minute${m !== 1 ? 's' : ''}`; };
 
   if (loading) return (
     <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -133,21 +129,62 @@ export default function OrderTrackingPage() {
     </div>
   );
 
-  const currentUIStep = UI_STEPS[step];
-  const rider = order?.rider;
-  const showRider   = step >= 2;
-  const arrived     = step >= 3 && step < 4;
-  const delivered   = step >= 4;
-
-  // Approximate distance for the pill (purely cosmetic)
-  const kmAway = (1.6 * (1 - animProgress)).toFixed(1);
+  const rider    = order?.rider;
+  const showRider  = step >= 2;
+  const arrived    = step >= 3 && step < 4;
+  const delivered  = step >= 4;
+  const kmAway     = (1.6 * (1 - animProgress)).toFixed(1);
 
   return (
     <div style={{ height: '100vh', background: '#fff', display: 'flex',
       flexDirection: 'column', overflow: 'hidden' }}>
 
-      {/* ── Map – top 60% ── */}
-      <div style={{ position: 'relative', flex: '0 0 60%', overflow: 'hidden' }}>
+      {/* ── Orange header bar ── */}
+      <div style={{
+        background: 'var(--qb-primary)',
+        paddingTop: 'env(safe-area-inset-top, 44px)',
+        paddingBottom: 14,
+        paddingLeft: 16,
+        paddingRight: 16,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative', flexShrink: 0,
+      }}>
+        <Pressable onClick={() => navigate(-1)} style={{
+          position: 'absolute', left: 16, bottom: 14,
+          width: 36, height: 36, borderRadius: 999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Icons.ChevronL size={22} stroke="#fff" sw={2.5}/>
+        </Pressable>
+        <span style={{ fontSize: 15, fontWeight: 800, color: '#fff',
+          letterSpacing: 1.8, textTransform: 'uppercase' }}>
+          Track Order
+        </span>
+      </div>
+
+      {/* ── Estimated time + order number ── */}
+      <div style={{
+        background: '#fff', padding: '12px 20px 10px',
+        display: 'flex', borderBottom: '1px solid #F3F4F6', flexShrink: 0,
+      }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--qb-primary)',
+            letterSpacing: 1.2, textTransform: 'uppercase' }}>Estimated Time</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#374151', marginTop: 2 }}>
+            {fmtEta(eta)}
+          </div>
+        </div>
+        <div style={{ flex: 1, textAlign: 'right' }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--qb-primary)',
+            letterSpacing: 1.2, textTransform: 'uppercase' }}>Order Number</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#374151', marginTop: 2 }}>
+            #{order?.orderNumber || '—'}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Map – top 55% ── */}
+      <div style={{ position: 'relative', flex: '0 0 55%', overflow: 'hidden' }}>
         <LeafletMap
           restaurant={
             order?.restaurant?.address?.coordinates
@@ -163,20 +200,9 @@ export default function OrderTrackingPage() {
           showRider={showRider}
         />
 
-        {/* Back button */}
-        <Pressable onClick={() => navigate(-1)} style={{
-          position: 'absolute', top: 52, left: 16, zIndex: 5,
-          width: 40, height: 40, borderRadius: 999,
-          background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(10px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-        }}>
-          <Icons.ChevronL size={20} stroke="#111" sw={2.5}/>
-        </Pressable>
-
         {/* ETA pill */}
         <div style={{
-          position: 'absolute', top: 52, right: 16, zIndex: 5,
+          position: 'absolute', top: 16, right: 16, zIndex: 5,
           padding: '8px 14px', borderRadius: 999,
           background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(10px)',
           boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
@@ -193,7 +219,7 @@ export default function OrderTrackingPage() {
           </span>
         </div>
 
-        {/* Distance pill — only show when rider is moving (not after arrival) */}
+        {/* Distance pill */}
         <AnimatePresence>
           {showRider && !arrived && !delivered && (
             <motion.div
@@ -211,7 +237,7 @@ export default function OrderTrackingPage() {
           )}
         </AnimatePresence>
 
-        {/* Arrived banner — pulses up from the map */}
+        {/* Arrived banner */}
         <AnimatePresence>
           {arrived && (
             <motion.div
@@ -221,8 +247,7 @@ export default function OrderTrackingPage() {
                 padding: '12px 14px', borderRadius: 5,
                 background: 'rgba(16,185,129,0.96)', backdropFilter: 'blur(8px)',
                 boxShadow: '0 8px 24px rgba(16,185,129,0.35)',
-                display: 'flex', alignItems: 'center', gap: 10,
-                color: '#fff',
+                display: 'flex', alignItems: 'center', gap: 10, color: '#fff',
               }}>
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
@@ -247,35 +272,18 @@ export default function OrderTrackingPage() {
         </AnimatePresence>
       </div>
 
-      {/* ── Bottom panel – bottom 40% ── */}
+      {/* ── Bottom panel ── */}
       <div style={{
         flex: 1, background: '#fff', overflow: 'auto',
-        borderTopLeftRadius: 28, borderTopRightRadius: 28,
-        marginTop: -28, position: 'relative', zIndex: 4,
-        boxShadow: '0 -10px 30px rgba(0,0,0,0.08)',
+        borderTopLeftRadius: 24, borderTopRightRadius: 24,
+        marginTop: -24, position: 'relative', zIndex: 4,
+        boxShadow: '0 -8px 24px rgba(0,0,0,0.07)',
       }}>
-        {/* Drag handle */}
         <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 6px' }}>
           <div style={{ width: 40, height: 4, borderRadius: 999, background: '#E5E5E5' }}/>
         </div>
 
-        <div style={{ padding: '6px 18px 24px' }}>
-
-          {/* Order number + current status label */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>
-              Order #{order?.orderNumber || '—'}
-            </div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#111', letterSpacing: -0.3, marginTop: 2 }}>
-              {currentUIStep.label}
-            </div>
-            <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>
-              {currentUIStep.sub}
-            </div>
-          </div>
-
-          {/* Stepper */}
-          <HorizontalStepper step={step}/>
+        <div style={{ padding: '6px 20px 24px' }}>
 
           {/* Rider card */}
           <AnimatePresence>
@@ -283,7 +291,7 @@ export default function OrderTrackingPage() {
               <motion.div
                 initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 14 }}
                 style={{
-                  marginTop: 16, padding: 12, borderRadius: 5,
+                  marginBottom: 16, padding: 12, borderRadius: 5,
                   background: 'linear-gradient(135deg, #111 0%, #1f1f1f 100%)',
                   display: 'flex', alignItems: 'center', gap: 12,
                 }}>
@@ -319,6 +327,9 @@ export default function OrderTrackingPage() {
             )}
           </AnimatePresence>
 
+          {/* Vertical timeline */}
+          <VerticalTimeline step={step}/>
+
           {/* CTA when delivered */}
           {delivered && (
             <div style={{ marginTop: 16 }}>
@@ -331,72 +342,60 @@ export default function OrderTrackingPage() {
   );
 }
 
-// ─── Horizontal stepper ──────────────────────────────────────────────────────
-function HorizontalStepper({ step }) {
+// ─── Vertical timeline ────────────────────────────────────────────────────────
+function VerticalTimeline({ step }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
-      padding: '4px 0 8px', position: 'relative' }}>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       {UI_STEPS.map((s, i) => {
         const isPast    = i < step;
         const isCurrent = i === step;
         const isFuture  = i > step;
+        const isLast    = i === UI_STEPS.length - 1;
+
+        const dotColor = isFuture ? '#D1D5DB' : isCurrent ? '#3B82F6' : 'var(--qb-primary)';
+        const lineColor = isPast ? '#10b981' : '#E5E7EB';
 
         return (
-          <React.Fragment key={i}>
-            {i > 0 && (
-              <div style={{
-                flex: 1,
-                height: 3,
-                marginTop: isCurrent || (i - 1 < step) ? 12 : 10,
-                borderRadius: 999,
-                background: i <= step ? '#10b981' : '#E5E5E5',
-                alignSelf: 'flex-start',
-                flexShrink: 0,
-              }}/>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center',
-              gap: 5, flexShrink: 0 }}>
+          <div key={i} style={{ display: 'flex', gap: 14, opacity: isFuture ? 0.45 : 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 16 }}>
               {isCurrent ? (
                 <motion.div
-                  animate={{
-                    boxShadow: [
-                      '0 0 0 0px rgba(229,57,53,0.18)',
-                      '0 0 0 6px rgba(229,57,53,0.18)',
-                      '0 0 0 0px rgba(229,57,53,0.0)',
-                    ],
-                  }}
+                  animate={{ boxShadow: [
+                    '0 0 0 0px rgba(229,57,53,0.18)',
+                    '0 0 0 6px rgba(229,57,53,0.18)',
+                    '0 0 0 0px rgba(229,57,53,0)',
+                  ]}}
                   transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
                   style={{
-                    width: 28, height: 28, borderRadius: 999,
-                    background: 'var(--qb-primary)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 999, background: '#fff' }}/>
-                </motion.div>
-              ) : isPast ? (
-                <div style={{
-                  width: 22, height: 22, borderRadius: 999, background: '#10b981',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Icons.Check size={11} sw={3} stroke="#fff"/>
-                </div>
+                    width: 13, height: 13, borderRadius: 999,
+                    background: dotColor, marginTop: 2, flexShrink: 0,
+                  }}/>
               ) : (
                 <div style={{
-                  width: 22, height: 22, borderRadius: 999,
-                  border: '2px solid #D1D5DB', background: '#fff',
+                  width: 13, height: 13, borderRadius: 999, background: dotColor,
+                  flexShrink: 0, marginTop: 2,
                 }}/>
               )}
-
+              {!isLast && (
+                <div style={{
+                  width: 2, flex: 1, minHeight: 24,
+                  background: lineColor,
+                  margin: '3px 0', borderRadius: 999,
+                }}/>
+              )}
+            </div>
+            <div style={{ paddingBottom: isLast ? 0 : 18 }}>
               <div style={{
-                fontSize: 9, fontWeight: isCurrent ? 700 : isFuture ? 400 : 600,
-                color: isCurrent ? 'var(--qb-primary)' : isFuture ? '#9CA3AF' : '#374151',
-                textAlign: 'center', maxWidth: 60, lineHeight: 1.2,
+                fontSize: 14, fontWeight: 700,
+                color: isFuture ? '#9CA3AF' : '#374151',
               }}>
                 {s.label}
               </div>
+              <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 1, lineHeight: 1.45 }}>
+                {s.sub}
+              </div>
             </div>
-          </React.Fragment>
+          </div>
         );
       })}
     </div>

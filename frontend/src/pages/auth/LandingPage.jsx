@@ -21,7 +21,9 @@ function GoogleSignInBlock({ selectedRole, referralCode, onSuccess, selectedRole
         const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
+        if (!profileRes.ok) throw new Error('Could not fetch Google profile');
         const profile = await profileRes.json();
+        if (!profile.email) throw new Error('No email returned from Google');
         const { data } = await api.post('/auth/google-token', {
           email: profile.email,
           name:  profile.name,
@@ -31,8 +33,8 @@ function GoogleSignInBlock({ selectedRole, referralCode, onSuccess, selectedRole
           referralCode: referralCode || undefined,
         });
         onSuccess(data);
-      } catch {
-        toast.error('Google sign-in failed. Try email login.');
+      } catch (err) {
+        toast.error(err.response?.data?.message || err.message || 'Google sign-in failed. Try email login.');
       } finally {
         setLoading(false);
       }

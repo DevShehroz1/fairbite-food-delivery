@@ -159,17 +159,29 @@ export function Stepper({ value, onChange, min = 0, max = 99 }) {
   );
 }
 
+// ─── Image URL optimizer ─────────────────────────────────────────────────────
+function optimizeImg(url, width = 600) {
+  if (!url) return url;
+  // Supabase storage: swap /object/ for /render/image/ to get server-side resize
+  if (url.includes('supabase.co/storage/v1/object/')) {
+    const base = url.split('?')[0].replace('/storage/v1/object/', '/storage/v1/render/image/');
+    return `${base}?width=${width}&quality=80&resize=cover`;
+  }
+  // Unsplash: fix width and add quality param
+  if (url.includes('unsplash.com')) {
+    return `${url.split('?')[0]}?w=${width}&auto=format&fit=crop&q=80`;
+  }
+  return url;
+}
+
 // ─── SmartImg ────────────────────────────────────────────────────────────────
-export function SmartImg({ src, alt = '', style, radius = 0, fallback = '🍽️' }) {
-  const [loaded, setLoaded] = useState(false);
-  const [errored, setErrored] = useState(false);
-  useEffect(() => { setLoaded(false); setErrored(false); }, [src]);
-
-  const showFallback = errored || !src;
-
+export function SmartImg({ src, alt = '', style, radius = 0, fallback = '🍽️', width = 600 }) {
+  const [status, setStatus] = useState('loading'); // loading | done | error
+  const optimized = optimizeImg(src, width);
+  useEffect(() => { setStatus('loading'); }, [src]);
   return (
     <div style={{ position: 'relative', overflow: 'hidden', borderRadius: radius, ...style }}>
-      {!loaded && !showFallback && (
+      {status === 'loading' && (
         <div style={{
           position: 'absolute', inset: 0, background: '#EEE',
           backgroundImage: 'linear-gradient(90deg, #EEE 0%, #F8F8F8 50%, #EEE 100%)',
@@ -177,7 +189,7 @@ export function SmartImg({ src, alt = '', style, radius = 0, fallback = '🍽️
           animation: 'qb-shimmer 1.2s linear infinite',
         }}/>
       )}
-      {showFallback ? (
+      {(status === 'error' || !src) ? (
         <div style={{
           position: 'absolute', inset: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -185,13 +197,17 @@ export function SmartImg({ src, alt = '', style, radius = 0, fallback = '🍽️
           fontSize: 'clamp(28px, 6vw, 56px)',
         }}>{fallback}</div>
       ) : (
-        <img src={src} alt={alt} decoding="async"
-          onLoad={() => setLoaded(true)}
-          onError={() => setErrored(true)}
+        <img
+          src={optimized}
+          alt={alt}
+          decoding="async"
+          onLoad={() => setStatus('done')}
+          onError={() => setStatus('error')}
           style={{
             width: '100%', height: '100%', objectFit: 'cover', display: 'block',
-            opacity: loaded ? 1 : 0, transition: 'opacity .3s',
-          }}/>
+            opacity: status === 'done' ? 1 : 0, transition: 'opacity .3s',
+          }}
+        />
       )}
     </div>
   );

@@ -13,7 +13,9 @@ export const AuthProvider = ({ children }) => {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       api.get('/auth/me')
         .then(res => setUser(res.data.data))
-        .catch(() => { localStorage.removeItem('quickbite_token'); })
+        .catch((err) => {
+          if (err.response?.status === 401) localStorage.removeItem('quickbite_token');
+        })
         .finally(() => setLoading(false));
     } else {
       setLoading(false);

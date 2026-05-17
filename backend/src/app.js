@@ -17,10 +17,12 @@ app.use('/api/', limiter);
 //   - the explicit CLIENT_URL env var (when set)
 //   - any localhost dev origin
 //   - any QuickBite frontend Vercel alias (so eosin / hok-s / preview / git-master all work)
+//   - any extra origins from ALLOWED_ORIGINS env var (comma-separated)
 const EXPLICIT_ORIGINS = [
   process.env.CLIENT_URL,
   'http://localhost:3000',
   'http://localhost:3001',
+  ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : []),
 ].filter(Boolean);
 const ORIGIN_PATTERN = /^https:\/\/quickbite-frontend(-[a-z0-9-]+)?\.vercel\.app$/i;
 
@@ -28,6 +30,8 @@ const isAllowedOrigin = (origin) => {
   if (!origin) return true;
   if (EXPLICIT_ORIGINS.includes(origin)) return true;
   if (ORIGIN_PATTERN.test(origin)) return true;
+  // Allow any Vercel or Netlify deployment for flexibility
+  if (origin.endsWith('.vercel.app') || origin.endsWith('.netlify.app')) return true;
   return false;
 };
 
