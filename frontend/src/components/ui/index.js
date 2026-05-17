@@ -357,18 +357,20 @@ export function WelcomeBanner({ name, avatar, autoDismissMs = 3500, onClose }) {
   return (
     <AnimatePresence onExitComplete={() => onClose && onClose()}>
       {open && (
+        <div style={{
+          position: 'fixed', zIndex: 100,
+          top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+          left: 12, right: 12,
+          maxWidth: 440,
+          margin: '0 auto',
+          pointerEvents: 'none',
+        }}>
         <motion.div
           initial={{ opacity: 0, y: -24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -24 }}
           transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-          style={{
-            position: 'fixed', zIndex: 100,
-            top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
-            left: '50%', transform: 'translateX(-50%)',
-            width: 'calc(100% - 24px)', maxWidth: 440,
-            pointerEvents: 'auto',
-          }}
+          style={{ pointerEvents: 'auto' }}
           role="status" aria-live="polite"
         >
           <div style={{
@@ -419,6 +421,7 @@ export function WelcomeBanner({ name, avatar, autoDismissMs = 3500, onClose }) {
             </Pressable>
           </div>
         </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );
