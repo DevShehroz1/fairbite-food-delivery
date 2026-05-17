@@ -59,6 +59,44 @@ button { font-family: inherit; }
   }
 }
 
+/* ─── Map shell — wraps the Leaflet container so we can stack overlays. ── */
+.qb-map-shell {
+  position: relative;
+  width: 100%; height: 100%;
+}
+
+/* Subtle warm-grey tint on top of CartoDB tiles brings them closer to
+   the iOS Maps palette without needing a paid tile provider. */
+.qb-map-shell::after {
+  content: '';
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 248, 240, 0.18) 0%,
+    rgba(232, 238, 239, 0.0)  35%,
+    rgba(232, 238, 239, 0.0)  70%,
+    rgba(0, 0, 0, 0.08)       100%
+  );
+  z-index: 350; /* above tiles, below markers (which sit at 600+) */
+  mix-blend-mode: multiply;
+}
+
+.qb-map-routeflag {
+  position: absolute;
+  left: 50%; bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 500;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.85);
+  color: #fff;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.3px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
 /* ─── Leaflet pin styling ───────────────────────────────────────────────── */
 .qb-leaflet-icon { background: transparent; border: none; }
 
@@ -68,44 +106,74 @@ button { font-family: inherit; }
   font-size: 18px;
   border-radius: 50% 50% 50% 0;
   background: #fff;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.22),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset;
   transform: rotate(-45deg);
+  border: 2px solid rgba(255, 255, 255, 0.95);
 }
 .qb-pin span { transform: rotate(45deg); display: inline-block; }
 .qb-pin-restaurant { background: var(--qb-primary); color: #fff; }
 .qb-pin-customer   { background: #2563EB; color: #fff; }
 
+/* ── Rider: layered pulse → ring → directional notch → glyph ───────────── */
 .qb-pin-rider {
-  width: 54px; height: 54px;
   position: relative;
-  background: transparent;
-  box-shadow: none;
-  transform: none;
-  border-radius: 0;
+  width: 60px; height: 60px;
+  background: transparent; box-shadow: none;
+  transform: none; border-radius: 0; border: 0;
 }
 .qb-pin-rider-pulse {
-  position: absolute; inset: 0;
+  position: absolute; inset: 6px;
   border-radius: 50%;
-  background: rgba(229,57,53,0.25);
-  animation: qb-rider-pulse 1.6s ease-out infinite;
+  background: rgba(229, 57, 53, 0.32);
+  animation: qb-rider-pulse 1.8s ease-out infinite;
+  pointer-events: none;
 }
-.qb-pin-rider-dot {
-  position: absolute; inset: 12px;
+/* Static disc that carries the emoji upright. */
+.qb-pin-rider-ring {
+  position: absolute; inset: 14px;
   border-radius: 50%;
   background: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-  box-shadow: 0 4px 14px rgba(229,57,53,0.4);
   border: 2.5px solid var(--qb-primary);
+  box-shadow:
+    0 6px 18px rgba(229, 57, 53, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
+}
+.qb-pin-rider-glyph {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; line-height: 1;
+}
+/* Invisible spinning layer behind the disc — its only visible child is the
+   notch, so rotating it swings the heading indicator around the rider. */
+.qb-pin-rider-rotator {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+.qb-pin-rider-heading {
+  position: absolute;
+  top: 0; left: 50%;
+  width: 0; height: 0;
+  transform: translateX(-50%);
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 11px solid var(--qb-primary);
+  filter: drop-shadow(0 2px 3px rgba(229, 57, 53, 0.5));
 }
 @keyframes qb-rider-pulse {
-  0%   { transform: scale(0.6); opacity: 1; }
-  100% { transform: scale(1.6); opacity: 0; }
+  0%   { transform: scale(0.65); opacity: 0.85; }
+  80%  { opacity: 0; }
+  100% { transform: scale(1.7);  opacity: 0; }
 }
 
 /* Hide leaflet zoom controls + attribution we already hid via props */
 .leaflet-container { font-family: inherit; }
 .leaflet-control-attribution { display: none !important; }
+.leaflet-pane.leaflet-overlay-pane svg path { transition: stroke-dashoffset 0.6s linear; }
 
 /* ─── QuickBite toasts ─────────────────────────────────────────────────── */
 .Toastify__toast-container {
