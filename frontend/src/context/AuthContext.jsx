@@ -3,23 +3,56 @@ import api from '../services/api';
 
 const AuthContext = createContext(null);
 
+// Decode JWT payload locally — no network, instant.
+// Returns { id, role } if the token is valid and not expired, otherwise null.
+function decodeToken(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp && payload.exp * 1000 < Date.now()) return null; // expired
+    return { id: payload.id, role: payload.role };
+  } catch {
+    return null;
+  }
+}
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('quickbite_token');
-    if (token) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      api.get('/auth/me')
-        .then(res => setUser(res.data.data))
-        .catch((err) => {
-          if (err.response?.status === 401) localStorage.removeItem('quickbite_token');
-        })
-        .finally(() => setLoading(false));
-    } else {
+    if (!token) {
       setLoading(false);
+      return;
     }
+
+    // Decode the JWT locally first — this is instant and prevents the
+    // "redirect to login during Vercel cold-start" problem.
+    const decoded = decodeToken(token);
+    if (!decoded) {
+      // Token is malformed or expired — clear it and stop here.
+      localStorage.removeItem('quickbite_token');
+      setLoading(false);
+      return;
+    }
+
+    // Use the decoded claims as a temporary user so RoleRoute never
+    // sees isAuthenticated=false while the backend is warming up.
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    setUser(decoded);
+    setLoading(false);
+
+    // Verify with the server in the background and hydrate full user data.
+    api.get('/auth/me')
+      .then(res => setUser(res.data.data))
+      .catch((err) => {
+        // Only a real 401 means the token is invalid — log out then.
+        // Network errors (cold-start timeout, offline) leave the session intact.
+        if (err.response?.status === 401) {
+          localStorage.removeItem('quickbite_token');
+          setUser(null);
+        }
+      });
   }, []);
 
   const login = (token, userData) => {
