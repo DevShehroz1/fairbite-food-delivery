@@ -142,7 +142,7 @@ export default function OrderTrackingPage() {
       {/* ── Orange header bar ── */}
       <div style={{
         background: 'var(--qb-primary)',
-        paddingTop: 'env(safe-area-inset-top, 44px)',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)',
         paddingBottom: 14,
         paddingLeft: 16,
         paddingRight: 16,
@@ -275,15 +275,15 @@ export default function OrderTrackingPage() {
       {/* ── Bottom panel ── */}
       <div style={{
         flex: 1, background: '#fff', overflow: 'auto',
-        borderTopLeftRadius: 24, borderTopRightRadius: 24,
-        marginTop: -24, position: 'relative', zIndex: 4,
+        borderTopLeftRadius: 28, borderTopRightRadius: 28,
+        marginTop: -28, position: 'relative', zIndex: 4,
         boxShadow: '0 -8px 24px rgba(0,0,0,0.07)',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 6px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 0 8px' }}>
           <div style={{ width: 40, height: 4, borderRadius: 999, background: '#E5E5E5' }}/>
         </div>
 
-        <div style={{ padding: '6px 20px 24px' }}>
+        <div style={{ padding: '4px 20px 24px' }}>
 
           {/* Rider card */}
           <AnimatePresence>

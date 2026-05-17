@@ -50,8 +50,8 @@ function FitToRoute({ a, b }) {
   const map = useMap();
   useEffect(() => {
     if (!a || !b) return;
-    const bounds = L.latLngBounds([a, b]).pad(0.4);
-    map.fitBounds(bounds, { animate: true });
+    const bounds = L.latLngBounds([a, b]).pad(0.15);
+    map.fitBounds(bounds, { animate: true, maxZoom: 15 });
   }, [a, b, map]);
   return null;
 }
