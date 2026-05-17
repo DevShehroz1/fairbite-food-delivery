@@ -138,32 +138,25 @@ exports.updateOrderStatus = async (req, res, next) => {
     // Notify the customer watching this order
     emit(req, `order_${order.id}`, `order_${order.id}_status`, { status: order.status });
 
-    // Auto-assign a rider when restaurant marks order as ready
+    // When the restaurant marks the order ready, broadcast it to the
+    // riders pool so EVERY logged-in rider sees it in their Available
+    // Orders list and can tap Accept to claim it. The previous
+    // auto-assignment logic silently picked any rider in the DB which
+    // meant a non-current rider account (e.g. rider@demo.com from the
+    // seed) often grabbed the order and the actively-logged-in rider
+    // never saw it. With the pool model the customer's progress bar
+    // still flips to "Rider Assigned" because that step is gated on
+    // status='ready', and once a rider taps Accept the customer's
+    // rider info populates on the next poll.
     if (status === 'ready' || status === 'ready-for-pickup') {
-      const io          = req.app.get('io');
-      const onlineRiders = req.app.get('onlineRiders') || new Map();
-      const onlineIds   = [...onlineRiders.keys()];
-
-      const riderId = await Order.findAvailableRider(onlineIds);
-      if (riderId) {
-        order = await Order.acceptOrder(order.id, riderId);
-
-        // Tell the rider they have been assigned an order
-        emit(req, `rider_${riderId}`, 'order_assigned', {
-          orderId:     order.id,
-          orderNumber: order.orderNumber,
-          restaurant:  order.restaurant,
-          deliveryAddress: order.deliveryAddress,
-          pricing:     order.pricing,
-          items:       order.items,
-        });
-
-        // Update customer with rider assignment
-        emit(req, `order_${order.id}`, `order_${order.id}_status`, {
-          status: order.status,
-          rider:  order.rider,
-        });
-      }
+      emit(req, 'riders', 'new_order', {
+        orderId:         order.id,
+        orderNumber:     order.orderNumber,
+        restaurant:      order.restaurant,
+        deliveryAddress: order.deliveryAddress,
+        pricing:         order.pricing,
+        items:           order.items,
+      });
     }
 
     res.status(200).json({ success: true, data: order });

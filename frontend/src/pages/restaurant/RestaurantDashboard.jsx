@@ -102,7 +102,7 @@ export default function RestaurantDashboard() {
       await api.put(`/orders/${orderId}/status`, { status: newStatus });
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
       if (newStatus === 'ready') {
-        toast.success('Rider assigned!');
+        toast.success('Order sent to riders — first to accept gets it.');
       } else if (newStatus === 'preparing') {
         toast.success('Started preparing — customer notified.');
       } else {

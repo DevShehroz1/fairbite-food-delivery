@@ -93,6 +93,25 @@ export default function RiderDashboard() {
     }
   };
 
+  // Claim an order from the available pool. Backend's /accept endpoint
+  // refuses if another rider already took it, so we just trust the
+  // response — on success the order becomes the active order via the
+  // next /orders poll (which now sees it has rider_id = current user).
+  const acceptOrder = async (orderId) => {
+    try {
+      const r = await api.put(`/orders/${orderId}/accept`);
+      const accepted = r.data?.data;
+      if (accepted) {
+        activeOrderRef.current = accepted;
+        setActiveOrder(accepted);
+        setOrders(prev => prev.filter(o => o.id !== orderId));
+        toast.success(`Order accepted! 🛵 #${accepted.orderNumber}`);
+      }
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Could not accept');
+    }
+  };
+
   const STATUS_TO_STEP = { ready: 0, 'picked-up': 1, delivered: 2 };
   const activeStepIndex = activeOrder ? (STATUS_TO_STEP[activeOrder.status] ?? -1) : -1;
 
@@ -365,7 +384,7 @@ export default function RiderDashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <AnimatePresence>
                   {availableOrders.map(order => (
-                    <OrderCard key={order.id} order={order} />
+                    <OrderCard key={order.id} order={order} onAccept={() => acceptOrder(order.id)} />
                   ))}
                 </AnimatePresence>
               </div>
@@ -434,7 +453,7 @@ function RouteRow({ icon, color, title, sub, tag }) {
   );
 }
 
-function OrderCard({ order }) {
+function OrderCard({ order, onAccept }) {
   const [countdown, setCountdown] = useState(30);
   useEffect(() => {
     const t = setInterval(() => setCountdown(c => {
@@ -521,7 +540,20 @@ function OrderCard({ order }) {
         <span style={{ color: '#10b981', fontWeight: 700 }}>+Rs. 40 surge</span>
       </div>
 
-      {/* Auto-assigned — no manual accept needed */}
+      {/* Accept CTA — claims the order; backend rejects if another rider
+          already took it (race-safe via the rider_id null check). */}
+      <Pressable
+        onClick={onAccept}
+        style={{
+          width: '100%', height: 46, borderRadius: 5,
+          background: 'var(--qb-primary)', color: '#fff',
+          fontSize: 14, fontWeight: 800, letterSpacing: 0.3,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          boxShadow: '0 6px 18px rgba(229,57,53,0.32)',
+        }}
+      >
+        <Icons.Bike size={16} stroke="#fff" sw={2.5} /> Accept Delivery
+      </Pressable>
     </motion.div>
   );
 }
