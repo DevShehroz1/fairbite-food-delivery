@@ -29,7 +29,9 @@ function backendToStep(status) {
   }
 }
 
-const RIDE_DURATION_MS = 5500;
+// Rider takes 7 seconds from the moment they tap "On my way" on the rider
+// dashboard until the arrival popup fires on the customer's screen.
+const RIDE_DURATION_MS = 7000;
 const POLL_INTERVAL_MS = 1500;
 
 export default function OrderTrackingPage() {
@@ -43,6 +45,11 @@ export default function OrderTrackingPage() {
   const [eta, setEta]           = useState(28 * 60);
   const [animProgress, setAnimProgress] = useState(0);
   const rideStartRef = useRef(null);
+  // Center-screen "Rider reached destination" popup. Surfaces exactly once
+  // per arrival (the prevStepRef gate stops the poll from re-firing it on
+  // every tick once status is already arrived/delivered).
+  const [showArrivedPopup, setShowArrivedPopup] = useState(false);
+  const prevStepRef = useRef(0);
 
   useEffect(() => {
     api.get(`/orders/${id}`)
@@ -76,6 +83,39 @@ export default function OrderTrackingPage() {
   useEffect(() => {
     const t = setInterval(() => setEta(e => Math.max(0, e - 1)), 1000);
     return () => clearInterval(t);
+  }, []);
+
+  // Detect the moment the rider arrives — fires once per session. Uses a
+  // ref instead of a state dep so the poll re-running with the same step
+  // never re-triggers the popup.
+  useEffect(() => {
+    const prev = prevStepRef.current;
+    if (prev < 3 && step >= 3 && step < 4) {
+      setShowArrivedPopup(true);
+      toast.success('Your rider has arrived! Please pick up your order.', { autoClose: 4000 });
+      // Browser-level notification too, so the user is alerted even if the
+      // tab is in the background. Respects whatever permission they granted.
+      try {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          new Notification('QuickBite — Rider has arrived', {
+            body: 'Pick up your order from the door.',
+            icon: '/favicon.ico',
+          });
+        }
+      } catch (_) { /* notifications unavailable — toast already covers it */ }
+    }
+    prevStepRef.current = step;
+  }, [step]);
+
+  // Ask for notification permission once on mount so the arrival popup can
+  // also surface as an OS-level notification. Silent failure is fine —
+  // the in-app popup + toast cover the no-permission case.
+  useEffect(() => {
+    try {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {});
+      }
+    } catch (_) {}
   }, []);
 
   // Smooth rider animation:
@@ -338,6 +378,101 @@ export default function OrderTrackingPage() {
           )}
         </div>
       </div>
+
+      {/* ── Rider-arrived popup — fires the moment status flips to "Arriving"
+            (step 3). The user dismisses with "Got it" or the X button. ── */}
+      <AnimatePresence>
+        {showArrivedPopup && (
+          <>
+            <motion.div
+              key="arrived-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+              onClick={() => setShowArrivedPopup(false)}
+              style={{
+                position: 'fixed', inset: 0, zIndex: 1000,
+                background: 'rgba(0,0,0,0.55)',
+                backdropFilter: 'blur(4px)',
+              }}
+            />
+            <motion.div
+              key="arrived-card"
+              role="alertdialog"
+              aria-live="assertive"
+              initial={{ opacity: 0, scale: 0.85, y: 18 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 8 }}
+              transition={{ type: 'spring', stiffness: 360, damping: 28 }}
+              style={{
+                position: 'fixed', zIndex: 1001,
+                left: '50%', top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 'min(86vw, 340px)',
+                background: '#fff',
+                borderRadius: 16,
+                padding: '28px 24px 22px',
+                textAlign: 'center',
+                boxShadow: '0 24px 60px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.12)',
+              }}
+            >
+              {/* Animated success ring with the bike emoji at its center. */}
+              <div style={{ position: 'relative', width: 86, height: 86, margin: '0 auto 14px' }}>
+                <motion.div
+                  aria-hidden
+                  animate={{ scale: [1, 1.35, 1], opacity: [0.55, 0, 0.55] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
+                  style={{
+                    position: 'absolute', inset: 0, borderRadius: 999,
+                    background: 'rgba(16,185,129,0.35)',
+                  }}
+                />
+                <div style={{
+                  position: 'absolute', inset: 8, borderRadius: 999,
+                  background: '#10b981',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 36, lineHeight: 1,
+                  boxShadow: '0 12px 28px rgba(16,185,129,0.4)',
+                }}>
+                  🛵
+                </div>
+              </div>
+              <div style={{ fontSize: 19, fontWeight: 800, color: '#111', letterSpacing: -0.3 }}>
+                Rider reached destination!
+              </div>
+              <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6, lineHeight: 1.45 }}>
+                Pick up your order — your rider is at the door.
+              </div>
+              <button
+                onClick={() => setShowArrivedPopup(false)}
+                style={{
+                  marginTop: 18, width: '100%', height: 48,
+                  borderRadius: 12, border: 0,
+                  background: 'var(--qb-primary)', color: '#fff',
+                  fontSize: 15, fontWeight: 800, letterSpacing: 0.2,
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 22px rgba(229,57,53,0.4)',
+                }}
+              >
+                Got it
+              </button>
+              <Pressable
+                onClick={() => setShowArrivedPopup(false)}
+                aria-label="Close"
+                style={{
+                  position: 'absolute', top: 10, right: 10,
+                  width: 32, height: 32, borderRadius: 999,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#9CA3AF',
+                }}
+              >
+                <Icons.X size={18} sw={2.2}/>
+              </Pressable>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
