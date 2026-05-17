@@ -356,46 +356,108 @@ function VerticalTimeline({ step }) {
         const lineColor = isPast ? '#10b981' : '#E5E7EB';
 
         return (
-          <div key={i} style={{ display: 'flex', gap: 14, opacity: isFuture ? 0.45 : 1 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 16 }}>
+          <motion.div
+            key={i}
+            initial={false}
+            animate={{ opacity: isFuture ? 0.45 : 1 }}
+            transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+            style={{ display: 'flex', gap: 14 }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 16, position: 'relative' }}>
               {isCurrent ? (
+                <div style={{ position: 'relative', width: 13, height: 13, marginTop: 2, flexShrink: 0 }}>
+                  {/* Outer glow halo — slow, soft pulse like iOS notification dot. */}
+                  <motion.div
+                    aria-hidden
+                    animate={{ scale: [1, 2.4, 1], opacity: [0.35, 0, 0.35] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+                    style={{
+                      position: 'absolute', inset: 0, borderRadius: 999,
+                      background: 'rgba(59,130,246,0.45)',
+                      willChange: 'transform, opacity',
+                    }}
+                  />
+                  {/* Inner ring — quicker, tighter pulse adds layered depth. */}
+                  <motion.div
+                    aria-hidden
+                    animate={{ scale: [1, 1.7, 1], opacity: [0.55, 0, 0.55] }}
+                    transition={{ duration: 1.4, repeat: Infinity, ease: 'easeOut' }}
+                    style={{
+                      position: 'absolute', inset: 0, borderRadius: 999,
+                      background: 'rgba(59,130,246,0.6)',
+                      willChange: 'transform, opacity',
+                    }}
+                  />
+                  {/* The dot itself breathes scale + brightness. */}
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.12, 1],
+                      boxShadow: [
+                        '0 0 0 0 rgba(59,130,246,0.55)',
+                        '0 0 0 6px rgba(59,130,246,0.0)',
+                        '0 0 0 0 rgba(59,130,246,0.0)',
+                      ],
+                    }}
+                    transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                    style={{
+                      position: 'relative', zIndex: 1,
+                      width: 13, height: 13, borderRadius: 999,
+                      background: dotColor,
+                      willChange: 'transform',
+                    }}
+                  />
+                </div>
+              ) : (
                 <motion.div
-                  animate={{ boxShadow: [
-                    '0 0 0 0px rgba(229,57,53,0.18)',
-                    '0 0 0 6px rgba(229,57,53,0.18)',
-                    '0 0 0 0px rgba(229,57,53,0)',
-                  ]}}
-                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                  initial={false}
+                  animate={{ background: dotColor, scale: isPast ? 1 : 0.95 }}
+                  transition={{ duration: 0.45, ease: [0.32, 0.72, 0, 1] }}
                   style={{
                     width: 13, height: 13, borderRadius: 999,
-                    background: dotColor, marginTop: 2, flexShrink: 0,
-                  }}/>
-              ) : (
-                <div style={{
-                  width: 13, height: 13, borderRadius: 999, background: dotColor,
-                  flexShrink: 0, marginTop: 2,
-                }}/>
+                    flexShrink: 0, marginTop: 2,
+                  }}
+                />
               )}
               {!isLast && (
                 <div style={{
                   width: 2, flex: 1, minHeight: 24,
                   background: lineColor,
                   margin: '3px 0', borderRadius: 999,
-                }}/>
+                  position: 'relative', overflow: 'hidden',
+                }}>
+                  {isCurrent && (
+                    <motion.div
+                      aria-hidden
+                      initial={{ y: '-100%' }}
+                      animate={{ y: '100%' }}
+                      transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                      style={{
+                        position: 'absolute', left: 0, right: 0, height: '60%',
+                        background: 'linear-gradient(180deg, transparent 0%, rgba(59,130,246,0.7) 50%, transparent 100%)',
+                        willChange: 'transform',
+                      }}
+                    />
+                  )}
+                </div>
               )}
             </div>
             <div style={{ paddingBottom: isLast ? 0 : 18 }}>
-              <div style={{
-                fontSize: 14, fontWeight: 700,
-                color: isFuture ? '#9CA3AF' : '#374151',
-              }}>
+              <motion.div
+                initial={false}
+                animate={{
+                  color: isFuture ? '#9CA3AF' : '#374151',
+                  fontWeight: isCurrent ? 800 : 700,
+                }}
+                transition={{ duration: 0.3 }}
+                style={{ fontSize: 14 }}
+              >
                 {s.label}
-              </div>
+              </motion.div>
               <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 1, lineHeight: 1.45 }}>
                 {s.sub}
               </div>
             </div>
-          </div>
+          </motion.div>
         );
       })}
     </div>

@@ -1,8 +1,9 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from './context/AuthContext';
 import { QBLogoMark } from './components/ui';
+import { CartFlyProvider } from './context/CartFlyContext';
 
 // LandingPage handles both sign-in and registration tabs.
 import LandingPage from './pages/auth/LandingPage';
@@ -107,13 +108,19 @@ const SuspenseFallback = () => (
   </div>
 );
 
-const PageWrap = ({ children }) => (
+// Apple's signature ease-out — fast start, soft settle.
+const IOS_EASE = [0.32, 0.72, 0, 1];
+
+// iOS-style push/pop: forward navigations slide in from the right,
+// backward (browser back) slide in from the left, with the leaving view
+// drifting in the opposite direction at lower opacity.
+const PageWrap = ({ children, dir = 1 }) => (
   <motion.div
-    initial={{ opacity: 0, y: 8 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -6 }}
-    transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
-    style={{ minHeight: '100vh' }}
+    initial={{ x: dir * 28, opacity: 0 }}
+    animate={{ x: 0, opacity: 1 }}
+    exit={{ x: -dir * 10, opacity: 0 }}
+    transition={{ duration: 0.34, ease: IOS_EASE }}
+    style={{ minHeight: '100vh', willChange: 'transform, opacity' }}
   >
     {children}
   </motion.div>
@@ -122,18 +129,21 @@ const PageWrap = ({ children }) => (
 const App = () => {
   const { isAuthenticated, user, loading } = useAuth();
   const location = useLocation();
+  const navType = useNavigationType();
+  const dir = navType === 'POP' ? -1 : 1;
 
   if (loading) return <SuspenseFallback/>;
 
   return (
     <AppErrorBoundary>
+    <CartFlyProvider>
     <Suspense fallback={<SuspenseFallback/>}>
       <AnimatePresence mode="wait" initial={false}>
         <Routes location={location} key={location.pathname}>
           <Route path="/"
             element={isAuthenticated
               ? <Navigate to={DASHBOARD_ROUTES[user?.role] || '/home'} replace />
-              : <PageWrap><LandingPage /></PageWrap>}
+              : <PageWrap dir={dir}><LandingPage /></PageWrap>}
           />
 
           {/* Legacy /login + /register routes funnel into Landing. */}
@@ -141,24 +151,25 @@ const App = () => {
           <Route path="/register" element={<Navigate to="/" replace />} />
 
           {/* Customer-only */}
-          <Route path="/home"             element={<RoleRoute allow={['customer']}><PageWrap><HomePage /></PageWrap></RoleRoute>} />
-          <Route path="/restaurants"      element={<RoleRoute allow={['customer']}><PageWrap><RestaurantListPage /></PageWrap></RoleRoute>} />
-          <Route path="/restaurants/:id"  element={<RoleRoute allow={['customer']}><PageWrap><RestaurantDetailPage /></PageWrap></RoleRoute>} />
-          <Route path="/cart"             element={<RoleRoute allow={['customer']}><PageWrap><CartPage /></PageWrap></RoleRoute>} />
-          <Route path="/orders"           element={<RoleRoute allow={['customer']}><PageWrap><OrderHistoryPage /></PageWrap></RoleRoute>} />
-          <Route path="/orders/:id/track" element={<RoleRoute allow={['customer']}><PageWrap><OrderTrackingPage /></PageWrap></RoleRoute>} />
-          <Route path="/profile"          element={<RoleRoute allow={['customer']}><PageWrap><ProfilePage /></PageWrap></RoleRoute>} />
-          <Route path="/rewards"          element={<RoleRoute allow={['customer']}><PageWrap><RewardsPage /></PageWrap></RoleRoute>} />
+          <Route path="/home"             element={<RoleRoute allow={['customer']}><PageWrap dir={dir}><HomePage /></PageWrap></RoleRoute>} />
+          <Route path="/restaurants"      element={<RoleRoute allow={['customer']}><PageWrap dir={dir}><RestaurantListPage /></PageWrap></RoleRoute>} />
+          <Route path="/restaurants/:id"  element={<RoleRoute allow={['customer']}><PageWrap dir={dir}><RestaurantDetailPage /></PageWrap></RoleRoute>} />
+          <Route path="/cart"             element={<RoleRoute allow={['customer']}><PageWrap dir={dir}><CartPage /></PageWrap></RoleRoute>} />
+          <Route path="/orders"           element={<RoleRoute allow={['customer']}><PageWrap dir={dir}><OrderHistoryPage /></PageWrap></RoleRoute>} />
+          <Route path="/orders/:id/track" element={<RoleRoute allow={['customer']}><PageWrap dir={dir}><OrderTrackingPage /></PageWrap></RoleRoute>} />
+          <Route path="/profile"          element={<RoleRoute allow={['customer']}><PageWrap dir={dir}><ProfilePage /></PageWrap></RoleRoute>} />
+          <Route path="/rewards"          element={<RoleRoute allow={['customer']}><PageWrap dir={dir}><RewardsPage /></PageWrap></RoleRoute>} />
 
           {/* Role dashboards */}
-          <Route path="/dashboard/restaurant" element={<RoleRoute allow={['restaurant']}><PageWrap><RestaurantDashboard /></PageWrap></RoleRoute>} />
-          <Route path="/dashboard/rider"      element={<RoleRoute allow={['rider']}><PageWrap><RiderDashboard /></PageWrap></RoleRoute>} />
-          <Route path="/dashboard/admin"      element={<RoleRoute allow={['admin']}><PageWrap><AdminDashboard /></PageWrap></RoleRoute>} />
+          <Route path="/dashboard/restaurant" element={<RoleRoute allow={['restaurant']}><PageWrap dir={dir}><RestaurantDashboard /></PageWrap></RoleRoute>} />
+          <Route path="/dashboard/rider"      element={<RoleRoute allow={['rider']}><PageWrap dir={dir}><RiderDashboard /></PageWrap></RoleRoute>} />
+          <Route path="/dashboard/admin"      element={<RoleRoute allow={['admin']}><PageWrap dir={dir}><AdminDashboard /></PageWrap></RoleRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>
     </Suspense>
+    </CartFlyProvider>
     </AppErrorBoundary>
   );
 };
