@@ -222,72 +222,65 @@ export function SmartImg({
 }
 
 // ─── QuickBite logo ───────────────────────────────────────────────────────────
-// A bowl with steam + a speed chevron, on a warm gradient roundel.
-export function QBLogoMark({ size = 32, shadow = true }) {
+// Wordmark-only identity: "quick" in near-black + "bite" in brand red, set
+// in heavy lowercase Inter with tight negative tracking. No glyph, no
+// roundel — type carries the brand. The `inverted` prop swaps the two
+// colours so the mark stays readable on the brand-red hero background.
+//
+// Some surfaces only have square space (favicon, PWA icon, app icon on the
+// suspense splash). For those, callers pass `compact` to render the short
+// "qb." variant — same typeface, same letter-spacing, fits in a square.
+export function QBLogoMark({
+  size = 32,
+  inverted = false,
+  compact = false,
+}) {
+  // `size` historically meant "icon edge in px". For the wordmark we treat
+  // it as the cap height of the type and scale the word accordingly. The
+  // tracking ratio is calibrated so "quickbite." reads tight at every size.
+  const fontPx = compact ? size * 0.78 : size * 0.74;
+  const baseColor = inverted ? '#fff' : '#111';
+  const accentColor = inverted ? '#FFE5DD' : 'var(--qb-primary)';
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none"
-      style={shadow ? { filter: 'drop-shadow(0 4px 10px rgba(229,57,53,0.25))' } : undefined}>
-      <defs>
-        <linearGradient id="qbBg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#FF7043"/>
-          <stop offset="1" stopColor="#E53935"/>
-        </linearGradient>
-        <linearGradient id="qbBowl" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFFFFF"/>
-          <stop offset="1" stopColor="#FFE5DD"/>
-        </linearGradient>
-      </defs>
-
-      {/* Rounded-square background */}
-      <rect x="0" y="0" width="64" height="64" rx="16" fill="url(#qbBg)"/>
-
-      {/* Subtle inner highlight */}
-      <rect x="3" y="3" width="58" height="58" rx="14" fill="none"
-        stroke="rgba(255,255,255,0.22)" strokeWidth="1"/>
-
-      {/* Steam — three curves rising */}
-      <g stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.92">
-        <path d="M22 18 C 22 14, 26 14, 26 10"/>
-        <path d="M32 18 C 32 13, 36 13, 36 9"/>
-        <path d="M42 18 C 42 14, 46 14, 46 10"/>
-      </g>
-
-      {/* Bowl */}
-      <path d="M14 28 H50 A0 0 0 0 1 50 28 V32 A18 18 0 0 1 14 32 V28 Z"
-        fill="url(#qbBowl)"/>
-
-      {/* Bowl rim shine */}
-      <path d="M14 28 H50" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"/>
-
-      {/* Speed chevron inside the bowl — 'Quick' */}
-      <path d="M26 41 L33 36 L31 41 L37 36"
-        stroke="#E53935" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-
-      {/* Wheel hint under the bowl — fast delivery */}
-      <circle cx="22" cy="52" r="3.2" fill="#FFFFFF"/>
-      <circle cx="22" cy="52" r="1.2" fill="#E53935"/>
-      <circle cx="42" cy="52" r="3.2" fill="#FFFFFF"/>
-      <circle cx="42" cy="52" r="1.2" fill="#E53935"/>
-    </svg>
+    <span style={{
+      fontFamily: 'Inter, -apple-system, system-ui, sans-serif',
+      fontWeight: 900,
+      fontSize: fontPx,
+      lineHeight: 1,
+      letterSpacing: '-0.05em',
+      color: baseColor,
+      whiteSpace: 'nowrap',
+      display: 'inline-block',
+    }}>
+      {compact
+        ? <>qb<span style={{ color: accentColor }}>.</span></>
+        : <>quick<span style={{ color: accentColor }}>bite</span><span style={{ color: accentColor }}>.</span></>
+      }
+    </span>
   );
 }
 
-// Full lockup: mark + wordmark
-export function QBLogoLockup({ size = 32, color = '#111', subColor = '#9CA3AF', tagline = true }) {
+// Lockup — backwards-compatible shim. The new identity IS the wordmark,
+// so the lockup just renders the wordmark; the `tagline` arg still works
+// for the rare surface (e.g. landing hero) that wants the "FAST · FAIR ·
+// TASTY" line underneath.
+export function QBLogoLockup({ size = 32, color, tagline = true, inverted = false }) {
+  const subColor = inverted ? 'rgba(255,255,255,0.7)' : '#9CA3AF';
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-      <QBLogoMark size={size}/>
-      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-        <span style={{ fontSize: size * 0.62, fontWeight: 800, letterSpacing: -0.4, color }}>
-          Quick<span style={{ color: 'var(--qb-primary)' }}>Bite</span>
+    <div style={{ display: 'inline-flex', flexDirection: 'column', lineHeight: 1, gap: 6 }}>
+      <QBLogoMark size={size} inverted={inverted}/>
+      {tagline && (
+        <span style={{
+          fontSize: Math.max(10, size * 0.28),
+          fontWeight: 700,
+          color: color || subColor,
+          letterSpacing: 0.6,
+          textTransform: 'uppercase',
+          fontFamily: 'Inter, -apple-system, system-ui, sans-serif',
+        }}>
+          Fast · Fair · Tasty
         </span>
-        {tagline && (
-          <span style={{ fontSize: size * 0.28, fontWeight: 600, color: subColor,
-            marginTop: 4, letterSpacing: 0.4, textTransform: 'uppercase' }}>
-            Fast · Fair · Tasty
-          </span>
-        )}
-      </div>
+      )}
     </div>
   );
 }

@@ -92,17 +92,19 @@ const RoleRoute = ({ allow, children }) => {
 const SuspenseFallback = () => (
   <div style={{
     height: '100vh', display: 'flex', flexDirection: 'column',
-    alignItems: 'center', justifyContent: 'center', gap: 16,
+    alignItems: 'center', justifyContent: 'center', gap: 18,
     background: '#F5F5F5',
   }}>
+    {/* Soft breathing scale on the wordmark — keeps the splash calm and
+        avoids the cartoon wiggle the old roundel mark needed. */}
     <motion.div
-      animate={{ scale: [1, 1.08, 1], rotate: [0, 8, -8, 0] }}
-      transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+      animate={{ opacity: [0.55, 1, 0.55] }}
+      transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
     >
-      <QBLogoMark size={64}/>
+      <QBLogoMark size={56}/>
     </motion.div>
-    <div style={{ fontSize: 13, fontWeight: 700, color: '#9CA3AF', letterSpacing: 0.6, textTransform: 'uppercase' }}>
-      Loading…
+    <div style={{ fontSize: 12, fontWeight: 700, color: '#9CA3AF', letterSpacing: 0.8, textTransform: 'uppercase' }}>
+      Loading
     </div>
   </div>
 );

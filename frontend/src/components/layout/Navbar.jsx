@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, Button, IconButton, Badge, Box, Switch, Avatar, Menu, MenuItem, Chip } from '@mui/material';
-import { ShoppingCart, RestaurantMenu } from '@mui/icons-material';
+import { AppBar, Toolbar, Button, IconButton, Badge, Box, Switch, Avatar, Menu, MenuItem, Chip, Typography } from '@mui/material';
+import { ShoppingCart } from '@mui/icons-material';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { isDemoMode, enableDemoMode, disableDemoMode } from '../../services/demoService';
 import useCart from '../../hooks/useCart';
+import { QBLogoMark } from '../ui';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -36,20 +37,10 @@ const Navbar = () => {
         }}
       >
         <Toolbar sx={{ justifyContent:'space-between', minHeight:'60px !important' }}>
-          {/* Logo */}
-          <Typography
-            component={Link} to="/"
-            variant="h6" fontWeight={800}
-            sx={{
-              textDecoration:'none', display:'flex', alignItems:'center', gap:1,
-              background:'linear-gradient(135deg,#E53935,#FF5722)',
-              WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
-              letterSpacing:-0.5,
-            }}
-          >
-            <RestaurantMenu sx={{ color:'#E53935', fontSize:22 }}/>
-            QuickBite
-          </Typography>
+          {/* Wordmark — no icon, type-only identity. */}
+          <Box component={Link} to="/" sx={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', lineHeight: 1 }}>
+            <QBLogoMark size={26}/>
+          </Box>
 
           {/* Centre nav */}
           <Box sx={{ display:{ xs:'none', md:'flex' }, gap:0.5 }}>

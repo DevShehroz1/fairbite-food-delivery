@@ -4,23 +4,19 @@
       <stop offset="0" stop-color="#FF7043"/>
       <stop offset="1" stop-color="#E53935"/>
     </linearGradient>
-    <linearGradient id="qbBowl" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFFFFF"/>
-      <stop offset="1" stop-color="#FFE5DD"/>
-    </linearGradient>
   </defs>
-  <rect x="0" y="0" width="64" height="64" rx="16" fill="url(#qbBg)"/>
-  <rect x="3" y="3" width="58" height="58" rx="14" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
-  <g stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.92">
-    <path d="M22 18 C 22 14, 26 14, 26 10"/>
-    <path d="M32 18 C 32 13, 36 13, 36 9"/>
-    <path d="M42 18 C 42 14, 46 14, 46 10"/>
-  </g>
-  <path d="M14 28 H50 V32 A18 18 0 0 1 14 32 V28 Z" fill="url(#qbBowl)"/>
-  <path d="M14 28 H50" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
-  <path d="M26 41 L33 36 L31 41 L37 36" stroke="#E53935" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <circle cx="22" cy="52" r="3.2" fill="#FFFFFF"/>
-  <circle cx="22" cy="52" r="1.2" fill="#E53935"/>
-  <circle cx="42" cy="52" r="3.2" fill="#FFFFFF"/>
-  <circle cx="42" cy="52" r="1.2" fill="#E53935"/>
+  <!-- Rounded-square red background tile so the PWA / favicon still has a
+       branded silhouette even though the wordmark identity itself is
+       type-only. -->
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="url(#qbBg)"/>
+  <!-- "qb." in heavy Inter at the same negative-letter-spacing as the
+       in-app wordmark. The dot is set in white for max contrast and to
+       echo the brand-accent dot in the full "quickbite." wordmark. -->
+  <text x="32" y="44"
+        text-anchor="middle"
+        font-family="Inter, -apple-system, system-ui, sans-serif"
+        font-weight="900"
+        font-size="34"
+        letter-spacing="-1.6"
+        fill="#FFFFFF">qb<tspan fill="#FFE5DD">.</tspan></text>
 </svg>

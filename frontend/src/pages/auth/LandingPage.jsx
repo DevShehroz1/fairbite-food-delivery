@@ -156,16 +156,11 @@ export default function LandingPage() {
           display: 'flex', flexDirection: 'column', color: '#fff',
         }}>
 
-        {/* logo */}
-        <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <QBLogoMark size={48}/>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.4, lineHeight: 1 }}>
-              Quick<span style={{ color: 'var(--qb-accent)' }}>Bite</span>
-            </div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 4, letterSpacing: 0.4, textTransform: 'uppercase', fontWeight: 600 }}>
-              Fast · Fair · Tasty
-            </div>
+        {/* Wordmark on the red hero — type carries the brand, no glyph. */}
+        <motion.div variants={item} style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20, lineHeight: 1 }}>
+          <QBLogoMark size={40} inverted/>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.6, textTransform: 'uppercase', fontWeight: 700 }}>
+            Fast · Fair · Tasty
           </div>
         </motion.div>
 
