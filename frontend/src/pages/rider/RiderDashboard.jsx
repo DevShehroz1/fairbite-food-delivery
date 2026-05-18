@@ -5,6 +5,8 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { Icons, PKR, Pressable, SmartImg } from '../../components/ui';
+import LeafletMap, { DEFAULT_RESTAURANT, DEFAULT_CUSTOMER } from '../../components/LeafletMap';
+import OrderChat from '../../components/OrderChat';
 
 export default function RiderDashboard() {
   const navigate = useNavigate();
@@ -14,6 +16,7 @@ export default function RiderDashboard() {
   const [activeOrder, setActiveOrder] = useState(null);
   const [earnings, setEarnings] = useState({ today: 0, week: 0, trips: 0, rating: 4.9, onlineHours: '0h 0m' });
   const [loading, setLoading] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const activeOrderRef = useRef(null);
 
@@ -258,6 +261,28 @@ export default function RiderDashboard() {
                 </span>
               </div>
 
+              {/* Live route map — same road-snap LeafletMap the customer
+                  sees, so the rider gets turn-by-turn context with both
+                  pickup and drop pins. Once the rider taps Confirm Pickup
+                  the customer-facing animation kicks in; we keep the
+                  rider's map showing the static route for clarity. */}
+              <div style={{ height: 180, borderRadius: 5, overflow: 'hidden', marginBottom: 12, border: '1px solid #F0F0F0' }}>
+                <LeafletMap
+                  restaurant={
+                    activeOrder.restaurant?.address?.coordinates
+                      ? [activeOrder.restaurant.address.coordinates.lat, activeOrder.restaurant.address.coordinates.lng]
+                      : DEFAULT_RESTAURANT
+                  }
+                  customer={
+                    activeOrder.deliveryAddress?.coordinates
+                      ? [activeOrder.deliveryAddress.coordinates.lat, activeOrder.deliveryAddress.coordinates.lng]
+                      : DEFAULT_CUSTOMER
+                  }
+                  progress={0}
+                  showRider={false}
+                />
+              </div>
+
               {/* Route rows */}
               <RouteRow
                 icon="🍴"
@@ -317,6 +342,20 @@ export default function RiderDashboard() {
                     <Icons.Check size={14} sw={3} />Mark Delivered
                   </Pressable>
                 )}
+                {/* Message-customer button — same OrderChat the customer
+                    opens from their tracking page. */}
+                <Pressable
+                  onClick={() => setChatOpen(true)}
+                  aria-label="Message customer"
+                  style={{
+                    width: 46, height: 46, borderRadius: 5, flexShrink: 0,
+                    background: '#3b82f6', color: '#fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 4px 14px rgba(59,130,246,0.32)',
+                  }}
+                >
+                  <Icons.Message size={18} stroke="#fff" sw={2.2}/>
+                </Pressable>
               </div>
             </motion.div>
           )}
@@ -392,6 +431,16 @@ export default function RiderDashboard() {
           </>
         )}
       </div>
+
+      {/* Order chat thread — only addressable when there is an active
+          delivery, since the chat is scoped to the order ID. */}
+      <OrderChat
+        open={chatOpen && !!activeOrder}
+        onClose={() => setChatOpen(false)}
+        orderId={activeOrder?.id}
+        currentUserId={user?.id || user?._id}
+        otherPartyName={activeOrder?.customer?.name ? `${activeOrder.customer.name} · Customer` : 'Customer'}
+      />
     </div>
   );
 }

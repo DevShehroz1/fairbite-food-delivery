@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { Icons, Pressable, SmartImg, BrandButton } from '../../components/ui';
 import LeafletMap, { DEFAULT_RESTAURANT, DEFAULT_CUSTOMER } from '../../components/LeafletMap';
+import OrderChat from '../../components/OrderChat';
 
 // 5-step customer UI mapping aligned with the rework flow:
 //   0  Order Placed       — pending/confirmed (auto-confirmed on create)
@@ -43,8 +45,10 @@ const POLL_INTERVAL_MS = 1500;
 export default function OrderTrackingPage() {
   const { id }   = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [order, setOrder]       = useState(null);
+  const [chatOpen, setChatOpen] = useState(false);
   const [loading, setLoading]   = useState(true);
   const [step, setStep]         = useState(0);
   const [cancelled, setCancelled] = useState(false);
@@ -404,7 +408,7 @@ export default function OrderTrackingPage() {
                   </div>
                 </div>
                 <Pressable
-                  onClick={() => toast.info('In-app messaging coming soon!', { autoClose: 2000 })}
+                  onClick={() => setChatOpen(true)}
                   style={{
                     width: 40, height: 40, borderRadius: 999, background: '#3b82f6',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -448,6 +452,19 @@ export default function OrderTrackingPage() {
                 backdropFilter: 'blur(4px)',
               }}
             />
+            {/* Centering wrapper — framer-motion overrides any `transform`
+                we set in `style`, so we can't use translate(-50%,-50%) on
+                the animated card itself. A flexbox-centered fixed parent
+                handles centering while the motion.div drives just the
+                entry/exit animation. */}
+            <div
+              style={{
+                position: 'fixed', inset: 0, zIndex: 1001,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                pointerEvents: 'none',
+                padding: '16px',
+              }}
+            >
             <motion.div
               key="arrived-card"
               role="alertdialog"
@@ -457,9 +474,8 @@ export default function OrderTrackingPage() {
               exit={{ opacity: 0, scale: 0.9, y: 8 }}
               transition={{ type: 'spring', stiffness: 360, damping: 28 }}
               style={{
-                position: 'fixed', zIndex: 1001,
-                left: '50%', top: '50%',
-                transform: 'translate(-50%, -50%)',
+                position: 'relative',
+                pointerEvents: 'auto',
                 width: 'min(86vw, 340px)',
                 background: '#fff',
                 borderRadius: 16,
@@ -521,6 +537,7 @@ export default function OrderTrackingPage() {
                 <Icons.X size={18} sw={2.2}/>
               </Pressable>
             </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
@@ -544,6 +561,14 @@ export default function OrderTrackingPage() {
                 backdropFilter: 'blur(4px)',
               }}
             />
+            <div
+              style={{
+                position: 'fixed', inset: 0, zIndex: 1003,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                pointerEvents: 'none',
+                padding: '16px',
+              }}
+            >
             <motion.div
               key="review-card"
               role="dialog"
@@ -553,9 +578,8 @@ export default function OrderTrackingPage() {
               exit={{ opacity: 0, scale: 0.92, y: 8 }}
               transition={{ type: 'spring', stiffness: 340, damping: 28 }}
               style={{
-                position: 'fixed', zIndex: 1003,
-                left: '50%', top: '50%',
-                transform: 'translate(-50%, -50%)',
+                position: 'relative',
+                pointerEvents: 'auto',
                 width: 'min(88vw, 360px)',
                 background: '#fff',
                 borderRadius: 18,
@@ -651,9 +675,19 @@ export default function OrderTrackingPage() {
                 Skip for now
               </Pressable>
             </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
+
+      {/* ── Order chat — customer ↔ rider thread, polling-backed. ── */}
+      <OrderChat
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        orderId={id}
+        currentUserId={user?.id || user?._id}
+        otherPartyName={rider?.name ? `${rider.name} · Rider` : 'Your Rider'}
+      />
     </div>
   );
 }

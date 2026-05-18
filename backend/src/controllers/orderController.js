@@ -1,5 +1,6 @@
 const Order      = require('../models/Order');
 const Restaurant = require('../models/Restaurant');
+const Message    = require('../models/Message');
 const referralCtrl = require('./referralController');
 const couponCtrl   = require('./couponController');
 
@@ -187,5 +188,47 @@ exports.wipeAll = async (req, res, next) => {
   try {
     const removed = await Order.deleteAll();
     res.status(200).json({ success: true, message: `Wiped ${removed} orders + all reviews.` });
+  } catch (err) { next(err); }
+};
+
+// Both customer (the one who placed it) and rider (the one who took it)
+// can read + post to an order's chat thread. The restaurant owner is
+// also allowed in case they want to pass instructions later.
+const isOrderParticipant = (order, user) => {
+  if (!order || !user) return false;
+  if (user.role === 'admin') return true;
+  if (user.role === 'restaurant') return true; // restaurant scope covered by their dashboard's order list
+  return (
+    order.customer?.id === user.id ||
+    order.customer?._id === user.id ||
+    order.rider?.id === user.id ||
+    order.rider?._id === user.id
+  );
+};
+
+exports.listMessages = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (!isOrderParticipant(order, req.user)) return res.status(403).json({ success: false, message: 'Not authorized' });
+    const messages = await Message.listForOrder(req.params.id);
+    res.status(200).json({ success: true, count: messages.length, data: messages });
+  } catch (err) { next(err); }
+};
+
+exports.postMessage = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (!isOrderParticipant(order, req.user)) return res.status(403).json({ success: false, message: 'Not authorized' });
+    const text = (req.body.text || '').toString().trim();
+    if (!text) return res.status(400).json({ success: false, message: 'Empty message' });
+    const message = await Message.create({
+      orderId:    req.params.id,
+      senderId:   req.user.id,
+      senderRole: req.user.role,
+      text,
+    });
+    res.status(201).json({ success: true, data: message });
   } catch (err) { next(err); }
 };
