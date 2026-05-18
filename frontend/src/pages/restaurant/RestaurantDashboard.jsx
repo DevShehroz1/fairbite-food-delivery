@@ -44,13 +44,14 @@ export default function RestaurantDashboard() {
   const [newOrderAlert, setNewOrderAlert] = useState(null);
   const prevOrderIdsRef = useRef(null);
 
+  const prevStatusByIdRef = useRef(new Map());
   const fetchOrders = async () => {
     try {
       const r = await api.get('/orders/restaurant');
       const newOrders = r.data.data || [];
       if (prevOrderIdsRef.current !== null) {
         const prevIds = new Set(prevOrderIdsRef.current);
-        const incoming = newOrders.filter(o => !prevIds.has(o.id) && o.status === 'pending');
+        const incoming = newOrders.filter(o => !prevIds.has(o.id) && (o.status === 'pending' || o.status === 'confirmed'));
         if (incoming.length > 0) {
           setNewOrderAlert(incoming[0]);
           toast(`New order #${incoming[0].orderNumber || ''}!`, {
@@ -59,6 +60,17 @@ export default function RestaurantDashboard() {
           });
         }
       }
+      // Detect status changes — fire a "Payment received" toast the moment
+      // the rider picks an order up, so the restaurant has a clear cue
+      // their account just got credited.
+      const PAID_STATES = new Set(['picked-up', 'on-the-way', 'delivered']);
+      newOrders.forEach(o => {
+        const prev = prevStatusByIdRef.current.get(o.id);
+        if (prev && !PAID_STATES.has(prev) && PAID_STATES.has(o.status)) {
+          toast.success(`Payment received: Rs.${Math.round(o.pricing?.subtotal || 0)} for #${o.orderNumber}`, { autoClose: 3500 });
+        }
+        prevStatusByIdRef.current.set(o.id, o.status);
+      });
       prevOrderIdsRef.current = newOrders.map(o => o.id);
       setOrders(newOrders);
     } catch {}
@@ -150,13 +162,24 @@ export default function RestaurantDashboard() {
           </Pressable>
         </div>
 
-        {/* Stats row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, paddingBottom: 16 }}>
-          <MiniStatCard icon={<Icons.Receipt size={14} stroke="var(--qb-primary)" />} label="Active" value={activeOrders.length} color="var(--qb-primary)" />
-          <MiniStatCard icon={<Icons.Tag size={14} stroke="#10b981" />} label="Revenue" value={`${Math.round(historyOrders.reduce((s,o) => s+(o.pricing?.subtotal||0),0)/1000)}K`} color="#10b981" />
-          <MiniStatCard icon={<Icons.Star size={14} stroke="#f59e0b" />} label="Rating" value={restaurant?.rating?.average || '—'} color="#f59e0b" />
-          <MiniStatCard icon={<Icons.Truck size={14} stroke="#8b5cf6" />} label="Total" value={orders.length} color="#8b5cf6" />
-        </div>
+        {/* Stats row. The "Paid" stat sums the subtotal of every order
+            whose status has reached picked-up or beyond — the moment the
+            rider picks up the order, the restaurant's account is credited
+            for that meal. */}
+        {(() => {
+          const PAID_STATES = new Set(['picked-up', 'on-the-way', 'delivered']);
+          const paidTotal = orders
+            .filter(o => PAID_STATES.has(o.status))
+            .reduce((s, o) => s + (o.pricing?.subtotal || 0), 0);
+          return (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, paddingBottom: 16 }}>
+              <MiniStatCard icon={<Icons.Receipt size={14} stroke="var(--qb-primary)" />} label="Active" value={activeOrders.length} color="var(--qb-primary)" />
+              <MiniStatCard icon={<Icons.Wallet size={14} stroke="#10b981" />} label="Paid" value={`Rs.${Math.round(paidTotal).toLocaleString('en-PK')}`} color="#10b981" />
+              <MiniStatCard icon={<Icons.Star size={14} stroke="#f59e0b" />} label="Rating" value={restaurant?.rating?.average || '—'} color="#f59e0b" />
+              <MiniStatCard icon={<Icons.Truck size={14} stroke="#8b5cf6" />} label="Total" value={orders.length} color="#8b5cf6" />
+            </div>
+          );
+        })()}
 
         {/* Commission banner */}
         <div style={{
@@ -372,6 +395,35 @@ function OrderCard({ order, onUpdateStatus }) {
                   <span style={{ fontSize: 12, fontWeight: 700, color: '#8b5cf6' }}>
                     Rider: {order.rider.name || 'Assigned'}
                   </span>
+                </div>
+              )}
+
+              {/* Payment-received indicator — visible the moment the rider
+                  picks up the order. The subtotal is what the restaurant
+                  earns; the platform commission + delivery fee are not in
+                  their account. */}
+              {['picked-up', 'on-the-way', 'delivered'].includes(order.status) && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  marginTop: 8, padding: '10px 12px', borderRadius: 5,
+                  background: 'rgba(16,185,129,0.08)',
+                  border: '1px solid rgba(16,185,129,0.2)',
+                }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 999, flexShrink: 0,
+                    background: '#10b981',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Icons.Wallet size={16} stroke="#fff" sw={2.2}/>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: '#065f46' }}>
+                      Payment received
+                    </div>
+                    <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>
+                      {PKR(order.pricing?.subtotal || 0)} credited on rider pickup
+                    </div>
+                  </div>
                 </div>
               )}
 
