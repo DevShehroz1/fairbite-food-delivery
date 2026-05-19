@@ -30,6 +30,7 @@ export default function CartPage() {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [availableCoupons, setAvailableCoupons] = useState([]);
   const [verifyOpen, setVerifyOpen] = useState(false);
+  const [pendingPlace, setPendingPlace] = useState(false);
   const [validating, setValidating] = useState(false);
 
   useEffect(() => {
@@ -49,6 +50,17 @@ export default function CartPage() {
       .then(r => setAvailableCoupons(r.data.data?.available || []))
       .catch(() => {});
   }, [couponSheetOpen]);
+
+  // After the modal flips phoneVerified=true, finish the place-order flow
+  // automatically — done via state + effect to avoid the stale-closure that
+  // would happen if we called handlePlace synchronously from onVerified.
+  useEffect(() => {
+    if (pendingPlace && user?.phoneVerified) {
+      setPendingPlace(false);
+      handlePlace();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPlace, user?.phoneVerified]);
 
   const deliveryFee = 0; // free delivery — change if you start charging
   const tax   = Math.round(subtotal * 0.05);
@@ -534,7 +546,7 @@ export default function CartPage() {
         open={verifyOpen}
         onClose={() => setVerifyOpen(false)}
         initialPhone={user?.phone}
-        onVerified={() => { setVerifyOpen(false); handlePlace(); }}
+        onVerified={() => { setVerifyOpen(false); setPendingPlace(true); }}
       />
 
     </div>
