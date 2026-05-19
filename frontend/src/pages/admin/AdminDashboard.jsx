@@ -1,42 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 import { Icons, PKR, Pressable } from '../../components/ui';
 
-const DEMO_USERS = [
-  { _id: 'u1', name: 'Ahmed Khan', email: 'ahmed@example.com', role: 'customer', isActive: true, createdAt: '2026-04-01' },
-  { _id: 'u2', name: 'Zara Foods', email: 'zara@restaurant.com', role: 'restaurant', isActive: true, createdAt: '2026-04-02' },
-  { _id: 'u3', name: 'Ali Rider', email: 'ali@rider.com', role: 'rider', isActive: true, createdAt: '2026-04-03' },
-  { _id: 'u4', name: 'Sara Bibi', email: 'sara@example.com', role: 'customer', isActive: false, createdAt: '2026-04-05' },
-];
-
-const DEMO_RESTAURANTS = [
-  { _id: 'r1', name: 'Karachi Grill House', owner: 'Ahmed', status: { isVerified: true, isActive: true }, stats: { totalOrders: 847, totalRevenue: 284000 } },
-  { _id: 'r2', name: 'Pizza Palace', owner: 'Zara', status: { isVerified: false, isActive: true }, stats: { totalOrders: 320, totalRevenue: 105000 } },
-  { _id: 'r3', name: 'Green Bowl', owner: 'Sara', status: { isVerified: true, isActive: true }, stats: { totalOrders: 95, totalRevenue: 42000 } },
-];
-
-const ROLE_COLORS = {
+const ROLE_COLOR = {
   customer:   '#3b82f6',
   restaurant: '#f59e0b',
   rider:      '#10b981',
   admin:      '#ef4444',
 };
-
-const STAT_CARDS = [
-  { Icon: Icons.User,    label: 'Total Users',       value: '1,240',    accent: '#3b82f6' },
-  { Icon: Icons.Truck,   label: 'Restaurants',        value: '156',      accent: '#10b981' },
-  { Icon: Icons.Receipt, label: 'Orders Today',       value: '842',      accent: '#f59e0b' },
-  { Icon: Icons.Tag,     label: 'Platform Revenue',   value: 'PKR 89K',  accent: '#ef4444' },
-];
-
-const IMPACT_STATS = [
-  { value: 'PKR 2.4M', label: 'Saved for restaurants with 15% commission' },
-  { value: '156',      label: 'Restaurants onboarded' },
-  { value: 'PKR 156',  label: 'Avg rider earning per delivery' },
-  { value: '0',        label: 'Hidden fees charged' },
-];
 
 const cardStyle = {
   background: '#F5F5F5',
@@ -45,274 +20,379 @@ const cardStyle = {
   overflow: 'hidden',
 };
 
+const fmtDate = (s) => {
+  if (!s) return '—';
+  try { return new Date(s).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' }); }
+  catch (_) { return s; }
+};
+
+const Avatar = ({ name, src, color = '#6b7280', size = 40 }) => (
+  src
+    ? <img src={src} alt="" style={{ width: size, height: size, borderRadius: 5, objectFit: 'cover', flexShrink: 0 }}/>
+    : <div style={{
+        width: size, height: size, borderRadius: 5, flexShrink: 0,
+        background: color + '22', color, display: 'flex',
+        alignItems: 'center', justifyContent: 'center',
+        fontWeight: 800, fontSize: size * 0.4,
+      }}>
+        {(name || '?').trim().charAt(0).toUpperCase()}
+      </div>
+);
+
+const StatBlock = ({ value, label }) => (
+  <div style={{ flex: 1, textAlign: 'center' }}>
+    <div style={{ fontSize: 15, fontWeight: 800, color: '#111', lineHeight: 1 }}>{value}</div>
+    <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>{label}</div>
+  </div>
+);
+
+const Divider = () => <div style={{ width: 1, background: '#E5E7EB' }}/>;
+
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState('customers');
+  const [overview, setOverview] = useState(null);
+  const [customers, setCustomers] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
+  const [riders, setRiders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const [ov, cu, re, ri] = await Promise.all([
+          api.get('/admin/overview'),
+          api.get('/admin/customers'),
+          api.get('/admin/restaurants'),
+          api.get('/admin/riders'),
+        ]);
+        if (cancelled) return;
+        setOverview(ov.data.data);
+        setCustomers(cu.data.data || []);
+        setRestaurants(re.data.data || []);
+        setRiders(ri.data.data || []);
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Failed to load admin data');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleLogout = () => { logout(); navigate('/'); };
+
+  const matchesQuery = (str) => !query || (str || '').toLowerCase().includes(query.toLowerCase());
+
+  const filteredCustomers   = customers.filter(c => matchesQuery(c.name) || matchesQuery(c.email) || matchesQuery(c.referralCode));
+  const filteredRestaurants = restaurants.filter(r => matchesQuery(r.name) || matchesQuery(r.owner?.email) || matchesQuery(r.address?.city));
+  const filteredRiders      = riders.filter(r => matchesQuery(r.name) || matchesQuery(r.email) || matchesQuery(r.phone));
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'inherit' }}>
 
-      {/* ── Sticky Header ─────────────────────────────────────── */}
+      {/* ── Sticky header ───────────────────────────────────────── */}
       <div style={{
-        position: 'sticky', top: 0, zIndex: 20,
-        background: '#fff',
-        borderBottom: '1px solid #F0F0F0',
-        padding: '14px 20px',
+        position: 'sticky', top: 0, zIndex: 20, background: '#fff',
+        borderBottom: '1px solid #F0F0F0', padding: '14px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#111', lineHeight: 1.2 }}>
-            Admin Dashboard
-          </div>
-          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>
-            Welcome back, {user?.name || 'Admin'}
-          </div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#111', lineHeight: 1.2 }}>Admin Dashboard</div>
+          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>Welcome back, {user?.name || 'Admin'}</div>
         </div>
-
-        <Pressable
-          onClick={handleLogout}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '8px 14px', borderRadius: 5,
-            background: '#fff1f1', color: '#ef4444',
-            fontSize: 13, fontWeight: 600,
-            border: '1px solid #fecaca',
-          }}
-        >
-          <Icons.LogOut size={15} stroke="#ef4444" />
-          Logout
+        <Pressable onClick={handleLogout} style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '8px 14px', borderRadius: 5,
+          background: '#fff1f1', color: '#ef4444',
+          fontSize: 13, fontWeight: 600, border: '1px solid #fecaca',
+        }}>
+          <Icons.LogOut size={15} stroke="#ef4444"/>Logout
         </Pressable>
       </div>
 
-      {/* ── Body ──────────────────────────────────────────────── */}
-      <div style={{ padding: '20px 16px 40px', maxWidth: 600, margin: '0 auto' }}>
+      <div style={{ padding: '20px 16px 40px', maxWidth: 720, margin: '0 auto' }}>
 
-        {/* ── 2×2 Stat Grid ───────────────────────────────────── */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr',
-          gap: 12, marginBottom: 16,
-        }}>
-          {STAT_CARDS.map(({ Icon, label, value, accent }) => (
-            <motion.div
-              key={label}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
-              style={{ ...cardStyle, padding: '16px 14px' }}
-            >
+        {/* ── Overview cards (real counts) ────────────────────── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+          {[
+            { Icon: Icons.User,    label: 'Total Users',    value: overview?.userTotal ?? '—',          accent: '#3b82f6' },
+            { Icon: Icons.Truck,   label: 'Restaurants',     value: overview?.restaurants ?? '—',        accent: '#10b981' },
+            { Icon: Icons.Receipt, label: 'Orders Today',    value: overview?.orders?.today ?? '—',      accent: '#f59e0b' },
+            { Icon: Icons.Tag,     label: 'Delivered Revenue', value: overview ? PKR(overview.orders.revenue) : '—', accent: '#ef4444' },
+          ].map(({ Icon, label, value, accent }) => (
+            <motion.div key={label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }} style={{ ...cardStyle, padding: '16px 14px' }}>
               <div style={{
-                width: 36, height: 36, borderRadius: 5,
-                background: accent + '18',
+                width: 36, height: 36, borderRadius: 5, background: accent + '18',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 marginBottom: 10, color: accent,
               }}>
-                <Icon size={18} stroke={accent} />
+                <Icon size={18} stroke={accent}/>
               </div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#111', lineHeight: 1 }}>
-                {value}
-              </div>
-              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
-                {label}
-              </div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#111', lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>{label}</div>
             </motion.div>
           ))}
         </div>
 
-        {/* ── Red Gradient Impact Banner ───────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          style={{
-            borderRadius: 5,
-            background: 'linear-gradient(135deg, var(--qb-primary) 0%, #b91c1c 100%)',
-            padding: '20px 18px',
-            marginBottom: 20,
-            boxShadow: '0 8px 24px rgba(229,57,53,0.28)',
-          }}
-        >
-          <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 14 }}>
-            QuickBite Impact This Month
-          </div>
-          <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr',
-            gap: 12,
-          }}>
-            {IMPACT_STATS.map(({ value, label }) => (
-              <div key={label}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', lineHeight: 1 }}>
-                  {value}
-                </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 3, lineHeight: 1.4 }}>
-                  {label}
-                </div>
+        {/* ── Role breakdown chip row ─────────────────────────── */}
+        {overview?.users && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+            {Object.entries(overview.users).map(([role, count]) => (
+              <div key={role} style={{
+                background: ROLE_COLOR[role] + '14', color: ROLE_COLOR[role],
+                padding: '6px 12px', borderRadius: 999,
+                fontSize: 12, fontWeight: 700, display: 'flex', gap: 6, alignItems: 'center',
+              }}>
+                <span style={{ textTransform: 'capitalize' }}>{role}</span>
+                <span>{count}</span>
               </div>
             ))}
           </div>
-        </motion.div>
+        )}
 
-        {/* ── Tab Bar ─────────────────────────────────────────── */}
+        {/* ── Tab bar (Customers / Restaurants / Riders) ──────── */}
         <div style={{
-          display: 'flex', gap: 6,
-          background: '#F5F5F5', borderRadius: 5,
-          padding: 4, marginBottom: 16,
+          display: 'flex', gap: 6, background: '#F5F5F5', borderRadius: 5,
+          padding: 4, marginBottom: 12,
         }}>
-          {['Users', 'Restaurants'].map((label, i) => (
-            <Pressable
-              key={label}
-              onClick={() => setTab(i)}
-              style={{
-                flex: 1, padding: '9px 0',
-                borderRadius: 5, fontSize: 13, fontWeight: 700,
-                background: tab === i ? '#fff' : 'transparent',
-                color: tab === i ? '#111' : '#6b7280',
-                boxShadow: tab === i ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
-                textAlign: 'center',
-              }}
-            >
-              {label}
+          {[
+            { k: 'customers',   label: 'Customers',   n: customers.length },
+            { k: 'restaurants', label: 'Restaurants', n: restaurants.length },
+            { k: 'riders',      label: 'Riders',      n: riders.length },
+          ].map(t => (
+            <Pressable key={t.k} onClick={() => setTab(t.k)} style={{
+              flex: 1, padding: '9px 0', borderRadius: 5, fontSize: 13, fontWeight: 700,
+              background: tab === t.k ? '#fff' : 'transparent',
+              color:      tab === t.k ? '#111' : '#6b7280',
+              boxShadow:  tab === t.k ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+              textAlign: 'center',
+            }}>
+              {t.label} <span style={{ opacity: 0.6, fontWeight: 600 }}>({t.n})</span>
             </Pressable>
           ))}
         </div>
 
-        {/* ── Users Tab ───────────────────────────────────────── */}
-        {tab === 0 && (
+        {/* ── Search ─────────────────────────────────────────── */}
+        <div style={{
+          marginBottom: 14, position: 'relative',
+          background: '#F5F5F5', borderRadius: 5, padding: '10px 14px 10px 38px',
+        }}>
+          <Icons.Search size={16} stroke="#6b7280"
+            {...{ style: { position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' } }}/>
+          <input
+            placeholder={`Search ${tab}…`}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            style={{
+              width: '100%', background: 'transparent', border: 0, outline: 0,
+              fontSize: 13, color: '#111',
+            }}/>
+        </div>
+
+        {loading && <SkeletonList/>}
+
+        {!loading && tab === 'customers' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {DEMO_USERS.map((u, i) => (
-              <motion.div
-                key={u._id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: i * 0.05 }}
-                style={{
-                  ...cardStyle,
-                  padding: '14px 16px',
-                  display: 'flex', alignItems: 'center', gap: 12,
-                }}
-              >
-                {/* Avatar */}
-                <div style={{
-                  width: 40, height: 40, borderRadius: 5,
-                  background: (ROLE_COLORS[u.role] || '#6b7280') + '18',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                  color: ROLE_COLORS[u.role] || '#6b7280',
-                }}>
-                  <Icons.User size={18} stroke={ROLE_COLORS[u.role] || '#6b7280'} />
-                </div>
-
-                {/* Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{u.name}</span>
-                    {/* Role badge */}
-                    <span style={{
-                      fontSize: 10, fontWeight: 700,
-                      padding: '2px 7px', borderRadius: 999,
-                      background: (ROLE_COLORS[u.role] || '#6b7280') + '18',
-                      color: ROLE_COLORS[u.role] || '#6b7280',
-                      textTransform: 'capitalize',
-                    }}>
-                      {u.role}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{u.email}</div>
-                  <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 3 }}>
-                    Joined {u.createdAt}
-                  </div>
-                </div>
-
-                {/* Active dot */}
-                <div style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  gap: 4, flexShrink: 0,
-                }}>
-                  <div style={{
-                    width: 8, height: 8, borderRadius: '50%',
-                    background: u.isActive ? '#10b981' : '#d1d5db',
-                  }} />
-                  <span style={{
-                    fontSize: 10, fontWeight: 600,
-                    color: u.isActive ? '#10b981' : '#9ca3af',
-                  }}>
-                    {u.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
+            {filteredCustomers.length === 0
+              ? <EmptyState label={query ? 'No matches' : 'No customers yet'}/>
+              : filteredCustomers.map(c => <CustomerCard key={c._id} c={c}/>)}
           </div>
         )}
 
-        {/* ── Restaurants Tab ─────────────────────────────────── */}
-        {tab === 1 && (
+        {!loading && tab === 'restaurants' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {DEMO_RESTAURANTS.map((r, i) => (
-              <motion.div
-                key={r._id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: i * 0.05 }}
-                style={{ ...cardStyle, padding: '14px 16px' }}
-              >
-                {/* Top row: name + badge */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{
-                      width: 36, height: 36, borderRadius: 5, flexShrink: 0,
-                      background: '#fef3c7',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 18,
-                    }}>
-                      🍽️
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{r.name}</div>
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>Owner: {r.owner}</div>
-                    </div>
-                  </div>
+            {filteredRestaurants.length === 0
+              ? <EmptyState label={query ? 'No matches' : 'No restaurants yet'}/>
+              : filteredRestaurants.map(r => <RestaurantCard key={r._id} r={r}/>)}
+          </div>
+        )}
 
-                  {/* Verified / Pending pill */}
-                  <span style={{
-                    fontSize: 11, fontWeight: 700,
-                    padding: '3px 9px', borderRadius: 999,
-                    background: r.status.isVerified ? '#d1fae5' : '#fef3c7',
-                    color:      r.status.isVerified ? '#059669' : '#d97706',
-                  }}>
-                    {r.status.isVerified ? 'Verified' : 'Pending'}
-                  </span>
-                </div>
-
-                {/* Stats row */}
-                <div style={{
-                  display: 'flex', gap: 0,
-                  borderTop: '1px dashed #E5E7EB', paddingTop: 10, marginTop: 4,
-                }}>
-                  <div style={{ flex: 1, textAlign: 'center' }}>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>
-                      {r.stats.totalOrders}
-                    </div>
-                    <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>Orders</div>
-                  </div>
-                  <div style={{ width: 1, background: '#E5E7EB' }} />
-                  <div style={{ flex: 1, textAlign: 'center' }}>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#111' }}>
-                      {PKR(r.stats.totalRevenue)}
-                    </div>
-                    <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>Revenue</div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+        {!loading && tab === 'riders' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {filteredRiders.length === 0
+              ? <EmptyState label={query ? 'No matches' : 'No riders yet'}/>
+              : filteredRiders.map(r => <RiderCard key={r._id} r={r}/>)}
           </div>
         )}
 
       </div>
+    </div>
+  );
+}
+
+function CustomerCard({ c }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }} style={{ ...cardStyle, padding: '14px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+        <Avatar name={c.name} src={c.avatar} color={ROLE_COLOR.customer}/>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{c.name || 'Unnamed'}</div>
+          <div style={{ fontSize: 12, color: '#6b7280', wordBreak: 'break-all' }}>{c.email}</div>
+          {c.phone && <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>{c.phone}</div>}
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontSize: 10, color: '#9ca3af' }}>Joined</div>
+          <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>{fmtDate(c.created_at)}</div>
+        </div>
+      </div>
+      <div style={{
+        display: 'flex', borderTop: '1px dashed #E5E7EB', paddingTop: 10,
+      }}>
+        <StatBlock value={c.stats.total} label="Orders"/>
+        <Divider/>
+        <StatBlock value={c.stats.delivered} label="Delivered"/>
+        <Divider/>
+        <StatBlock value={PKR(c.stats.spent)} label="Spent"/>
+        <Divider/>
+        <StatBlock value={c.rewardsCount} label="Rewards"/>
+      </div>
+      <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        {c.referralCode && (
+          <Chip color="#6366f1" icon={<Icons.Tag size={11} stroke="#6366f1"/>}>
+            Code: {c.referralCode}
+          </Chip>
+        )}
+        {c.referredBy && (
+          <Chip color="#10b981" icon={<Icons.Gift size={11} stroke="#10b981"/>}>
+            Referred user
+          </Chip>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function RestaurantCard({ r }) {
+  const verified = r.status?.isVerified;
+  const active   = r.status?.isActive !== false;
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }} style={{ ...cardStyle, padding: '14px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+        <Avatar name={r.name} src={r.images?.cover || r.images?.logo} color={ROLE_COLOR.restaurant}/>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{r.name}</div>
+          <div style={{ fontSize: 12, color: '#6b7280' }}>
+            {r.address?.city || r.address?.street || '—'}
+            {r.cuisine?.length ? ` · ${r.cuisine.slice(0, 2).join(', ')}` : ''}
+          </div>
+          {r.owner && (
+            <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2, wordBreak: 'break-all' }}>
+              Owner: {r.owner.name} · {r.owner.email}
+            </div>
+          )}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end', flexShrink: 0 }}>
+          <Chip color={verified ? '#059669' : '#d97706'}>
+            {verified ? 'Verified' : 'Pending'}
+          </Chip>
+          {!active && <Chip color="#6b7280">Inactive</Chip>}
+        </div>
+      </div>
+      <div style={{
+        display: 'flex', borderTop: '1px dashed #E5E7EB', paddingTop: 10,
+      }}>
+        <StatBlock value={r.stats.total} label="Orders"/>
+        <Divider/>
+        <StatBlock value={r.stats.delivered} label="Delivered"/>
+        <Divider/>
+        <StatBlock value={PKR(r.stats.revenue)} label="Revenue"/>
+        <Divider/>
+        <StatBlock value={r.menuCount} label="Menu"/>
+        <Divider/>
+        <StatBlock
+          value={r.rating?.average ? Number(r.rating.average).toFixed(1) : '—'}
+          label="Rating"/>
+      </div>
+    </motion.div>
+  );
+}
+
+function RiderCard({ r }) {
+  const active = r.stats.active;
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }} style={{ ...cardStyle, padding: '14px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+        <Avatar name={r.name} src={r.avatar} color={ROLE_COLOR.rider}/>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{r.name || 'Unnamed'}</div>
+          <div style={{ fontSize: 12, color: '#6b7280', wordBreak: 'break-all' }}>{r.email}</div>
+          {r.phone && <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>{r.phone}</div>}
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontSize: 10, color: '#9ca3af' }}>Joined</div>
+          <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>{fmtDate(r.created_at)}</div>
+        </div>
+      </div>
+      <div style={{
+        display: 'flex', borderTop: '1px dashed #E5E7EB', paddingTop: 10,
+      }}>
+        <StatBlock value={r.stats.assigned} label="Assigned"/>
+        <Divider/>
+        <StatBlock value={r.stats.delivered} label="Delivered"/>
+        <Divider/>
+        <StatBlock value={PKR(r.stats.earnings)} label="Earnings"/>
+      </div>
+      {active && (
+        <div style={{
+          marginTop: 10, padding: '8px 10px',
+          background: '#ecfdf5', borderRadius: 5,
+          display: 'flex', alignItems: 'center', gap: 8,
+          fontSize: 12, color: '#059669', fontWeight: 600,
+        }}>
+          <Icons.Bike size={14} stroke="#059669"/>
+          On a delivery — #{active.order_number} ({active.status})
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function Chip({ color, icon, children }) {
+  return (
+    <span style={{
+      fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 999,
+      background: color + '18', color, display: 'inline-flex', alignItems: 'center', gap: 4,
+    }}>
+      {icon}{children}
+    </span>
+  );
+}
+
+function EmptyState({ label }) {
+  return (
+    <div style={{
+      ...cardStyle, padding: 30, textAlign: 'center',
+      color: '#6b7280', fontSize: 13, fontWeight: 600,
+    }}>
+      {label}
+    </div>
+  );
+}
+
+function SkeletonList() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {[0, 1, 2].map(i => (
+        <div key={i} style={{ ...cardStyle, padding: '14px 16px', minHeight: 110 }}>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ width: 40, height: 40, background: '#E5E7EB', borderRadius: 5 }}/>
+            <div style={{ flex: 1 }}>
+              <div style={{ height: 12, background: '#E5E7EB', borderRadius: 4, width: '60%' }}/>
+              <div style={{ height: 10, background: '#EEE', borderRadius: 4, width: '40%', marginTop: 8 }}/>
+            </div>
+          </div>
+          <div style={{ marginTop: 12, height: 30, background: '#EEE', borderRadius: 4 }}/>
+        </div>
+      ))}
     </div>
   );
 }
