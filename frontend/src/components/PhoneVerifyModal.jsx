@@ -32,11 +32,7 @@ export default function PhoneVerifyModal({ open, onClose, onVerified, initialPho
     if (!open) {
       setStep('phone'); setCode(''); setDemoOtp(null); setSecondsLeft(0);
       confirmationRef.current = null;
-      // RecaptchaVerifier instances must be cleared so the next open re-renders.
-      if (verifierRef.current) {
-        try { verifierRef.current.clear(); } catch (_) {}
-        verifierRef.current = null;
-      }
+      teardownRecaptcha();
     } else if (initialPhone && !phone) {
       setPhone(initialPhone);
     }
@@ -60,9 +56,25 @@ export default function PhoneVerifyModal({ open, onClose, onVerified, initialPho
     return '+' + p;
   };
 
+  const teardownRecaptcha = () => {
+    if (verifierRef.current) {
+      try { verifierRef.current.clear(); } catch (_) {}
+      verifierRef.current = null;
+    }
+    // clear() doesn't always purge the DOM (especially after a failed init),
+    // so blow the host element away ourselves so the next mount is clean.
+    if (recaptchaRef.current) {
+      try { recaptchaRef.current.innerHTML = ''; } catch (_) {}
+    }
+  };
+
   const ensureRecaptcha = () => {
     if (!FIREBASE_ENABLED || !auth) return null;
     if (!verifierRef.current && recaptchaRef.current) {
+      // Always start from a virgin DOM node — if a previous attempt half-mounted,
+      // Firebase will throw "reCAPTCHA has already been rendered in this element"
+      // when we try to mount again into the same div.
+      recaptchaRef.current.innerHTML = '';
       verifierRef.current = new RecaptchaVerifier(auth, recaptchaRef.current, {
         size: 'invisible',
       });
@@ -105,11 +117,12 @@ export default function PhoneVerifyModal({ open, onClose, onVerified, initialPho
       if (code === 'auth/invalid-phone-number') msg = 'Invalid phone number';
       if (code === 'auth/too-many-requests')   msg = 'Too many attempts. Try again later.';
       if (code === 'auth/captcha-check-failed') msg = 'reCAPTCHA check failed — refresh and retry';
-      // If reCAPTCHA failed mid-flight, blow it away so the next attempt rebuilds.
-      if (verifierRef.current) {
-        try { verifierRef.current.clear(); } catch (_) {}
-        verifierRef.current = null;
+      if (/reCAPTCHA has already been rendered/i.test(err.message || '')) {
+        msg = 'reCAPTCHA reset — please tap "Send SMS code" again';
       }
+      // Whatever failed, fully tear down the verifier + the DOM host so the
+      // next click rebuilds it from scratch.
+      teardownRecaptcha();
       toast.error(msg);
     } finally {
       setSending(false);
