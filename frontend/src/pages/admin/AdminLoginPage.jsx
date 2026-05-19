@@ -39,6 +39,7 @@ function GoogleAdminLogin({ onSuccess }) {
           name:  profile.name,
           avatar: profile.picture,
           googleId: profile.sub,
+          intent: 'admin',
         });
         onSuccess(data);
       } catch (err) {

@@ -101,16 +101,26 @@ exports.googleAuth = async (req, res, next) => {
   }
 };
 
-// Google OAuth — access token flow (used with useGoogleLogin hook)
+// Google OAuth — access token flow (used with useGoogleLogin hook).
+// The frontend distinguishes two flows via the `intent` field:
+//   - intent === 'admin'   → admin allowlist applies; the email-allowlisted
+//                            account is created or upgraded to role='admin'.
+//   - anything else        → public LandingPage; the selected role wins,
+//                            even if the email is in the admin allowlist.
+//                            This lets the admin email also sign in as a
+//                            customer/rider/restaurant for testing.
 exports.googleTokenAuth = async (req, res, next) => {
   try {
-    const { email, name, avatar, googleId, role, referralCode } = req.body;
+    const { email, name, avatar, googleId, role, referralCode, intent } = req.body;
     if (!email) return res.status(400).json({ success: false, message: 'No email provided' });
+
+    const adminIntent = intent === 'admin';
+    const allowAdmin  = adminIntent && isAdminEmail(email);
 
     let user = await User.findByEmail(email);
     const allowed = ['customer', 'restaurant', 'rider'];
     if (!user) {
-      const assignedRole = isAdminEmail(email)
+      const assignedRole = allowAdmin
         ? 'admin'
         : (allowed.includes(role) ? role : 'customer');
       let referredBy = null;
@@ -123,12 +133,14 @@ exports.googleTokenAuth = async (req, res, next) => {
     } else {
       const updates = {};
       if (avatar) updates.avatar = avatar;
-      // Admin allowlist always wins — promote existing accounts on next sign-in.
-      if (isAdminEmail(email) && user.role !== 'admin') {
-        updates.role = 'admin';
-      } else if (allowed.includes(role) && role !== user.role && user.role !== 'admin') {
-        // Don't let a stray role=customer payload demote a real admin.
-        updates.role = role;
+      if (allowAdmin) {
+        // AdminLoginPage flow — promote (or keep) admin.
+        if (user.role !== 'admin') updates.role = 'admin';
+      } else if (allowed.includes(role)) {
+        // Public LandingPage — flip role to whatever was selected, even
+        // if the user is currently admin. This is the "let me test as a
+        // customer using my admin email" case.
+        if (role !== user.role) updates.role = role;
       }
       if (Object.keys(updates).length) {
         const updated = await User.update(user.id, updates);

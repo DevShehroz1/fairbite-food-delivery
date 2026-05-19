@@ -64,8 +64,21 @@ const Divider = () => <div style={{ width: 1, background: '#E5E7EB' }}/>;
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const isTablet  = useMatchMedia('(min-width: 720px)');
-  const isDesktop = useMatchMedia('(min-width: 1024px)');
+  const isTabletAuto  = useMatchMedia('(min-width: 720px)');
+  const isDesktopAuto = useMatchMedia('(min-width: 1024px)');
+  // Manual view-mode override — 'auto' uses the screen width, 'desktop'
+  // forces wide layout, 'mobile' forces the phone layout. Stored in
+  // localStorage so the choice survives a reload.
+  const [viewMode, setViewMode] = useState(() => {
+    try { return localStorage.getItem('qb_admin_view') || 'auto'; }
+    catch (_) { return 'auto'; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('qb_admin_view', viewMode); } catch (_) {}
+  }, [viewMode]);
+  const isTablet  = viewMode === 'desktop' ? true  : viewMode === 'mobile' ? false : isTabletAuto;
+  const isDesktop = viewMode === 'desktop' ? true  : viewMode === 'mobile' ? false : isDesktopAuto;
+
   const [tab, setTab] = useState('customers');
   const [overview, setOverview] = useState(null);
   const [customers, setCustomers] = useState([]);
@@ -121,14 +134,17 @@ export default function AdminDashboard() {
           <div style={{ fontSize: isDesktop ? 24 : 20, fontWeight: 800, color: '#111', lineHeight: 1.2 }}>Admin Dashboard</div>
           <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>Welcome back, {user?.name || 'Admin'}</div>
         </div>
-        <Pressable onClick={handleLogout} style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '8px 14px', borderRadius: 5,
-          background: '#fff1f1', color: '#ef4444',
-          fontSize: 13, fontWeight: 600, border: '1px solid #fecaca',
-        }}>
-          <Icons.LogOut size={15} stroke="#ef4444"/>Logout
-        </Pressable>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <ViewModeToggle value={viewMode} onChange={setViewMode}/>
+          <Pressable onClick={handleLogout} style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '8px 14px', borderRadius: 5,
+            background: '#fff1f1', color: '#ef4444',
+            fontSize: 13, fontWeight: 600, border: '1px solid #fecaca',
+          }}>
+            <Icons.LogOut size={15} stroke="#ef4444"/>Logout
+          </Pressable>
+        </div>
       </div>
 
       <div style={{
@@ -398,6 +414,31 @@ function EmptyState({ label }) {
       color: '#6b7280', fontSize: 13, fontWeight: 600,
     }}>
       {label}
+    </div>
+  );
+}
+
+function ViewModeToggle({ value, onChange }) {
+  const opts = [
+    { key: 'auto',    label: 'Auto' },
+    { key: 'mobile',  label: 'Mobile' },
+    { key: 'desktop', label: 'Desktop' },
+  ];
+  return (
+    <div style={{
+      display: 'flex', background: '#F5F5F5',
+      borderRadius: 999, padding: 3,
+      border: '1px solid #E5E7EB',
+    }}>
+      {opts.map(o => (
+        <button key={o.key} onClick={() => onChange(o.key)} style={{
+          padding: '5px 11px', borderRadius: 999,
+          background: value === o.key ? '#111' : 'transparent',
+          color:      value === o.key ? '#fff' : '#6b7280',
+          border: 0, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+          transition: 'all .15s',
+        }}>{o.label}</button>
+      ))}
     </div>
   );
 }
