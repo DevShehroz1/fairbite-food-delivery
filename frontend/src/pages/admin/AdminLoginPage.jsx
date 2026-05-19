@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
@@ -8,6 +8,19 @@ import api from '../../services/api';
 import { Icons, Pressable, BrandButton, QBLogoMark } from '../../components/ui';
 
 const HAS_GOOGLE = Boolean(process.env.REACT_APP_GOOGLE_CLIENT_ID);
+
+const useMatchMedia = (query) => {
+  const [matches, setMatches] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia(query).matches);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia(query);
+    const h = (e) => setMatches(e.matches);
+    mq.addEventListener('change', h);
+    return () => mq.removeEventListener('change', h);
+  }, [query]);
+  return matches;
+};
 
 function GoogleAdminLogin({ onSuccess }) {
   const [busy, setBusy] = useState(false);
@@ -57,6 +70,7 @@ function GoogleAdminLogin({ onSuccess }) {
 export default function AdminLoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const isDesktop = useMatchMedia('(min-width: 900px)');
   const [email, setEmail] = useState('');
   const [password, setPass] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -88,14 +102,70 @@ export default function AdminLoginPage() {
     }
   };
 
+  const formColumn = (
+    <div style={{
+      width: '100%', maxWidth: 420,
+      display: 'flex', flexDirection: 'column',
+    }}>
+      <div style={{ marginBottom: 24, lineHeight: 1 }}>
+        <QBLogoMark size={40} inverted/>
+        <div style={{
+          fontSize: 11, color: 'rgba(255,255,255,0.7)',
+          letterSpacing: 0.6, textTransform: 'uppercase',
+          fontWeight: 700, marginTop: 6,
+        }}>
+          Admin Console
+        </div>
+      </div>
+
+      <h1 style={{ fontSize: isDesktop ? 32 : 26, fontWeight: 800, letterSpacing: -0.5, margin: '0 0 4px', lineHeight: 1.15 }}>
+        Sign in to the <span style={{ color: 'var(--qb-accent)' }}>admin panel</span>.
+      </h1>
+      <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, margin: '0 0 28px' }}>
+        Restricted access. Sign in with an admin account.
+      </p>
+
+      {HAS_GOOGLE && (
+        <>
+          <div style={{ marginBottom: 14 }}>
+            <GoogleAdminLogin onSuccess={acceptIfAdmin}/>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }}/>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>or</span>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }}/>
+          </div>
+        </>
+      )}
+
+      <div style={{ marginBottom: 10 }}>
+        <FloatField label="Admin email" value={email} onChange={setEmail} type="email"/>
+      </div>
+      <div style={{ marginBottom: 18 }}>
+        <FloatField label="Password" value={password} onChange={setPass}
+          type={showPw ? 'text' : 'password'}
+          trailing={
+            <Pressable onClick={() => setShowPw(!showPw)} style={{ color: 'rgba(255,255,255,0.6)', padding: 6 }}>
+              {showPw ? <Icons.EyeOff size={18}/> : <Icons.Eye size={18}/>}
+            </Pressable>
+          }/>
+      </div>
+
+      <BrandButton onClick={handleSubmit} disabled={loading}>
+        {loading ? 'Please wait…' : 'Sign in to admin'}
+      </BrandButton>
+    </div>
+  );
+
   return (
     <div style={{
       position: 'relative', minHeight: '100vh',
       background: 'radial-gradient(circle at 20% 0%, #2b0a0a 0%, #0b0b0b 70%)',
       color: '#fff',
+      display: 'flex',
     }}>
       {/* small back link */}
-      <div style={{ position: 'absolute', top: 16, left: 16 }}>
+      <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 5 }}>
         <Pressable onClick={() => navigate('/')} style={{
           color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 600,
           display: 'flex', alignItems: 'center', gap: 4,
@@ -104,58 +174,53 @@ export default function AdminLoginPage() {
         </Pressable>
       </div>
 
-      <div style={{
-        minHeight: '100vh', maxWidth: 400, margin: '0 auto',
-        padding: '80px 24px 40px',
-        display: 'flex', flexDirection: 'column',
-      }}>
-        <div style={{ marginBottom: 24, lineHeight: 1 }}>
-          <QBLogoMark size={40} inverted/>
-          <div style={{
-            fontSize: 11, color: 'rgba(255,255,255,0.7)',
-            letterSpacing: 0.6, textTransform: 'uppercase',
-            fontWeight: 700, marginTop: 6,
-          }}>
-            Admin Console
+      {isDesktop && (
+        <div style={{
+          flex: '1 1 0', minHeight: '100vh',
+          position: 'relative', overflow: 'hidden',
+          background:
+            'radial-gradient(circle at 30% 30%, rgba(229,57,53,0.35), transparent 60%),' +
+            'radial-gradient(circle at 70% 80%, rgba(180,30,40,0.45), transparent 55%),' +
+            '#150707',
+          display: 'flex', flexDirection: 'column',
+          justifyContent: 'space-between',
+          padding: '64px 56px',
+        }}>
+          <div>
+            <QBLogoMark size={32} inverted/>
+            <div style={{
+              fontSize: 11, color: 'rgba(255,255,255,0.5)',
+              letterSpacing: 0.6, textTransform: 'uppercase',
+              fontWeight: 700, marginTop: 6,
+            }}>
+              QuickBite control room
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 40, fontWeight: 900, color: '#fff', lineHeight: 1.05, letterSpacing: -1, maxWidth: 460 }}>
+              Run the platform from one place.
+            </div>
+            <ul style={{
+              listStyle: 'none', padding: 0, margin: '24px 0 0',
+              color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 500, lineHeight: 1.8,
+            }}>
+              <li>· Live customer, restaurant and rider rosters</li>
+              <li>· Order totals + delivered revenue at a glance</li>
+              <li>· Referral linkage and per-account rewards count</li>
+            </ul>
+          </div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+            Restricted to QuickBite admins only.
           </div>
         </div>
+      )}
 
-        <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5, margin: '0 0 4px', lineHeight: 1.15 }}>
-          Sign in to the <span style={{ color: 'var(--qb-accent)' }}>admin panel</span>.
-        </h1>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, margin: '0 0 28px' }}>
-          Restricted access. Sign in with an admin account.
-        </p>
-
-        {HAS_GOOGLE && (
-          <>
-            <div style={{ marginBottom: 14 }}>
-              <GoogleAdminLogin onSuccess={acceptIfAdmin}/>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }}/>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>or</span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }}/>
-            </div>
-          </>
-        )}
-
-        <div style={{ marginBottom: 10 }}>
-          <FloatField label="Admin email" value={email} onChange={setEmail} type="email"/>
-        </div>
-        <div style={{ marginBottom: 18 }}>
-          <FloatField label="Password" value={password} onChange={setPass}
-            type={showPw ? 'text' : 'password'}
-            trailing={
-              <Pressable onClick={() => setShowPw(!showPw)} style={{ color: 'rgba(255,255,255,0.6)', padding: 6 }}>
-                {showPw ? <Icons.EyeOff size={18}/> : <Icons.Eye size={18}/>}
-              </Pressable>
-            }/>
-        </div>
-
-        <BrandButton onClick={handleSubmit} disabled={loading}>
-          {loading ? 'Please wait…' : 'Sign in to admin'}
-        </BrandButton>
+      <div style={{
+        flex: '1 1 0', minHeight: '100vh',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: isDesktop ? '40px 56px' : '80px 24px 40px',
+      }}>
+        {formColumn}
       </div>
     </div>
   );

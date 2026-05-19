@@ -6,6 +6,19 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { Icons, PKR, Pressable } from '../../components/ui';
 
+const useMatchMedia = (query) => {
+  const [matches, setMatches] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia(query).matches);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia(query);
+    const h = (e) => setMatches(e.matches);
+    mq.addEventListener('change', h);
+    return () => mq.removeEventListener('change', h);
+  }, [query]);
+  return matches;
+};
+
 const ROLE_COLOR = {
   customer:   '#3b82f6',
   restaurant: '#f59e0b',
@@ -51,6 +64,8 @@ const Divider = () => <div style={{ width: 1, background: '#E5E7EB' }}/>;
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const isTablet  = useMatchMedia('(min-width: 720px)');
+  const isDesktop = useMatchMedia('(min-width: 1024px)');
   const [tab, setTab] = useState('customers');
   const [overview, setOverview] = useState(null);
   const [customers, setCustomers] = useState([]);
@@ -98,11 +113,12 @@ export default function AdminDashboard() {
       {/* ── Sticky header ───────────────────────────────────────── */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 20, background: '#fff',
-        borderBottom: '1px solid #F0F0F0', padding: '14px 20px',
+        borderBottom: '1px solid #F0F0F0',
+        padding: isDesktop ? '18px 40px' : '14px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#111', lineHeight: 1.2 }}>Admin Dashboard</div>
+          <div style={{ fontSize: isDesktop ? 24 : 20, fontWeight: 800, color: '#111', lineHeight: 1.2 }}>Admin Dashboard</div>
           <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>Welcome back, {user?.name || 'Admin'}</div>
         </div>
         <Pressable onClick={handleLogout} style={{
@@ -115,10 +131,18 @@ export default function AdminDashboard() {
         </Pressable>
       </div>
 
-      <div style={{ padding: '20px 16px 40px', maxWidth: 720, margin: '0 auto' }}>
+      <div style={{
+        padding: isDesktop ? '28px 40px 60px' : '20px 16px 40px',
+        maxWidth: isDesktop ? 1280 : 720,
+        margin: '0 auto',
+      }}>
 
         {/* ── Overview cards (real counts) ────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isTablet ? 'repeat(4, 1fr)' : '1fr 1fr',
+          gap: 12, marginBottom: 16,
+        }}>
           {[
             { Icon: Icons.User,    label: 'Total Users',    value: overview?.userTotal ?? '—',          accent: '#3b82f6' },
             { Icon: Icons.Truck,   label: 'Restaurants',     value: overview?.restaurants ?? '—',        accent: '#10b981' },
@@ -195,29 +219,29 @@ export default function AdminDashboard() {
             }}/>
         </div>
 
-        {loading && <SkeletonList/>}
+        {loading && <SkeletonList isTablet={isTablet}/>}
 
-        {!loading && tab === 'customers' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {filteredCustomers.length === 0
-              ? <EmptyState label={query ? 'No matches' : 'No customers yet'}/>
-              : filteredCustomers.map(c => <CustomerCard key={c._id} c={c}/>)}
-          </div>
-        )}
-
-        {!loading && tab === 'restaurants' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {filteredRestaurants.length === 0
-              ? <EmptyState label={query ? 'No matches' : 'No restaurants yet'}/>
-              : filteredRestaurants.map(r => <RestaurantCard key={r._id} r={r}/>)}
-          </div>
-        )}
-
-        {!loading && tab === 'riders' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {filteredRiders.length === 0
-              ? <EmptyState label={query ? 'No matches' : 'No riders yet'}/>
-              : filteredRiders.map(r => <RiderCard key={r._id} r={r}/>)}
+        {!loading && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isTablet ? 'repeat(2, 1fr)' : '1fr',
+            gap: 12,
+          }}>
+            {tab === 'customers' && (
+              filteredCustomers.length === 0
+                ? <EmptyState label={query ? 'No matches' : 'No customers yet'}/>
+                : filteredCustomers.map(c => <CustomerCard key={c._id} c={c}/>)
+            )}
+            {tab === 'restaurants' && (
+              filteredRestaurants.length === 0
+                ? <EmptyState label={query ? 'No matches' : 'No restaurants yet'}/>
+                : filteredRestaurants.map(r => <RestaurantCard key={r._id} r={r}/>)
+            )}
+            {tab === 'riders' && (
+              filteredRiders.length === 0
+                ? <EmptyState label={query ? 'No matches' : 'No riders yet'}/>
+                : filteredRiders.map(r => <RiderCard key={r._id} r={r}/>)
+            )}
           </div>
         )}
 
@@ -378,10 +402,14 @@ function EmptyState({ label }) {
   );
 }
 
-function SkeletonList() {
+function SkeletonList({ isTablet }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {[0, 1, 2].map(i => (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: isTablet ? 'repeat(2, 1fr)' : '1fr',
+      gap: 12,
+    }}>
+      {[0, 1, 2, 3].map(i => (
         <div key={i} style={{ ...cardStyle, padding: '14px 16px', minHeight: 110 }}>
           <div style={{ display: 'flex', gap: 12 }}>
             <div style={{ width: 40, height: 40, background: '#E5E7EB', borderRadius: 5 }}/>
