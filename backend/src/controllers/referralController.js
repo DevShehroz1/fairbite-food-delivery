@@ -42,9 +42,11 @@ exports.getMyReferralInfo = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// Called from order controller when a referred user's first order is delivered.
-// Issues coupons to both parties. Safe to call multiple times — checks for prior issuance.
-exports.creditReferralOnFirstOrder = async ({ refereeId }) => {
+// Issues both referee + referrer coupons. Safe to call multiple times — the
+// per-referee `source === 'referee'` check makes it idempotent. Called from
+// the auth controller right after a referred signup, and (defensively) from
+// the order controller on first delivered order.
+exports.creditReferralCoupons = async ({ refereeId }) => {
   if (!refereeId) return;
   const referee = await User.findById(refereeId);
   if (!referee?.referredBy) return;
@@ -58,5 +60,7 @@ exports.creditReferralOnFirstOrder = async ({ refereeId }) => {
   await User.addReward(refereeId, refereeCoupon);
   await User.addReward(referee.referredBy, referrerCoupon);
 };
+
+exports.creditReferralOnFirstOrder = exports.creditReferralCoupons;
 
 exports._test = { REFERRAL_REWARDS, makeCoupon };

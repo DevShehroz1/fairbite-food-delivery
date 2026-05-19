@@ -1,7 +1,14 @@
 const User = require('../models/User');
 const { OAuth2Client } = require('google-auth-library');
+const referralCtrl = require('./referralController');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const creditReferralBestEffort = async (user) => {
+  if (!user?.referredBy) return;
+  try { await referralCtrl.creditReferralCoupons({ refereeId: user.id }); }
+  catch (e) { console.error('Referral signup credit failed:', e.message); }
+};
 
 const sendToken = (user, statusCode, res) => {
   const token = User.generateToken(user);
@@ -26,6 +33,7 @@ exports.register = async (req, res, next) => {
     }
 
     const user = await User.create({ name, email, password, role, phone, referredBy });
+    await creditReferralBestEffort(user);
     sendToken(user, 201, res);
   } catch (err) { next(err); }
 };
@@ -94,6 +102,7 @@ exports.googleTokenAuth = async (req, res, next) => {
         if (referrer) referredBy = referrer.id;
       }
       user = await User.createGoogleUser({ name, email, avatar, googleId, role: assignedRole, referredBy });
+      await creditReferralBestEffort(user);
     } else {
       const updates = {};
       if (avatar) updates.avatar = avatar;
