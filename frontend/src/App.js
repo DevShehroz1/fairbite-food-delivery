@@ -71,6 +71,7 @@ const RewardsPage          = lazy(() => import('./pages/customer/RewardsPage'));
 const RestaurantDashboard  = lazy(() => import('./pages/restaurant/RestaurantDashboard'));
 const RiderDashboard       = lazy(() => import('./pages/rider/RiderDashboard'));
 const AdminDashboard       = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminLoginPage       = lazy(() => import('./pages/admin/AdminLoginPage'));
 
 const DASHBOARD_ROUTES = {
   customer:   '/home',
@@ -156,6 +157,13 @@ const App = () => {
           <Route path="/dashboard/restaurant" element={<RoleRoute allow={['restaurant']}><PageWrap><RestaurantDashboard /></PageWrap></RoleRoute>} />
           <Route path="/dashboard/rider"      element={<RoleRoute allow={['rider']}><PageWrap><RiderDashboard /></PageWrap></RoleRoute>} />
           <Route path="/dashboard/admin"      element={<RoleRoute allow={['admin']}><PageWrap><AdminDashboard /></PageWrap></RoleRoute>} />
+
+          {/* Separate admin sign-in URL (not advertised from the public LandingPage) */}
+          <Route path="/admin/login"
+            element={isAuthenticated && user?.role === 'admin'
+              ? <Navigate to="/dashboard/admin" replace />
+              : <PageWrap><AdminLoginPage /></PageWrap>}
+          />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
