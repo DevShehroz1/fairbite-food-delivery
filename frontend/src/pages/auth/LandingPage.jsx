@@ -90,6 +90,7 @@ export default function LandingPage() {
   const { login } = useAuth();
   const [selectedRole, setSelectedRole] = useState('customer');
   const [tab, setTab]         = useState(params.get('ref') ? 'register' : 'login');
+  const [emailOpen, setEmailOpen] = useState(false);
   const [email, setEmail]     = useState('');
   const [password, setPass]   = useState('');
   const [name, setName]       = useState('');
@@ -148,6 +149,25 @@ export default function LandingPage() {
         background: 'linear-gradient(180deg, rgba(15,10,10,0.55), rgba(20,10,10,0.85))',
       }}/>
 
+      {/* Sign In / Register toggle — pinned in the top-right corner */}
+      <div style={{
+        position: 'fixed', top: 16, right: 16, zIndex: 5,
+        display: 'flex', background: 'rgba(0,0,0,0.45)',
+        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+        borderRadius: 999, padding: 3,
+        border: '1px solid rgba(255,255,255,0.14)',
+      }}>
+        {['login', 'register'].map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{
+            padding: '7px 14px', borderRadius: 999,
+            background: tab === t ? '#fff' : 'transparent',
+            color: tab === t ? '#111' : 'rgba(255,255,255,0.85)',
+            border: 0, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            transition: 'all .2s',
+          }}>{t === 'login' ? 'Sign In' : 'Sign Up'}</button>
+        ))}
+      </div>
+
       <motion.div variants={stagger} initial="hidden" animate="show"
         style={{
           position: 'relative', zIndex: 1,
@@ -165,10 +185,12 @@ export default function LandingPage() {
         </motion.div>
 
         <motion.h1 variants={item} style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5, margin: '0 0 4px', lineHeight: 1.15 }}>
-          Welcome to a <span style={{ color: 'var(--qb-accent)' }}>fair</span> deal.
+          {tab === 'login'
+            ? <>Welcome <span style={{ color: 'var(--qb-accent)' }}>back</span>.</>
+            : <>Welcome to a <span style={{ color: 'var(--qb-accent)' }}>fair</span> deal.</>}
         </motion.h1>
         <motion.p variants={item} style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, margin: '0 0 20px' }}>
-          Sign in or create an account in seconds.
+          {tab === 'login' ? 'Sign in to continue.' : 'Create an account in seconds.'}
         </motion.p>
 
         {/* Role selector */}
@@ -195,6 +217,20 @@ export default function LandingPage() {
           </div>
         </motion.div>
 
+        {/* Referral code — always visible so it applies to Google sign-in too */}
+        <motion.div variants={item} style={{ marginBottom: 14 }}>
+          <FloatField
+            label="Referral code (optional)"
+            value={referralCode}
+            onChange={(v) => setReferralCode((v || '').toUpperCase())}
+          />
+          {referralCode && (
+            <div style={{ fontSize: 11, color: 'var(--qb-accent)', marginTop: 6, paddingLeft: 4 }}>
+              ✓ Code applied — new accounts get Rs. 250 off their first order
+            </div>
+          )}
+        </motion.div>
+
         {/* Google button — only when REACT_APP_GOOGLE_CLIENT_ID is set */}
         {HAS_GOOGLE && (
           <motion.div variants={item} style={{ marginBottom: 14 }}>
@@ -211,71 +247,72 @@ export default function LandingPage() {
         {HAS_GOOGLE && (
           <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
             <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }}/>
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>or sign in with email</span>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>or</span>
             <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }}/>
           </motion.div>
         )}
 
-        {/* login / register tab */}
-        <motion.div variants={item} style={{
-          display: 'flex', background: 'rgba(255,255,255,0.1)', borderRadius: 5, padding: 4, marginBottom: 14,
-        }}>
-          {['login', 'register'].map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{
-              flex: 1, padding: '10px 0', borderRadius: 5,
-              background: tab === t ? '#fff' : 'transparent',
-              color: tab === t ? '#111' : 'rgba(255,255,255,0.8)',
-              border: 0, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              textTransform: 'capitalize', transition: 'all .2s',
-            }}>{t === 'login' ? 'Sign In' : 'Register'}</button>
-          ))}
-        </motion.div>
+        {/* Continue-with-email toggle — collapsed by default */}
+        {!emailOpen && (
+          <motion.div variants={item}>
+            <Pressable onClick={() => setEmailOpen(true)} style={{
+              width: '100%', height: 52, borderRadius: 5,
+              background: 'rgba(255,255,255,0.07)',
+              border: '1px solid rgba(255,255,255,0.13)',
+              color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              fontSize: 14, fontWeight: 700,
+            }}>
+              <Icons.Message size={18}/>
+              {tab === 'login' ? 'Sign in with email' : 'Sign up with email'}
+            </Pressable>
+          </motion.div>
+        )}
 
-        <AnimatePresence>
-          {tab === 'register' && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden', marginBottom: 10 }}>
-              <FloatField label="Full Name" value={name} onChange={setName}/>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Email/password form — animated in when user opens it */}
+        <AnimatePresence initial={false}>
+          {emailOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              style={{ overflow: 'hidden' }}>
+              <AnimatePresence initial={false}>
+                {tab === 'register' && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden', marginBottom: 10 }}>
+                    <FloatField label="Full Name" value={name} onChange={setName}/>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-        <motion.div variants={item} style={{ marginBottom: 10 }}>
-          <FloatField label="Email" value={email} onChange={setEmail} type="email"/>
-        </motion.div>
-        <motion.div variants={item} style={{ marginBottom: tab === 'register' ? 10 : 18 }}>
-          <FloatField label="Password" value={password} onChange={setPass}
-            type={showPw ? 'text' : 'password'}
-            trailing={
-              <Pressable onClick={() => setShowPw(!showPw)} style={{ color: 'rgba(255,255,255,0.6)', padding: 6 }}>
-                {showPw ? <Icons.EyeOff size={18}/> : <Icons.Eye size={18}/>}
+              <div style={{ marginBottom: 10 }}>
+                <FloatField label="Email" value={email} onChange={setEmail} type="email"/>
+              </div>
+              <div style={{ marginBottom: 14 }}>
+                <FloatField label="Password" value={password} onChange={setPass}
+                  type={showPw ? 'text' : 'password'}
+                  trailing={
+                    <Pressable onClick={() => setShowPw(!showPw)} style={{ color: 'rgba(255,255,255,0.6)', padding: 6 }}>
+                      {showPw ? <Icons.EyeOff size={18}/> : <Icons.Eye size={18}/>}
+                    </Pressable>
+                  }/>
+              </div>
+
+              <BrandButton onClick={handleSubmit} disabled={loading}>
+                {loading ? 'Please wait…' : (tab === 'login' ? 'Sign In' : `Create ${ROLES.find(r => r.key === selectedRole)?.label} Account`)}
+              </BrandButton>
+
+              <Pressable onClick={() => setEmailOpen(false)} style={{
+                width: '100%', marginTop: 10, padding: 8,
+                background: 'transparent', color: 'rgba(255,255,255,0.55)',
+                fontSize: 12, fontWeight: 600, textAlign: 'center',
+              }}>
+                Hide email form
               </Pressable>
-            }/>
-        </motion.div>
-
-        <AnimatePresence>
-          {tab === 'register' && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden', marginBottom: 18 }}>
-              <FloatField
-                label="Referral code (optional)"
-                value={referralCode}
-                onChange={(v) => setReferralCode((v || '').toUpperCase())}
-              />
-              {referralCode && params.get('ref') && (
-                <div style={{ fontSize: 11, color: 'var(--qb-accent)', marginTop: 6, paddingLeft: 4 }}>
-                  ✓ Friend's code applied — you'll get Rs. 250 off your first order
-                </div>
-              )}
             </motion.div>
           )}
         </AnimatePresence>
-
-        <motion.div variants={item}>
-          <BrandButton onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Please wait…' : (tab === 'login' ? 'Sign In' : `Create ${ROLES.find(r => r.key === selectedRole)?.label} Account`)}
-          </BrandButton>
-        </motion.div>
       </motion.div>
     </div>
   );
