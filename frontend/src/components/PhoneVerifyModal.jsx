@@ -90,6 +90,10 @@ export default function PhoneVerifyModal({ open, onClose, onVerified, initialPho
     setSending(true);
     try {
       if (FIREBASE_ENABLED && auth) {
+        // Always start with a fresh verifier — re-using a previous one across
+        // attempts is the source of every "reCAPTCHA has already been rendered"
+        // / "captcha-check-failed" loop we've seen.
+        teardownRecaptcha();
         const verifier = ensureRecaptcha();
         if (!verifier) throw new Error('reCAPTCHA could not initialize');
         const confirmation = await signInWithPhoneNumber(auth, e164, verifier);
