@@ -82,6 +82,7 @@ app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/referrals', require('./routes/referralRoutes'));
 app.use('/api/coupons',   require('./routes/couponRoutes'));
+app.use('/api/admin',     require('./routes/adminRoutes'));
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
