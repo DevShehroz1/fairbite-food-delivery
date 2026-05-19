@@ -1,5 +1,6 @@
 const bcrypt   = require('bcryptjs');
 const supabase = require('../config/supabase');
+const firebase = require('../config/firebase');
 
 // Demo-mode: the generated OTP is returned in the API response so the customer
 // can copy it from the in-app banner. To swap to real SMS, set OTP_DEMO_MODE=false
@@ -102,6 +103,47 @@ exports.verifyOtp = async (req, res, next) => {
     if (upErr) throw new Error(upErr.message);
 
     res.json({ success: true, verified: true, phone: row.phone });
+  } catch (err) { next(err); }
+};
+
+// Firebase Phone Auth path: client sends the Firebase ID token after
+// signInWithPhoneNumber resolved. We verify it server-side with
+// firebase-admin (so a malicious client can't just POST a fake token),
+// then flip phone_verified=true and store the verified phone.
+exports.firebaseVerify = async (req, res, next) => {
+  try {
+    const { idToken, phone } = req.body || {};
+    if (!idToken) return res.status(400).json({ success: false, message: 'Missing idToken' });
+    if (!firebase.isFirebaseConfigured()) {
+      return res.status(503).json({
+        success: false,
+        message: 'Firebase admin not configured on the server. Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY.',
+      });
+    }
+
+    let decoded;
+    try {
+      decoded = await firebase.verifyIdToken(idToken);
+    } catch (err) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired Firebase token' });
+    }
+
+    const verifiedPhone = decoded.phone_number || phone || null;
+    if (!verifiedPhone) {
+      return res.status(400).json({ success: false, message: 'Phone number missing from token' });
+    }
+
+    const { error } = await supabase.from('users').update({
+      phone:          verifiedPhone,
+      phone_verified: true,
+      otp_hash:       null,
+      otp_expires_at: null,
+      otp_attempts:   0,
+      updated_at:     new Date(),
+    }).eq('id', req.user.id);
+    if (error) throw new Error(error.message);
+
+    res.json({ success: true, verified: true, phone: verifiedPhone });
   } catch (err) { next(err); }
 };
 

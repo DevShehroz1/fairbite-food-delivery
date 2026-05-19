@@ -12,8 +12,9 @@ router.get('/me', protect, getMe);
 router.put('/updateprofile', protect, updateProfile);
 router.post('/logout', protect, logout);
 
-router.post('/otp/send',   protect, otp.requestOtp);
-router.post('/otp/verify', protect, otp.verifyOtp);
-router.get('/otp/status',  protect, otp.getStatus);
+router.post('/otp/send',     protect, otp.requestOtp);
+router.post('/otp/verify',   protect, otp.verifyOtp);
+router.post('/otp/firebase', protect, otp.firebaseVerify);
+router.get('/otp/status',    protect, otp.getStatus);
 
 module.exports = router;

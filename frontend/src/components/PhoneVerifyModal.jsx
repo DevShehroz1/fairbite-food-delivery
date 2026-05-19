@@ -1,19 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { Icons, Pressable, BrandButton } from './ui';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { auth, FIREBASE_ENABLED } from '../services/firebase';
 
-// Two-step OTP modal: (1) phone entry → /auth/otp/send,
-// (2) code entry → /auth/otp/verify. On success calls onVerified()
-// and refreshes the auth-context user (which now exposes phoneVerified).
-//
-// Backend is in OTP_DEMO_MODE — instead of sending a real SMS it returns
-// the generated code in `demoOtp`. We surface it here as a tinted banner
-// so the demo can complete the loop without an SMS provider.
+// Two-step OTP modal.
+//   - If Firebase is configured (REACT_APP_FIREBASE_* env vars set), uses
+//     Firebase Phone Auth to send a real SMS, verifies the code client-side,
+//     then hands the resulting ID token to the backend at /auth/otp/firebase
+//     which uses firebase-admin to verify the token and flip phone_verified.
+//   - Otherwise falls back to the demo flow (/auth/otp/send + /auth/otp/verify)
+//     so dev/preview environments keep working without Firebase setup.
 export default function PhoneVerifyModal({ open, onClose, onVerified, initialPhone }) {
   const { refreshUser } = useAuth();
+  const recaptchaRef    = useRef(null);
+  const verifierRef     = useRef(null);
+  const confirmationRef = useRef(null);
+
   const [step, setStep]       = useState('phone');
   const [phone, setPhone]     = useState(initialPhone || '');
   const [code, setCode]       = useState('');
@@ -25,6 +31,12 @@ export default function PhoneVerifyModal({ open, onClose, onVerified, initialPho
   useEffect(() => {
     if (!open) {
       setStep('phone'); setCode(''); setDemoOtp(null); setSecondsLeft(0);
+      confirmationRef.current = null;
+      // RecaptchaVerifier instances must be cleared so the next open re-renders.
+      if (verifierRef.current) {
+        try { verifierRef.current.clear(); } catch (_) {}
+        verifierRef.current = null;
+      }
     } else if (initialPhone && !phone) {
       setPhone(initialPhone);
     }
@@ -37,24 +49,68 @@ export default function PhoneVerifyModal({ open, onClose, onVerified, initialPho
     return () => clearTimeout(t);
   }, [secondsLeft]);
 
+  // Convert a Pakistani local number ("0312…") into E.164 ("+92312…")
+  // so Firebase / international SMS routes know the country.
+  const toE164 = (raw) => {
+    let p = (raw || '').replace(/[\s-]/g, '');
+    if (!p) return p;
+    if (p.startsWith('+')) return p;
+    if (p.startsWith('00')) return '+' + p.slice(2);
+    if (p.startsWith('0'))  return '+92' + p.slice(1); // default PK
+    return '+' + p;
+  };
+
+  const ensureRecaptcha = () => {
+    if (!FIREBASE_ENABLED || !auth) return null;
+    if (!verifierRef.current && recaptchaRef.current) {
+      verifierRef.current = new RecaptchaVerifier(auth, recaptchaRef.current, {
+        size: 'invisible',
+      });
+    }
+    return verifierRef.current;
+  };
+
   const sendCode = async () => {
-    if (!phone || phone.replace(/[^0-9]/g, '').length < 8) {
+    const e164 = toE164(phone);
+    if (!e164 || e164.replace(/[^0-9]/g, '').length < 8) {
       return toast.error('Enter a valid phone number');
     }
     setSending(true);
     try {
-      const { data } = await api.post('/auth/otp/send', { phone });
-      if (data.verified) {
-        toast.success('Phone already verified');
-        await refreshUser();
-        onVerified?.(); onClose?.();
-        return;
+      if (FIREBASE_ENABLED && auth) {
+        const verifier = ensureRecaptcha();
+        if (!verifier) throw new Error('reCAPTCHA could not initialize');
+        const confirmation = await signInWithPhoneNumber(auth, e164, verifier);
+        confirmationRef.current = confirmation;
+        setDemoOtp(null);
+        setSecondsLeft(180);
+        setStep('code');
+        toast.success(`SMS sent to ${e164}`);
+      } else {
+        // Demo fallback — backend returns the code in the response.
+        const { data } = await api.post('/auth/otp/send', { phone: e164 });
+        if (data.verified) {
+          toast.success('Phone already verified');
+          await refreshUser();
+          onVerified?.(); onClose?.();
+          return;
+        }
+        setDemoOtp(data.demoOtp || null);
+        setSecondsLeft(data.expiresInSeconds || 300);
+        setStep('code');
       }
-      setDemoOtp(data.demoOtp || null);
-      setSecondsLeft(data.expiresInSeconds || 300);
-      setStep('code');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Could not send OTP');
+      const code = err.code || '';
+      let msg = err.response?.data?.message || err.message || 'Could not send OTP';
+      if (code === 'auth/invalid-phone-number') msg = 'Invalid phone number';
+      if (code === 'auth/too-many-requests')   msg = 'Too many attempts. Try again later.';
+      if (code === 'auth/captcha-check-failed') msg = 'reCAPTCHA check failed — refresh and retry';
+      // If reCAPTCHA failed mid-flight, blow it away so the next attempt rebuilds.
+      if (verifierRef.current) {
+        try { verifierRef.current.clear(); } catch (_) {}
+        verifierRef.current = null;
+      }
+      toast.error(msg);
     } finally {
       setSending(false);
     }
@@ -64,12 +120,23 @@ export default function PhoneVerifyModal({ open, onClose, onVerified, initialPho
     if (!/^\d{6}$/.test(code)) return toast.error('Enter the 6-digit code');
     setVerifying(true);
     try {
-      await api.post('/auth/otp/verify', { code });
+      if (FIREBASE_ENABLED && auth) {
+        if (!confirmationRef.current) throw new Error('Request an OTP first');
+        const cred = await confirmationRef.current.confirm(code);
+        const idToken = await cred.user.getIdToken();
+        await api.post('/auth/otp/firebase', { idToken, phone: toE164(phone) });
+      } else {
+        await api.post('/auth/otp/verify', { code });
+      }
       toast.success('Phone verified');
       await refreshUser();
       onVerified?.(); onClose?.();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Wrong code');
+      const code = err.code || '';
+      let msg = err.response?.data?.message || err.message || 'Wrong code';
+      if (code === 'auth/invalid-verification-code') msg = 'Wrong code';
+      if (code === 'auth/code-expired')              msg = 'Code expired — request a new one';
+      toast.error(msg);
     } finally {
       setVerifying(false);
     }
@@ -106,8 +173,10 @@ export default function PhoneVerifyModal({ open, onClose, onVerified, initialPho
                 </div>
                 <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4, maxWidth: 280 }}>
                   {step === 'phone'
-                    ? 'We need to verify your phone number before you can place an order.'
-                    : `Code sent for ${phone}. Expires in ${Math.max(0, secondsLeft)}s.`}
+                    ? (FIREBASE_ENABLED
+                        ? 'We\'ll text you a 6-digit code to confirm your number.'
+                        : 'We need to verify your phone number before you can place an order.')
+                    : `Code sent for ${toE164(phone)}. Expires in ${Math.max(0, secondsLeft)}s.`}
                 </div>
               </div>
               <Pressable onClick={onClose} style={{ padding: 6, color: '#6b7280' }}>
@@ -130,7 +199,7 @@ export default function PhoneVerifyModal({ open, onClose, onVerified, initialPho
                     outline: 'none', marginBottom: 14, background: '#F9FAFB',
                   }}/>
                 <BrandButton onClick={sendCode} disabled={sending}>
-                  {sending ? 'Sending…' : 'Send OTP'}
+                  {sending ? 'Sending…' : (FIREBASE_ENABLED ? 'Send SMS code' : 'Send OTP')}
                 </BrandButton>
               </>
             )}
@@ -146,7 +215,7 @@ export default function PhoneVerifyModal({ open, onClose, onVerified, initialPho
                   }}>
                     <Icons.Gift size={14} stroke="#92400E"/>
                     <div>
-                      Demo mode (no SMS provider wired):
+                      Demo mode (Firebase not configured):
                       <span style={{ marginLeft: 6, fontWeight: 800, letterSpacing: 2 }}>{demoOtp}</span>
                     </div>
                   </div>
@@ -167,7 +236,7 @@ export default function PhoneVerifyModal({ open, onClose, onVerified, initialPho
                 <BrandButton onClick={verifyCode} disabled={verifying || code.length !== 6}>
                   {verifying ? 'Verifying…' : 'Verify & Continue'}
                 </BrandButton>
-                <Pressable onClick={() => { setStep('phone'); setCode(''); setDemoOtp(null); }}
+                <Pressable onClick={() => { setStep('phone'); setCode(''); setDemoOtp(null); confirmationRef.current = null; }}
                   style={{
                     width: '100%', marginTop: 10, padding: 8,
                     color: '#6b7280', fontSize: 12, fontWeight: 600, textAlign: 'center',
@@ -176,6 +245,9 @@ export default function PhoneVerifyModal({ open, onClose, onVerified, initialPho
                 </Pressable>
               </>
             )}
+
+            {/* Invisible reCAPTCHA host — Firebase mounts the widget here. */}
+            <div ref={recaptchaRef}/>
 
           </motion.div>
         </motion.div>
