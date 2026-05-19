@@ -87,6 +87,14 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
 
+  // Admin pages break out of the global 430px phone frame and use the
+  // full viewport. The class is removed on unmount so customer/rider/
+  // restaurant pages keep the mobile-shaped frame.
+  useEffect(() => {
+    document.body.classList.add('qb-fullscreen');
+    return () => document.body.classList.remove('qb-fullscreen');
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {

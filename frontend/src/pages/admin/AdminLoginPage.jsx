@@ -77,6 +77,12 @@ export default function AdminLoginPage() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Break out of the 430px phone frame so the login uses the full viewport.
+  useEffect(() => {
+    document.body.classList.add('qb-fullscreen');
+    return () => document.body.classList.remove('qb-fullscreen');
+  }, []);
+
   // Admin-only acceptance check. The backend doesn't have a dedicated
   // admin-login endpoint, but every account has a role on it — so the
   // policy is enforced client-side: only role === 'admin' is allowed
