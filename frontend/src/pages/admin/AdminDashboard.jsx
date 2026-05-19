@@ -64,20 +64,8 @@ const Divider = () => <div style={{ width: 1, background: '#E5E7EB' }}/>;
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const isTabletAuto  = useMatchMedia('(min-width: 720px)');
-  const isDesktopAuto = useMatchMedia('(min-width: 1024px)');
-  // Manual view-mode override — 'auto' uses the screen width, 'desktop'
-  // forces wide layout, 'mobile' forces the phone layout. Stored in
-  // localStorage so the choice survives a reload.
-  const [viewMode, setViewMode] = useState(() => {
-    try { return localStorage.getItem('qb_admin_view') || 'auto'; }
-    catch (_) { return 'auto'; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem('qb_admin_view', viewMode); } catch (_) {}
-  }, [viewMode]);
-  const isTablet  = viewMode === 'desktop' ? true  : viewMode === 'mobile' ? false : isTabletAuto;
-  const isDesktop = viewMode === 'desktop' ? true  : viewMode === 'mobile' ? false : isDesktopAuto;
+  const isTablet  = useMatchMedia('(min-width: 720px)');
+  const isDesktop = useMatchMedia('(min-width: 1024px)');
 
   const [tab, setTab] = useState('customers');
   const [overview, setOverview] = useState(null);
@@ -128,18 +116,8 @@ export default function AdminDashboard() {
   const filteredRestaurants = restaurants.filter(r => matchesQuery(r.name) || matchesQuery(r.owner?.email) || matchesQuery(r.address?.city));
   const filteredRiders      = riders.filter(r => matchesQuery(r.name) || matchesQuery(r.email) || matchesQuery(r.phone));
 
-  // Force-desktop should render the dashboard at its design width even when
-  // the actual window is smaller — otherwise toggling "Desktop" on a narrow
-  // window just squeezes the 4-column grid. Force-mobile clamps the page to
-  // a real phone width so it looks like a phone preview.
-  const forcedDesktop = viewMode === 'desktop';
-  const forcedMobile  = viewMode === 'mobile';
-
   return (
-    <div style={{
-      minHeight: '100vh', background: '#fff', fontFamily: 'inherit',
-      overflowX: forcedDesktop ? 'auto' : 'visible',
-    }}>
+    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'inherit' }}>
 
       {/* ── Sticky header ───────────────────────────────────────── */}
       <div style={{
@@ -147,29 +125,24 @@ export default function AdminDashboard() {
         borderBottom: '1px solid #F0F0F0',
         padding: isDesktop ? '18px 40px' : '14px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        minWidth: forcedDesktop ? 1280 : 'auto',
       }}>
         <div>
           <div style={{ fontSize: isDesktop ? 24 : 20, fontWeight: 800, color: '#111', lineHeight: 1.2 }}>Admin Dashboard</div>
           <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>Welcome back, {user?.name || 'Admin'}</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <ViewModeToggle value={viewMode} onChange={setViewMode}/>
-          <Pressable onClick={handleLogout} style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '8px 14px', borderRadius: 5,
-            background: '#fff1f1', color: '#ef4444',
-            fontSize: 13, fontWeight: 600, border: '1px solid #fecaca',
-          }}>
-            <Icons.LogOut size={15} stroke="#ef4444"/>Logout
-          </Pressable>
-        </div>
+        <Pressable onClick={handleLogout} style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '8px 14px', borderRadius: 5,
+          background: '#fff1f1', color: '#ef4444',
+          fontSize: 13, fontWeight: 600, border: '1px solid #fecaca',
+        }}>
+          <Icons.LogOut size={15} stroke="#ef4444"/>Logout
+        </Pressable>
       </div>
 
       <div style={{
         padding: isDesktop ? '28px 40px 60px' : '20px 16px 40px',
-        maxWidth: forcedMobile ? 440 : (isDesktop ? 1280 : 720),
-        minWidth: forcedDesktop ? 1280 : 0,
+        maxWidth: isDesktop ? 1280 : 720,
         margin: '0 auto',
       }}>
 
@@ -214,6 +187,11 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
+        )}
+
+        {/* ── 7-day trend chart ───────────────────────────────── */}
+        {overview?.series?.length > 0 && (
+          <TrendChart series={overview.series}/>
         )}
 
         {/* ── Tab bar (Customers / Restaurants / Riders) ──────── */}
@@ -438,27 +416,76 @@ function EmptyState({ label }) {
   );
 }
 
-function ViewModeToggle({ value, onChange }) {
-  const opts = [
-    { key: 'auto',    label: 'Auto' },
-    { key: 'mobile',  label: 'Mobile' },
-    { key: 'desktop', label: 'Desktop' },
-  ];
+function TrendChart({ series }) {
+  const [metric, setMetric] = useState('orders'); // 'orders' | 'revenue'
+  const values = series.map(d => Number(d[metric] || 0));
+  const peak   = Math.max(1, ...values);
+  // SVG viewBox keeps the chart fluid — width scales to container.
+  const W = 720, H = 180, pad = { l: 28, r: 12, t: 12, b: 28 };
+  const innerW = W - pad.l - pad.r;
+  const innerH = H - pad.t - pad.b;
+  const x = (i) => pad.l + (innerW / (series.length - 1)) * i;
+  const y = (v) => pad.t + innerH - (v / peak) * innerH;
+  const pathD = values.map((v, i) => `${i ? 'L' : 'M'} ${x(i)} ${y(v)}`).join(' ');
+  // Area fill (close path back along the bottom).
+  const areaD = `${pathD} L ${x(values.length - 1)} ${pad.t + innerH} L ${x(0)} ${pad.t + innerH} Z`;
+  const totalLabel = metric === 'revenue' ? PKR(values.reduce((a, b) => a + b, 0))
+                                          : values.reduce((a, b) => a + b, 0);
+
   return (
-    <div style={{
-      display: 'flex', background: '#F5F5F5',
-      borderRadius: 999, padding: 3,
-      border: '1px solid #E5E7EB',
-    }}>
-      {opts.map(o => (
-        <button key={o.key} onClick={() => onChange(o.key)} style={{
-          padding: '5px 11px', borderRadius: 999,
-          background: value === o.key ? '#111' : 'transparent',
-          color:      value === o.key ? '#fff' : '#6b7280',
-          border: 0, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-          transition: 'all .15s',
-        }}>{o.label}</button>
-      ))}
+    <div style={{ ...cardStyle, padding: 16, marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+        <div>
+          <div style={{ fontSize: 13, color: '#6b7280', fontWeight: 600 }}>Last 7 days</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#111', lineHeight: 1.1, marginTop: 2 }}>
+            {totalLabel}
+          </div>
+        </div>
+        <div style={{
+          display: 'flex', background: '#fff', borderRadius: 999, padding: 3,
+          border: '1px solid #E5E7EB',
+        }}>
+          {['orders', 'revenue'].map(k => (
+            <button key={k} onClick={() => setMetric(k)} style={{
+              padding: '5px 12px', borderRadius: 999,
+              background: metric === k ? '#111' : 'transparent',
+              color:      metric === k ? '#fff' : '#6b7280',
+              border: 0, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+              textTransform: 'capitalize',
+            }}>{k}</button>
+          ))}
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="180" preserveAspectRatio="none"
+        style={{ display: 'block' }}>
+        <defs>
+          <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stopColor="var(--qb-primary, #E53935)" stopOpacity="0.35"/>
+            <stop offset="100%" stopColor="var(--qb-primary, #E53935)" stopOpacity="0"/>
+          </linearGradient>
+        </defs>
+        {/* baseline */}
+        <line x1={pad.l} x2={W - pad.r} y1={pad.t + innerH} y2={pad.t + innerH}
+          stroke="#E5E7EB" strokeWidth="1"/>
+        <path d={areaD} fill="url(#trendFill)"/>
+        <path d={pathD}
+          fill="none" stroke="var(--qb-primary, #E53935)" strokeWidth="2.5"
+          strokeLinecap="round" strokeLinejoin="round"/>
+        {series.map((d, i) => (
+          <g key={d.date}>
+            <circle cx={x(i)} cy={y(values[i])} r="4"
+              fill="#fff" stroke="var(--qb-primary, #E53935)" strokeWidth="2"/>
+            <text x={x(i)} y={H - 8} textAnchor="middle"
+              fontSize="11" fontWeight="600" fill="#6b7280">{d.label}</text>
+            {values[i] > 0 && (
+              <text x={x(i)} y={y(values[i]) - 10} textAnchor="middle"
+                fontSize="10" fontWeight="700" fill="#111">
+                {metric === 'revenue' ? Math.round(values[i] / 1000) + 'k' : values[i]}
+              </text>
+            )}
+          </g>
+        ))}
+      </svg>
     </div>
   );
 }

@@ -31,6 +31,28 @@ exports.getOverview = async (req, res, next) => {
     const delivered  = orders.filter(o => o.status === 'delivered');
     const revenue    = delivered.reduce((s, o) => s + Number(o?.pricing?.total || 0), 0);
 
+    // 7-day daily series (oldest → newest). Buckets are local-day boundaries.
+    const series = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const next = new Date(d);
+      next.setDate(d.getDate() + 1);
+      const inBucket = orders.filter(o => {
+        const t = new Date(o.created_at);
+        return t >= d && t < next;
+      });
+      const dayRevenue = inBucket
+        .filter(o => o.status === 'delivered')
+        .reduce((s, o) => s + Number(o?.pricing?.total || 0), 0);
+      series.push({
+        date:    d.toISOString().slice(0, 10),
+        label:   d.toLocaleDateString('en-US', { weekday: 'short' }),
+        orders:  inBucket.length,
+        revenue: dayRevenue,
+      });
+    }
+
     res.json({
       success: true,
       data: {
@@ -43,6 +65,7 @@ exports.getOverview = async (req, res, next) => {
           delivered: delivered.length,
           revenue,
         },
+        series,
       },
     });
   } catch (err) { next(err); }
