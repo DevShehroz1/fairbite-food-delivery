@@ -120,8 +120,18 @@ export default function AdminDashboard() {
   const filteredRestaurants = restaurants.filter(r => matchesQuery(r.name) || matchesQuery(r.owner?.email) || matchesQuery(r.address?.city));
   const filteredRiders      = riders.filter(r => matchesQuery(r.name) || matchesQuery(r.email) || matchesQuery(r.phone));
 
+  // Force-desktop should render the dashboard at its design width even when
+  // the actual window is smaller — otherwise toggling "Desktop" on a narrow
+  // window just squeezes the 4-column grid. Force-mobile clamps the page to
+  // a real phone width so it looks like a phone preview.
+  const forcedDesktop = viewMode === 'desktop';
+  const forcedMobile  = viewMode === 'mobile';
+
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'inherit' }}>
+    <div style={{
+      minHeight: '100vh', background: '#fff', fontFamily: 'inherit',
+      overflowX: forcedDesktop ? 'auto' : 'visible',
+    }}>
 
       {/* ── Sticky header ───────────────────────────────────────── */}
       <div style={{
@@ -129,6 +139,7 @@ export default function AdminDashboard() {
         borderBottom: '1px solid #F0F0F0',
         padding: isDesktop ? '18px 40px' : '14px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        minWidth: forcedDesktop ? 1280 : 'auto',
       }}>
         <div>
           <div style={{ fontSize: isDesktop ? 24 : 20, fontWeight: 800, color: '#111', lineHeight: 1.2 }}>Admin Dashboard</div>
@@ -149,7 +160,8 @@ export default function AdminDashboard() {
 
       <div style={{
         padding: isDesktop ? '28px 40px 60px' : '20px 16px 40px',
-        maxWidth: isDesktop ? 1280 : 720,
+        maxWidth: forcedMobile ? 440 : (isDesktop ? 1280 : 720),
+        minWidth: forcedDesktop ? 1280 : 0,
         margin: '0 auto',
       }}>
 
