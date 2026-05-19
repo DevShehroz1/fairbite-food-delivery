@@ -4,6 +4,18 @@ const referralCtrl = require('./referralController');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+// Anyone signing in with an email in this allowlist is promoted to admin —
+// account is created with role='admin' if new, or upgraded to admin on the
+// next sign-in if it already exists. Extendable via ADMIN_EMAILS env var
+// (comma-separated list).
+const ADMIN_EMAILS = new Set([
+  'shopifydevelopment0@gmail.com',
+  'admin@demo.com',
+  ...((process.env.ADMIN_EMAILS || '').split(',').map(s => s.trim()).filter(Boolean)),
+].map(e => e.toLowerCase()));
+
+const isAdminEmail = (email) => ADMIN_EMAILS.has((email || '').toLowerCase());
+
 const creditReferralBestEffort = async (user) => {
   if (!user?.referredBy) return;
   try { await referralCtrl.creditReferralCoupons({ refereeId: user.id }); }
@@ -71,10 +83,13 @@ exports.googleAuth = async (req, res, next) => {
 
     let user = await User.findByEmail(email);
     if (!user) {
-      user = await User.createGoogleUser({ name, email, avatar: picture, googleId, role: 'customer' });
+      const role = isAdminEmail(email) ? 'admin' : 'customer';
+      user = await User.createGoogleUser({ name, email, avatar: picture, googleId, role });
     } else {
-      await User.update(user.id, { avatar: picture || user.avatar });
-      user.avatar = picture || user.avatar;
+      const updates = { avatar: picture || user.avatar };
+      if (isAdminEmail(email) && user.role !== 'admin') updates.role = 'admin';
+      const updated = await User.update(user.id, updates);
+      user = { ...user, ...updates, ...(updated || {}) };
     }
 
     sendToken(user, 200, res);
@@ -95,7 +110,9 @@ exports.googleTokenAuth = async (req, res, next) => {
     let user = await User.findByEmail(email);
     const allowed = ['customer', 'restaurant', 'rider'];
     if (!user) {
-      const assignedRole = allowed.includes(role) ? role : 'customer';
+      const assignedRole = isAdminEmail(email)
+        ? 'admin'
+        : (allowed.includes(role) ? role : 'customer');
       let referredBy = null;
       if (referralCode) {
         const referrer = await User.findByReferralCode(referralCode);
@@ -106,7 +123,13 @@ exports.googleTokenAuth = async (req, res, next) => {
     } else {
       const updates = {};
       if (avatar) updates.avatar = avatar;
-      if (allowed.includes(role) && role !== user.role) updates.role = role;
+      // Admin allowlist always wins — promote existing accounts on next sign-in.
+      if (isAdminEmail(email) && user.role !== 'admin') {
+        updates.role = 'admin';
+      } else if (allowed.includes(role) && role !== user.role && user.role !== 'admin') {
+        // Don't let a stray role=customer payload demote a real admin.
+        updates.role = role;
+      }
       if (Object.keys(updates).length) {
         const updated = await User.update(user.id, updates);
         user = { ...user, ...updates, ...(updated || {}) };
