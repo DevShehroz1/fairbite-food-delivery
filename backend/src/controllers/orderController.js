@@ -47,6 +47,15 @@ exports.getOrder = async (req, res, next) => {
 
 exports.createOrder = async (req, res, next) => {
   try {
+    // Customers must verify their phone via OTP before they can order.
+    if (req.user.role === 'customer' && !req.user.phoneVerified) {
+      return res.status(403).json({
+        success: false,
+        code: 'PHONE_NOT_VERIFIED',
+        message: 'Verify your phone number with an OTP before placing an order.',
+      });
+    }
+
     const { restaurantId, items, deliveryAddress, payment, couponCode } = req.body;
 
     const restaurant = await Restaurant.findById(restaurantId);

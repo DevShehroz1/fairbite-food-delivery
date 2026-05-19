@@ -8,12 +8,13 @@ const PUBLIC_COLS = '*';
 
 const fmt = (row) => {
   if (!row) return null;
-  const { password, ...safe } = row;
+  const { password, otp_hash, ...safe } = row;
   return {
     ...safe,
     _id: row.id,
-    referralCode: row.referral_code,
-    referredBy:   row.referred_by,
+    referralCode:  row.referral_code,
+    referredBy:    row.referred_by,
+    phoneVerified: Boolean(row.phone_verified),
   };
 };
 

@@ -7,6 +7,7 @@ import useCart from '../../hooks/useCart';
 import useLocation from '../../hooks/useLocation';
 import api from '../../services/api';
 import { Icons, PKR, Pressable } from '../../components/ui';
+import PhoneVerifyModal from '../../components/PhoneVerifyModal';
 
 const STEPS = [
   { n: 1, label: 'Menu' },
@@ -28,6 +29,7 @@ export default function CartPage() {
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [verifyOpen, setVerifyOpen] = useState(false);
   const [validating, setValidating] = useState(false);
 
   useEffect(() => {
@@ -77,6 +79,10 @@ export default function CartPage() {
   const handlePlace = async () => {
     if (!items.length) return;
     if (!user) { navigate('/'); return; }
+    if (user.role === 'customer' && !user.phoneVerified) {
+      setVerifyOpen(true);
+      return;
+    }
     setPlacing(true);
     const payload = {
       restaurantId,
@@ -104,6 +110,11 @@ export default function CartPage() {
         if (isNetworkErr && attempt === 1) {
           await new Promise(r => setTimeout(r, 2000));
           continue;
+        }
+        if (err.response?.data?.code === 'PHONE_NOT_VERIFIED') {
+          setVerifyOpen(true);
+          setPlacing(false);
+          return;
         }
         toast.error(err.response?.data?.message || 'Failed to place order');
         setPlacing(false);
@@ -512,10 +523,19 @@ export default function CartPage() {
             fontSize: 16, fontWeight: 700,
             boxShadow: '0 6px 20px rgba(229,57,53,0.3)',
           }}>
-            {placing ? 'Placing order…' : 'Confirm payment and address'}
+            {placing ? 'Placing order…' : (user?.role === 'customer' && !user?.phoneVerified)
+              ? 'Verify phone to order'
+              : 'Confirm payment and address'}
           </Pressable>
         </motion.div>
       </div>
+
+      <PhoneVerifyModal
+        open={verifyOpen}
+        onClose={() => setVerifyOpen(false)}
+        initialPhone={user?.phone}
+        onVerified={() => { setVerifyOpen(false); handlePlace(); }}
+      />
 
     </div>
   );
