@@ -191,35 +191,7 @@ export default function HomePage() {
         minHeight: '100vh',
       }}>
 
-        {/* Section 1 — Shortcuts row */}
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-          padding: '16px 16px',
-          borderBottom: '1px solid #F5F5F5',
-        }}>
-          {[
-            { id: 'offers',   label: 'Offers',   emoji: '🏷️' },
-            { id: 'pickup',   label: 'Pick-up',  emoji: '📦' },
-            { id: 'homechef', label: 'HomeChef', emoji: '🍳' },
-          ].map(s => (
-            <Pressable key={s.id} onClick={() => navigate('/restaurants')} style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-              flex: 1,
-            }}>
-              <div style={{
-                width: 60, height: 60, borderRadius: 5,
-                background: '#FFF0F0',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 26,
-              }}>
-                {s.emoji}
-              </div>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#111' }}>{s.label}</span>
-            </Pressable>
-          ))}
-        </div>
-
-        {/* Section 2 — What are you craving? */}
+        {/* Section 1 — What are you craving? */}
         <section style={{ marginTop: 20 }}>
           <SectionHeader title="What are you craving?" onSeeAll={() => navigate('/restaurants')}/>
           <div
