@@ -129,15 +129,17 @@ export default function OrderTrackingPage() {
     }
     setReviewSubmitting(true);
     try {
+      // Server resolves riderId from the order, so the client just sends the
+      // order id plus rating + comment. This rates the rider's delivery, not
+      // the restaurant.
       await api.post('/reviews', {
-        orderId:      order._id || order.id,
-        restaurantId: order.restaurant?._id || order.restaurant?.id || order.restaurant,
-        rating:       { overall: reviewRating },
-        comment:      reviewComment.trim(),
+        orderId: order._id || order.id,
+        rating:  { overall: reviewRating },
+        comment: reviewComment.trim(),
       });
       setReviewSubmitted(true);
       setShowReviewPopup(false);
-      toast.success('Thanks for the review!');
+      toast.success('Thanks for rating your rider!');
     } catch (e) {
       toast.error(e.response?.data?.message || 'Could not submit review');
     } finally {
@@ -588,12 +590,12 @@ export default function OrderTrackingPage() {
                 boxShadow: '0 24px 60px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.12)',
               }}
             >
-              <div style={{ fontSize: 38, lineHeight: 1, marginBottom: 6 }}>🎉</div>
+              <div style={{ fontSize: 38, lineHeight: 1, marginBottom: 6 }}>🛵</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: '#111', letterSpacing: -0.3 }}>
-                Order Delivered!
+                Rate your rider
               </div>
               <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4, lineHeight: 1.45 }}>
-                How was your order from {order?.restaurant?.name || 'the restaurant'}?
+                How was the delivery by {order?.rider?.name || 'your rider'}?
               </div>
 
               {/* 5-star selector */}

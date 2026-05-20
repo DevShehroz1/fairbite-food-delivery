@@ -14,7 +14,9 @@ export default function RiderDashboard() {
   const [available, setAvailable] = useState(true);
   const [availableOrders, setOrders] = useState([]);
   const [activeOrder, setActiveOrder] = useState(null);
-  const [earnings, setEarnings] = useState({ today: 0, week: 0, trips: 0, rating: 4.9, onlineHours: '0h 0m' });
+  const [earnings, setEarnings] = useState({ today: 0, week: 0, trips: 0, rating: 0, onlineHours: '0h 0m' });
+  const [reviews, setReviews] = useState([]);
+  const [reviewSummary, setReviewSummary] = useState({ average: 0, count: 0 });
   const [loading, setLoading] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
 
@@ -65,15 +67,27 @@ export default function RiderDashboard() {
     }).catch(() => {});
   };
 
+  const fetchReviews = () => {
+    api.get('/reviews/rider/me').then(r => {
+      setReviews(r.data.data || []);
+      const sum = r.data.summary || { average: 0, count: 0 };
+      setReviewSummary(sum);
+      setEarnings(e => ({ ...e, rating: sum.average || 0 }));
+    }).catch(() => {});
+  };
+
   useEffect(() => {
     fetchOrders();
     fetchActive();
+    fetchReviews();
     setLoading(false);
-    const pollOrders = setInterval(fetchOrders, 5000);
-    const pollActive = setInterval(fetchActive, 4000);
+    const pollOrders  = setInterval(fetchOrders, 5000);
+    const pollActive  = setInterval(fetchActive, 4000);
+    const pollReviews = setInterval(fetchReviews, 15000);
     return () => {
       clearInterval(pollOrders);
       clearInterval(pollActive);
+      clearInterval(pollReviews);
     };
   }, []);
 
@@ -170,7 +184,9 @@ export default function RiderDashboard() {
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
-              <MiniStat label="Rating" value={`${earnings.rating}★`} />
+              <MiniStat
+                label={`Rating (${reviewSummary.count})`}
+                value={reviewSummary.count > 0 ? `${earnings.rating}★` : '—'}/>
               <MiniStat label="Online" value={earnings.onlineHours} />
               <MiniStat label="Week" value={PKR(earnings.week)} />
             </div>
@@ -429,6 +445,63 @@ export default function RiderDashboard() {
               </div>
             )}
           </>
+        )}
+      </div>
+
+      {/* ── Customer reviews of THIS rider ─────────────────────── */}
+      <div style={{ padding: '0 18px', marginTop: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#111' }}>
+            What customers say
+          </div>
+          {reviewSummary.count > 0 && (
+            <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>
+              {reviewSummary.average}★ · {reviewSummary.count} review{reviewSummary.count === 1 ? '' : 's'}
+            </div>
+          )}
+        </div>
+        {reviews.length === 0 ? (
+          <div style={{
+            background: '#fff', borderRadius: 12, padding: '18px 16px',
+            color: '#9CA3AF', fontSize: 13, textAlign: 'center', fontWeight: 600,
+          }}>
+            No reviews yet — your customers' ratings will show up here after their orders are delivered.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {reviews.slice(0, 10).map(r => {
+              const stars = r.rating?.overall || 0;
+              return (
+                <div key={r._id || r.id} style={{
+                  background: '#fff', borderRadius: 12, padding: '14px 14px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>
+                      {r.customer?.name || 'Customer'}
+                    </div>
+                    <div style={{ display: 'flex', gap: 2 }}>
+                      {[1,2,3,4,5].map(n => (
+                        <Icons.Star key={n} size={13}
+                          stroke={n <= stars ? '#F5A524' : '#D1D5DB'}
+                          fill={n <= stars ? '#F5A524' : 'none'}/>
+                      ))}
+                    </div>
+                  </div>
+                  {r.comment && (
+                    <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.4 }}>
+                      "{r.comment}"
+                    </div>
+                  )}
+                  {r.restaurant?.name && (
+                    <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 6 }}>
+                      From: {r.restaurant.name}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 
