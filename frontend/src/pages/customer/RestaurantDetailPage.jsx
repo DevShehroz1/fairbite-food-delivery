@@ -375,6 +375,7 @@ export default function RestaurantDetailPage() {
                 background: '#fff', borderRadius: '5px 5px 0 0',
                 padding: '12px 16px 24px', maxHeight: '80vh', overflowY: 'auto',
                 boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
+                maxWidth: 430, margin: '0 auto',
               }}
             >
               <div style={{ width: 38, height: 4, borderRadius: 999, background: '#E5E5E5', margin: '0 auto 14px' }}/>
@@ -483,7 +484,7 @@ export default function RestaurantDetailPage() {
 
       {/* FoodPanda-style cart CTA */}
       {totalCartQty > 0 && (
-        <motion.div initial={{ y: 100 }} animate={{ y: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, padding: '12px 16px 28px', background: 'linear-gradient(180deg, transparent, #fff 25%)' }}>
+        <motion.div initial={{ y: 100 }} animate={{ y: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, padding: '12px 16px 28px', background: 'linear-gradient(180deg, transparent, #fff 25%)', maxWidth: 430, margin: '0 auto' }}>
           <Pressable onClick={() => navigate('/cart')} style={{ width: '100%', height: 58, borderRadius: 5, background: 'var(--qb-primary)', color: '#fff', display: 'flex', alignItems: 'center', padding: '0 18px', gap: 14, boxShadow: '0 8px 24px rgba(229,57,53,0.35)' }}>
             <div style={{ width: 34, height: 34, borderRadius: 999, border: '2px solid rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, flexShrink: 0 }}>{totalCartQty}</div>
             <div style={{ flex: 1 }}>

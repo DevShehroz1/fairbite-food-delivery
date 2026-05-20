@@ -466,6 +466,7 @@ export default function CartPage() {
                 background: '#fff', borderRadius: '5px 5px 0 0',
                 padding: '12px 16px 24px', maxHeight: '78vh', overflowY: 'auto',
                 boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
+                maxWidth: 430, margin: '0 auto',
               }}
             >
               <div style={{ width: 38, height: 4, borderRadius: 999, background: '#E5E5E5', margin: '0 auto 14px' }}/>
@@ -526,7 +527,7 @@ export default function CartPage() {
       </AnimatePresence>
 
       {/* ── Fixed CTA ────────────────────────────────────────── */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px 28px', background: '#fff', borderTop: '1px solid #F0F0F0' }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px 28px', background: '#fff', borderTop: '1px solid #F0F0F0', maxWidth: 430, margin: '0 auto' }}>
         <motion.div whileTap={{ scale: 0.98 }}>
           <Pressable onClick={handlePlace} style={{
             width: '100%', height: 52, borderRadius: 5,

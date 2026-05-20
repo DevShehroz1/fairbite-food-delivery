@@ -299,6 +299,7 @@ export function BottomNav({ tab, onTab }) {
       paddingBottom: 'env(safe-area-inset-bottom, 16px)',
       background: 'linear-gradient(180deg, transparent, #fff 30%)',
       pointerEvents: 'none',
+      maxWidth: 430, margin: '0 auto',
     }}>
       <div style={{
         margin: '0 16px 8px', height: 64, borderRadius: 5,
